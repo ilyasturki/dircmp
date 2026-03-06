@@ -1,5 +1,5 @@
-import type { AppState, Action, CompareEntry } from '~/types.js';
-import { compareAtPath } from '~/compare.js';
+import type { AppState, Action, CompareEntry } from '~/utils/types.js';
+import { compareAtPath } from '~/utils/compare.js';
 import { getDiffLineCount } from '~/components/diff-view.js';
 
 export const initialState: AppState = {

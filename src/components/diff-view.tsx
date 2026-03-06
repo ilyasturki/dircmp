@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Text } from 'ink';
-import type { DiffResult } from '~/types.js';
+import type { DiffResult } from '~/utils/types.js';
 
 interface DiffViewProps {
   filePath: string;
