@@ -1,5 +1,5 @@
-import { useReducer, useEffect, useState, useCallback } from 'react';
-import { Box, Text, useInput, useStdout } from 'ink';
+import { useReducer, useEffect, useState, useCallback, useMemo } from 'react';
+import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import type { AppState, Action, CompareEntry } from './types.js';
 import { scanDirectory } from './scanner.js';
 import { compareAtPath, getFileDiff } from './compare.js';
@@ -102,17 +102,6 @@ function reducer(state: AppState, action: Action): AppState {
       newState.entries = recomputeEntries(newState);
       return newState;
     }
-    case 'OPEN_DIFF': {
-      const entry = state.entries[state.cursorIndex];
-      if (!entry || entry.isDirectory || entry.status === 'identical') return state;
-      return {
-        ...state,
-        viewMode: 'diff',
-        selectedFile: entry.relativePath,
-        diffResult: null,
-        diffScrollOffset: 0,
-      };
-    }
     case 'CLOSE_DIFF':
       return {
         ...state,
@@ -133,8 +122,6 @@ function reducer(state: AppState, action: Action): AppState {
       }
       return { ...state, diffScrollOffset: newOffset };
     }
-    case 'RESIZE':
-      return state;
     default:
       return state;
   }
@@ -142,6 +129,7 @@ function reducer(state: AppState, action: Action): AppState {
 
 export function App({ leftDir, rightDir }: AppProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const { exit } = useApp();
   const { stdout } = useStdout();
 
   const [dimensions, setDimensions] = useState({
@@ -186,7 +174,8 @@ export function App({ leftDir, rightDir }: AppProps) {
   const handleInput = useCallback(
     (input: string, key: { upArrow: boolean; downArrow: boolean; tab: boolean; return: boolean; backspace: boolean; escape: boolean; delete: boolean }) => {
       if (input === 'q') {
-        process.exit(0);
+        exit();
+        return;
       }
 
       if (state.viewMode === 'diff') {
@@ -203,7 +192,7 @@ export function App({ leftDir, rightDir }: AppProps) {
       if (key.return) dispatch({ type: 'NAVIGATE_INTO' });
       if (key.backspace || key.delete) dispatch({ type: 'NAVIGATE_UP' });
     },
-    [state.viewMode]
+    [state.viewMode, exit]
   );
 
   useInput(handleInput);

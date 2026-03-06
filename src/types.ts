@@ -46,11 +46,9 @@ export type Action =
   | { type: 'SWITCH_PANEL' }
   | { type: 'NAVIGATE_INTO' }
   | { type: 'NAVIGATE_UP' }
-  | { type: 'OPEN_DIFF' }
   | { type: 'CLOSE_DIFF' }
   | { type: 'DIFF_LOADED'; diffResult: DiffResult }
   | { type: 'SCROLL_DIFF'; direction: 'up' | 'down' }
-  | { type: 'RESIZE'; columns: number; rows: number };
 
 export interface AppState {
   viewMode: ViewMode;

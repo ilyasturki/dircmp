@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Box, Text } from 'ink';
 import type { DiffResult } from '../types.js';
 
@@ -74,7 +75,7 @@ export function DiffView({
     );
   }
 
-  const displayLines = flattenDiff(diffResult);
+  const displayLines = useMemo(() => flattenDiff(diffResult), [diffResult]);
   const visible = displayLines.slice(scrollOffset, scrollOffset + visibleHeight);
   const gutterWidth = displayLines.length.toString().length + 1;
 

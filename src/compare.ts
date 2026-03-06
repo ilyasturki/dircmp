@@ -129,18 +129,18 @@ export async function getFileDiff(
   let leftBuf: Buffer | null = null;
   let rightBuf: Buffer | null = null;
 
-  try {
-    leftBuf = await fsp.readFile(path.join(leftRoot, relativePath));
-    leftContent = leftBuf.toString('utf-8');
-  } catch {
-    // missing file → empty string
-  }
+  const [leftResult, rightResult] = await Promise.allSettled([
+    fsp.readFile(path.join(leftRoot, relativePath)),
+    fsp.readFile(path.join(rightRoot, relativePath)),
+  ]);
 
-  try {
-    rightBuf = await fsp.readFile(path.join(rightRoot, relativePath));
+  if (leftResult.status === 'fulfilled') {
+    leftBuf = leftResult.value;
+    leftContent = leftBuf.toString('utf-8');
+  }
+  if (rightResult.status === 'fulfilled') {
+    rightBuf = rightResult.value;
     rightContent = rightBuf.toString('utf-8');
-  } catch {
-    // missing file → empty string
   }
 
   if ((leftBuf && isBinary(leftBuf)) || (rightBuf && isBinary(rightBuf))) {
