@@ -13,13 +13,17 @@ interface DirectoryPanelProps {
   scrollOffset: number;
 }
 
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  day: "2-digit",
+  month: "2-digit",
+  year: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 function formatDate(date: Date): string {
-  const y = date.getFullYear().toString().slice(2);
-  const m = (date.getMonth() + 1).toString().padStart(2, "0");
-  const d = date.getDate().toString().padStart(2, "0");
-  const h = date.getHours().toString().padStart(2, "0");
-  const min = date.getMinutes().toString().padStart(2, "0");
-  return `${y}-${m}-${d} ${h}:${min}`;
+  return dateFormatter.format(date);
 }
 
 export function DirectoryPanel({
