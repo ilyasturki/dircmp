@@ -59,8 +59,8 @@ export function App({ leftDir, rightDir }: AppProps) {
     );
   }
 
-  // Reserve rows: 1 for status bar, ~4 for borders/header
-  const contentHeight = Math.max(1, rows - 5);
+  // Reserve rows: 1 for status bar, 3 for borders (top/bottom + status border)
+  const contentHeight = Math.max(1, rows - 4);
 
   // Adjust scroll offset to keep cursor in view
   let { scrollOffset } = state;

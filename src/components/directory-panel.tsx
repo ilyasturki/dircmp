@@ -53,7 +53,9 @@ export function DirectoryPanel({
       ) : (
         visibleEntries.map((entry, i) => {
           const absoluteIndex = scrollOffset + i;
-          const isSelected = absoluteIndex === cursorIndex && isFocused;
+          const isCursorRow = absoluteIndex === cursorIndex;
+          const isSelected = isCursorRow && isFocused;
+          const isDimSelected = isCursorRow && !isFocused;
           const isMissingSide =
             (side === "left" && entry.status === "only-right") ||
             (side === "right" && entry.status === "only-left");
@@ -61,7 +63,7 @@ export function DirectoryPanel({
           if (isMissingSide) {
             return (
               <Box key={entry.relativePath + "-" + side}>
-                <Text dimColor inverse={isSelected}>
+                <Text dimColor inverse={isSelected} backgroundColor={isDimSelected ? "gray" : undefined}>
   {"    (missing)"}
                 </Text>
               </Box>
@@ -83,6 +85,7 @@ export function DirectoryPanel({
                 bold={entry.isDirectory}
                 dimColor={dimColor}
                 inverse={isSelected}
+                backgroundColor={isDimSelected ? "gray" : undefined}
               >
                 {`${arrow}${name.padEnd(24).slice(0, 24)} ${date}`}
                 {hasError ? " !" : ""}
