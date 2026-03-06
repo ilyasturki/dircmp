@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState, useCallback } from 'react';
+import { useReducer, useEffect, useState, useCallback } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import type { AppState, Action, CompareEntry } from './types.js';
 import { scanDirectory } from './scanner.js';
