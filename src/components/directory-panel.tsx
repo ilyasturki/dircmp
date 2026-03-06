@@ -13,13 +13,6 @@ interface DirectoryPanelProps {
   scrollOffset: number;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return "    -";
-  if (bytes < 1024) return `${bytes}B`.padStart(5);
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}K`.padStart(5);
-  return `${(bytes / (1024 * 1024)).toFixed(1)}M`.padStart(5);
-}
-
 function formatDate(date: Date): string {
   const y = date.getFullYear().toString().slice(2);
   const m = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -69,7 +62,7 @@ export function DirectoryPanel({
             return (
               <Box key={entry.relativePath + "-" + side}>
                 <Text dimColor inverse={isSelected}>
-                  {"  (missing)"}
+  {"    (missing)"}
                 </Text>
               </Box>
             );
@@ -81,9 +74,7 @@ export function DirectoryPanel({
           const dimColor = !hasError && entry.status === "identical";
 
           const name = entry.isDirectory ? `${entry.name}/` : entry.name;
-          const size = entry.isDirectory
-            ? "  <DIR>"
-            : formatSize(fileEntry?.size ?? 0);
+          const arrow = entry.isDirectory ? "▶ " : "  ";
           const date = fileEntry ? formatDate(fileEntry.modifiedTime) : "";
 
           return (
@@ -93,7 +84,7 @@ export function DirectoryPanel({
                 dimColor={dimColor}
                 inverse={isSelected}
               >
-                {`${name.padEnd(24).slice(0, 24)} ${size} ${date}`}
+                {`${arrow}${name.padEnd(24).slice(0, 24)} ${date}`}
                 {hasError ? " !" : ""}
               </Text>
             </Box>
