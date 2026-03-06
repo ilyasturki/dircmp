@@ -1,12 +1,14 @@
 import { Box, Text } from 'ink';
 import type { ViewMode } from '~/utils/types';
+import type { Shortcut } from '~/keymap';
 
 interface StatusBarProps {
   viewMode: ViewMode;
   isLoading: boolean;
+  keymap: Shortcut[];
 }
 
-export function StatusBar({ viewMode, isLoading }: StatusBarProps) {
+export function StatusBar({ viewMode, isLoading, keymap }: StatusBarProps) {
   if (isLoading) {
     return (
       <Box>
@@ -15,21 +17,14 @@ export function StatusBar({ viewMode, isLoading }: StatusBarProps) {
     );
   }
 
-  if (viewMode === 'diff') {
-    return (
-      <Box>
-        <Text dimColor>
-          Up/Down: scroll | Esc: back | q: quit
-        </Text>
-      </Box>
-    );
-  }
+  const helpText = keymap
+    .filter((s) => (s.mode === 'global' || s.mode === viewMode) && s.keyLabel !== '')
+    .map((s) => `${s.keyLabel}: ${s.description}`)
+    .join(' | ');
 
   return (
     <Box>
-      <Text dimColor>
-        Up/Down: navigate | Tab: switch panel | Enter: open | Backspace: go up | q: quit
-      </Text>
+      <Text dimColor>{helpText}</Text>
     </Box>
   );
 }

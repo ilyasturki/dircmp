@@ -1,8 +1,10 @@
 import { useEffect, useState, type Dispatch } from 'react';
+import { useInput, useApp } from 'ink';
 import type { WriteStream } from 'tty';
-import type { Action } from '~/utils/types';
+import type { Action, ViewMode } from '~/utils/types';
 import { scanDirectory } from '~/utils/scanner';
 import { getFileDiff } from '~/utils/compare';
+import { keymap } from '~/keymap';
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
   const [dimensions, setDimensions] = useState({
@@ -34,6 +36,19 @@ export function useDirectoryScan(leftDir: string, rightDir: string, dispatch: Di
         dispatch({ type: 'SCAN_ERROR', error: String(err) });
       });
   }, [leftDir, rightDir]);
+}
+
+export function useKeymap(viewMode: ViewMode, dispatch: Dispatch<Action>) {
+  const { exit } = useApp();
+  useInput((input, key) => {
+    for (const shortcut of keymap) {
+      if (shortcut.mode !== 'global' && shortcut.mode !== viewMode) continue;
+      if (!shortcut.match(input, key)) continue;
+      if (shortcut.effect.type === 'exit') exit();
+      else dispatch(shortcut.effect.action);
+      return;
+    }
+  });
 }
 
 export function useFileDiff(selectedFile: string | null, leftDir: string, rightDir: string, dispatch: Dispatch<Action>) {
