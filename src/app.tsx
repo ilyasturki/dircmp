@@ -3,9 +3,9 @@ import { Box, Text, useInput, useStdout } from 'ink';
 import type { AppState, Action, CompareEntry } from './types.js';
 import { scanDirectory } from './scanner.js';
 import { compareAtPath, getFileDiff } from './compare.js';
-import { DirPanel } from './components/DirPanel.js';
-import { DiffView, getDiffLineCount } from './components/DiffView.js';
-import { StatusBar } from './components/StatusBar.js';
+import { DirPanel } from './components/dir-panel.js';
+import { DiffView, getDiffLineCount } from './components/diff-view.js';
+import { StatusBar } from './components/status-bar.js';
 
 interface AppProps {
   leftDir: string;
