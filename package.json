@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.tsx",
+    "dev:watch": "tsx --watch src/index.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
