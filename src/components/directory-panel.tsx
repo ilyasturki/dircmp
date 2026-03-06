@@ -1,5 +1,6 @@
-import { Box, Text } from 'ink';
-import type { CompareEntry, PanelSide } from '~/utils/types';
+import { Box, Text } from "ink";
+import { TitledBox, titleStyles } from "@mishieck/ink-titled-box";
+import type { CompareEntry, PanelSide } from "~/utils/types";
 
 interface DirectoryPanelProps {
   rootPath: string;
@@ -13,18 +14,19 @@ interface DirectoryPanelProps {
 }
 
 function formatSize(bytes: number): string {
-  if (bytes === 0) return '    -';
+  if (bytes === 0) return "    -";
   if (bytes < 1024) return `${bytes}B`.padStart(5);
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}K`.padStart(5);
   return `${(bytes / (1024 * 1024)).toFixed(1)}M`.padStart(5);
 }
 
 function formatDate(date: Date): string {
-  const m = (date.getMonth() + 1).toString().padStart(2, '0');
-  const d = date.getDate().toString().padStart(2, '0');
-  const h = date.getHours().toString().padStart(2, '0');
-  const min = date.getMinutes().toString().padStart(2, '0');
-  return `${m}-${d} ${h}:${min}`;
+  const y = date.getFullYear().toString().slice(2);
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  const h = date.getHours().toString().padStart(2, "0");
+  const min = date.getMinutes().toString().padStart(2, "0");
+  return `${y}-${m}-${d} ${h}:${min}`;
 }
 
 export function DirectoryPanel({
@@ -37,22 +39,20 @@ export function DirectoryPanel({
   visibleHeight,
   scrollOffset,
 }: DirectoryPanelProps) {
-  const displayPath = currentPath === '' ? '/' : `/${currentPath}`;
-  const visibleEntries = entries.slice(scrollOffset, scrollOffset + visibleHeight);
+  const displayPath = currentPath === "" ? "/" : `/${currentPath}`;
+  const visibleEntries = entries.slice(
+    scrollOffset,
+    scrollOffset + visibleHeight,
+  );
 
   return (
-    <Box
+    <TitledBox
       flexDirection="column"
       width="50%"
-      borderStyle="round"
-      borderColor={isFocused ? 'cyan' : 'gray'}
+      borderStyle="bold"
+      borderColor={isFocused ? "cyan" : "gray"}
+      titles={[rootPath + displayPath]}
     >
-      <Box>
-        <Text bold>
-          {rootPath}
-          {displayPath}
-        </Text>
-      </Box>
       {entries.length === 0 ? (
         <Box>
           <Text dimColor>(empty)</Text>
@@ -62,42 +62,44 @@ export function DirectoryPanel({
           const absoluteIndex = scrollOffset + i;
           const isSelected = absoluteIndex === cursorIndex && isFocused;
           const isMissingSide =
-            (side === 'left' && entry.status === 'only-right') ||
-            (side === 'right' && entry.status === 'only-left');
+            (side === "left" && entry.status === "only-right") ||
+            (side === "right" && entry.status === "only-left");
 
           if (isMissingSide) {
             return (
-              <Box key={entry.relativePath + '-' + side}>
+              <Box key={entry.relativePath + "-" + side}>
                 <Text dimColor inverse={isSelected}>
-                  {'  (missing)'}
+                  {"  (missing)"}
                 </Text>
               </Box>
             );
           }
 
-          const fileEntry = side === 'left' ? entry.left : entry.right;
+          const fileEntry = side === "left" ? entry.left : entry.right;
           const hasError = fileEntry?.error;
 
-          const dimColor = !hasError && entry.status === 'identical';
+          const dimColor = !hasError && entry.status === "identical";
 
           const name = entry.isDirectory ? `${entry.name}/` : entry.name;
-          const size = entry.isDirectory ? '  <DIR>' : formatSize(fileEntry?.size ?? 0);
-          const date = fileEntry ? formatDate(fileEntry.modifiedTime) : '';
+          const size = entry.isDirectory
+            ? "  <DIR>"
+            : formatSize(fileEntry?.size ?? 0);
+          const date = fileEntry ? formatDate(fileEntry.modifiedTime) : "";
 
           return (
-            <Box key={entry.relativePath + '-' + side}>
+            <Box key={entry.relativePath + "-" + side}>
               <Text
                 bold={entry.isDirectory}
                 dimColor={dimColor}
                 inverse={isSelected}
               >
                 {`${name.padEnd(24).slice(0, 24)} ${size} ${date}`}
-                {hasError ? ' !' : ''}
+                {hasError ? " !" : ""}
               </Text>
             </Box>
           );
         })
       )}
-    </Box>
+    </TitledBox>
   );
 }
