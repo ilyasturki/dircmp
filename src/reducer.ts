@@ -1,11 +1,11 @@
 import type { AppState, Action, CompareEntry } from '~/utils/types';
-import { compareAtPath } from '~/utils/compare';
+import { buildVisibleTree } from '~/utils/compare';
 import { getDiffLineCount } from '~/components/file-diff';
 
 export const initialState: AppState = {
   viewMode: 'browser',
   focusedPanel: 'left',
-  currentPath: '',
+  expandedDirs: new Set(),
   cursorIndex: 0,
   scrollOffset: 0,
   leftScan: null,
@@ -19,7 +19,17 @@ export const initialState: AppState = {
 
 function recomputeEntries(state: AppState): CompareEntry[] {
   if (!state.leftScan || !state.rightScan) return [];
-  return compareAtPath(state.leftScan, state.rightScan, state.currentPath);
+  return buildVisibleTree(state.leftScan, state.rightScan, state.expandedDirs);
+}
+
+function removeDescendants(expandedDirs: Set<string>, dirPath: string): Set<string> {
+  const prefix = dirPath + '/';
+  const next = new Set(expandedDirs);
+  next.delete(dirPath);
+  for (const p of next) {
+    if (p.startsWith(prefix)) next.delete(p);
+  }
+  return next;
 }
 
 export function reducer(state: AppState, action: Action): AppState {
@@ -54,18 +64,23 @@ export function reducer(state: AppState, action: Action): AppState {
       const entry = state.entries[state.cursorIndex];
       if (!entry) return state;
       if (entry.isDirectory) {
-        const isMissing =
-          (state.focusedPanel === 'left' && entry.status === 'only-right') ||
-          (state.focusedPanel === 'right' && entry.status === 'only-left');
-        if (isMissing) return state;
-
+        let expandedDirs: Set<string>;
+        if (state.expandedDirs.has(entry.relativePath)) {
+          // Collapse: remove this dir and all descendants
+          expandedDirs = removeDescendants(state.expandedDirs, entry.relativePath);
+        } else {
+          // Expand
+          expandedDirs = new Set(state.expandedDirs);
+          expandedDirs.add(entry.relativePath);
+        }
         const newState = {
           ...state,
-          currentPath: entry.relativePath,
-          cursorIndex: 0,
-          scrollOffset: 0,
+          expandedDirs,
+          cursorIndex: state.cursorIndex,
         };
         newState.entries = recomputeEntries(newState);
+        // Clamp cursor after collapse may have removed entries
+        newState.cursorIndex = Math.min(newState.cursorIndex, Math.max(0, newState.entries.length - 1));
         return newState;
       }
       // File → open diff
@@ -78,18 +93,40 @@ export function reducer(state: AppState, action: Action): AppState {
         diffScrollOffset: 0,
       };
     }
-    case 'NAVIGATE_UP': {
-      if (state.currentPath === '') return state;
-      const parts = state.currentPath.split('/');
-      parts.pop();
-      const newPath = parts.join('/');
-      const newState = {
-        ...state,
-        currentPath: newPath,
-        cursorIndex: 0,
-        scrollOffset: 0,
-      };
+    case 'COLLAPSE_PARENT': {
+      const entry = state.entries[state.cursorIndex];
+      if (!entry) return state;
+
+      // Find nearest expanded ancestor
+      const parts = entry.relativePath.split('/');
+      // If the entry itself is an expanded dir, collapse it
+      if (entry.isDirectory && state.expandedDirs.has(entry.relativePath)) {
+        const expandedDirs = removeDescendants(state.expandedDirs, entry.relativePath);
+        const newState = { ...state, expandedDirs };
+        newState.entries = recomputeEntries(newState);
+        newState.cursorIndex = Math.min(state.cursorIndex, Math.max(0, newState.entries.length - 1));
+        return newState;
+      }
+
+      // Otherwise find the parent directory that is expanded
+      // Walk up from the entry's path to find nearest expanded ancestor
+      let ancestorPath = '';
+      let foundAncestor = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        ancestorPath = i === 0 ? parts[i] : ancestorPath + '/' + parts[i];
+        if (state.expandedDirs.has(ancestorPath)) {
+          foundAncestor = ancestorPath;
+        }
+      }
+
+      if (!foundAncestor) return state;
+
+      const expandedDirs = removeDescendants(state.expandedDirs, foundAncestor);
+      const newState = { ...state, expandedDirs };
       newState.entries = recomputeEntries(newState);
+      // Move cursor to the ancestor entry
+      const ancestorIndex = newState.entries.findIndex(e => e.relativePath === foundAncestor);
+      newState.cursorIndex = ancestorIndex >= 0 ? ancestorIndex : Math.min(state.cursorIndex, Math.max(0, newState.entries.length - 1));
       return newState;
     }
     case 'CLOSE_DIFF':

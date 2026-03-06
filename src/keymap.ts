@@ -80,8 +80,8 @@ export const keymap: Shortcut[] = [
   {
     mode: 'browser',
     keyLabel: 'Backspace',
-    description: 'go up',
+    description: 'collapse',
     match: (_input, key) => key.backspace || key.delete,
-    effect: { type: 'dispatch', action: { type: 'NAVIGATE_UP' } },
+    effect: { type: 'dispatch', action: { type: 'COLLAPSE_PARENT' } },
   },
 ];

@@ -69,7 +69,6 @@ export function App({ leftDir, rightDir }: AppProps) {
         <DirectoryDiff
           leftDir={leftDir}
           rightDir={rightDir}
-          currentPath={state.currentPath}
           entries={state.entries}
           cursorIndex={state.cursorIndex}
           focusedPanel={state.focusedPanel}

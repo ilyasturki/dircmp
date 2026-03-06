@@ -4,7 +4,6 @@ import type { CompareEntry, PanelSide } from "~/utils/types";
 
 interface DirectoryPanelProps {
   rootPath: string;
-  currentPath: string;
   entries: CompareEntry[];
   cursorIndex: number;
   isFocused: boolean;
@@ -28,7 +27,6 @@ function formatDate(date: Date): string {
 
 export function DirectoryPanel({
   rootPath,
-  currentPath,
   entries,
   cursorIndex,
   isFocused,
@@ -36,7 +34,6 @@ export function DirectoryPanel({
   visibleHeight,
   scrollOffset,
 }: DirectoryPanelProps) {
-  const displayPath = currentPath === "" ? "/" : `/${currentPath}`;
   const visibleEntries = entries.slice(
     scrollOffset,
     scrollOffset + visibleHeight,
@@ -48,7 +45,7 @@ export function DirectoryPanel({
       width="50%"
       borderStyle="bold"
       borderColor={isFocused ? "cyan" : "gray"}
-      titles={[rootPath + displayPath]}
+      titles={[rootPath]}
     >
       {entries.length === 0 ? (
         <Box>
@@ -80,7 +77,11 @@ export function DirectoryPanel({
           const dimColor = !hasError && entry.status === "identical";
 
           const name = entry.isDirectory ? `${entry.name}/` : entry.name;
-          const arrow = entry.isDirectory ? "▶ " : "  ";
+          const indent = "  ".repeat(entry.depth);
+          const arrow = entry.isDirectory
+            ? entry.isExpanded ? "▼ " : "▶ "
+            : "  ";
+          const nameWidth = Math.max(8, 24 - entry.depth * 2);
           const date = fileEntry ? formatDate(fileEntry.modifiedTime) : "";
 
           return (
@@ -91,7 +92,7 @@ export function DirectoryPanel({
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? "gray" : undefined}
               >
-                {`${arrow}${name.padEnd(24).slice(0, 24)} ${date}`}
+                {`${indent}${arrow}${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`}
                 {hasError ? " !" : ""}
               </Text>
             </Box>

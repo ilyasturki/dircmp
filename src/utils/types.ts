@@ -17,6 +17,8 @@ export interface CompareEntry {
   status: DiffStatus;
   left?: FileEntry;
   right?: FileEntry;
+  depth: number;
+  isExpanded: boolean;
 }
 
 export type ScanResult = Map<string, FileEntry>;
@@ -45,7 +47,7 @@ export type Action =
   | { type: 'MOVE_CURSOR'; direction: 'up' | 'down' }
   | { type: 'SWITCH_PANEL' }
   | { type: 'NAVIGATE_INTO' }
-  | { type: 'NAVIGATE_UP' }
+  | { type: 'COLLAPSE_PARENT' }
   | { type: 'CLOSE_DIFF' }
   | { type: 'DIFF_LOADED'; diffResult: DiffResult }
   | { type: 'SCROLL_DIFF'; direction: 'up' | 'down' }
@@ -53,7 +55,7 @@ export type Action =
 export interface AppState {
   viewMode: ViewMode;
   focusedPanel: PanelSide;
-  currentPath: string;
+  expandedDirs: Set<string>;
   cursorIndex: number;
   scrollOffset: number;
   leftScan: ScanResult | null;

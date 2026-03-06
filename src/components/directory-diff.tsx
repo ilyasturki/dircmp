@@ -5,7 +5,6 @@ import type { CompareEntry, PanelSide } from '~/utils/types';
 interface DirectoryDiffProps {
   leftDir: string;
   rightDir: string;
-  currentPath: string;
   entries: CompareEntry[];
   cursorIndex: number;
   focusedPanel: PanelSide;
@@ -16,7 +15,6 @@ interface DirectoryDiffProps {
 export function DirectoryDiff({
   leftDir,
   rightDir,
-  currentPath,
   entries,
   cursorIndex,
   focusedPanel,
@@ -27,7 +25,6 @@ export function DirectoryDiff({
     <Box flexGrow={1}>
       <DirectoryPanel
         rootPath={leftDir}
-        currentPath={currentPath}
         entries={entries}
         cursorIndex={cursorIndex}
         isFocused={focusedPanel === 'left'}
@@ -37,7 +34,6 @@ export function DirectoryDiff({
       />
       <DirectoryPanel
         rootPath={rightDir}
-        currentPath={currentPath}
         entries={entries}
         cursorIndex={cursorIndex}
         isFocused={focusedPanel === 'right'}

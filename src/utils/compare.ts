@@ -75,6 +75,8 @@ export function compareAtPath(
         isDirectory: left.isDirectory,
         status: 'only-left',
         left,
+        depth: 0,
+        isExpanded: false,
       });
       entries.push({
         relativePath: right.relativePath,
@@ -82,6 +84,8 @@ export function compareAtPath(
         isDirectory: right.isDirectory,
         status: 'only-right',
         right,
+        depth: 0,
+        isExpanded: false,
       });
       continue;
     }
@@ -100,7 +104,7 @@ export function compareAtPath(
         left.contentHash === right.contentHash ? 'identical' : 'modified';
     }
 
-    entries.push({ relativePath, name, isDirectory: isDir, status, left, right });
+    entries.push({ relativePath, name, isDirectory: isDir, status, left, right, depth: 0, isExpanded: false });
   }
 
   entries.sort((a, b) => {
@@ -109,6 +113,28 @@ export function compareAtPath(
   });
 
   return entries;
+}
+
+export function buildVisibleTree(
+  leftScan: ScanResult,
+  rightScan: ScanResult,
+  expandedDirs: Set<string>
+): CompareEntry[] {
+  const result: CompareEntry[] = [];
+
+  function walk(dirPath: string, depth: number) {
+    const entries = compareAtPath(leftScan, rightScan, dirPath);
+    for (const entry of entries) {
+      const isExpanded = entry.isDirectory && expandedDirs.has(entry.relativePath);
+      result.push({ ...entry, depth, isExpanded });
+      if (isExpanded) {
+        walk(entry.relativePath, depth + 1);
+      }
+    }
+  }
+
+  walk('', 0);
+  return result;
 }
 
 function isBinary(buffer: Buffer): boolean {
