@@ -1,10 +1,10 @@
 import { useReducer } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import { reducer, initialState } from '~/reducer.js';
-import { useTerminalDimensions, useDirectoryScan, useFileDiff } from '~/hooks.js';
-import { DirectoryDiff } from '~/components/directory-diff.js';
-import { FileDiff } from '~/components/file-diff.js';
-import { StatusBar } from '~/components/status-bar.js';
+import { reducer, initialState } from '~/reducer';
+import { useTerminalDimensions, useDirectoryScan, useFileDiff } from '~/hooks';
+import { DirectoryDiff } from '~/components/directory-diff';
+import { FileDiff } from '~/components/file-diff';
+import { StatusBar } from '~/components/status-bar';
 
 interface AppProps {
   leftDir: string;

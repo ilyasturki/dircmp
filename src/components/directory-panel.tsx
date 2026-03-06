@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink';
-import type { CompareEntry, PanelSide } from '~/utils/types.js';
+import type { CompareEntry, PanelSide } from '~/utils/types';
 
 interface DirectoryPanelProps {
   rootPath: string;

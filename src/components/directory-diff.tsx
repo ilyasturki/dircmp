@@ -1,6 +1,6 @@
 import { Box } from 'ink';
-import { DirectoryPanel } from '~/components/directory-panel.js';
-import type { CompareEntry, PanelSide } from '~/utils/types.js';
+import { DirectoryPanel } from '~/components/directory-panel';
+import type { CompareEntry, PanelSide } from '~/utils/types';
 
 interface DirectoryDiffProps {
   leftDir: string;

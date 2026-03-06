@@ -1,8 +1,8 @@
 import { useEffect, useState, type Dispatch } from 'react';
 import type { WriteStream } from 'tty';
-import type { Action } from '~/utils/types.js';
-import { scanDirectory } from '~/utils/scanner.js';
-import { getFileDiff } from '~/utils/compare.js';
+import type { Action } from '~/utils/types';
+import { scanDirectory } from '~/utils/scanner';
+import { getFileDiff } from '~/utils/compare';
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
   const [dimensions, setDimensions] = useState({

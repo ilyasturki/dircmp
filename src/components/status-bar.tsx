@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink';
-import type { ViewMode } from '~/utils/types.js';
+import type { ViewMode } from '~/utils/types';
 
 interface StatusBarProps {
   viewMode: ViewMode;

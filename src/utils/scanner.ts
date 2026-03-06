@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import type { FileEntry, ScanResult } from '~/utils/types.js';
+import type { FileEntry, ScanResult } from '~/utils/types';
 
 async function hashFile(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {

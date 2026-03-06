@@ -1,6 +1,6 @@
-import type { AppState, Action, CompareEntry } from '~/utils/types.js';
-import { compareAtPath } from '~/utils/compare.js';
-import { getDiffLineCount } from '~/components/file-diff.js';
+import type { AppState, Action, CompareEntry } from '~/utils/types';
+import { compareAtPath } from '~/utils/compare';
+import { getDiffLineCount } from '~/components/file-diff';
 
 export const initialState: AppState = {
   viewMode: 'browser',
