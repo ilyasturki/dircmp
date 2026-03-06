@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
 import type { CompareEntry, PanelSide } from '~/utils/types.js';
 
-interface DirPanelProps {
+interface DirectoryPanelProps {
   rootPath: string;
   currentPath: string;
   entries: CompareEntry[];
@@ -27,7 +27,7 @@ function formatDate(date: Date): string {
   return `${m}-${d} ${h}:${min}`;
 }
 
-export function DirPanel({
+export function DirectoryPanel({
   rootPath,
   currentPath,
   entries,
@@ -36,7 +36,7 @@ export function DirPanel({
   side,
   visibleHeight,
   scrollOffset,
-}: DirPanelProps) {
+}: DirectoryPanelProps) {
   const displayPath = currentPath === '' ? '/' : `/${currentPath}`;
   const visibleEntries = entries.slice(scrollOffset, scrollOffset + visibleHeight);
 

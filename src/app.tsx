@@ -2,8 +2,8 @@ import { useReducer } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { reducer, initialState } from '~/reducer.js';
 import { useTerminalDimensions, useDirectoryScan, useFileDiff } from '~/hooks.js';
-import { DirPanel } from '~/components/dir-panel.js';
-import { DiffView } from '~/components/diff-view.js';
+import { DirectoryDiff } from '~/components/directory-diff.js';
+import { FileDiff } from '~/components/file-diff.js';
 import { StatusBar } from '~/components/status-bar.js';
 
 interface AppProps {
@@ -78,7 +78,7 @@ export function App({ leftDir, rightDir }: AppProps) {
         </Box>
       ) : state.viewMode === 'diff' && state.selectedFile ? (
         <Box flexGrow={1}>
-          <DiffView
+          <FileDiff
             filePath={state.selectedFile}
             diffResult={state.diffResult}
             scrollOffset={state.diffScrollOffset}
@@ -86,28 +86,16 @@ export function App({ leftDir, rightDir }: AppProps) {
           />
         </Box>
       ) : (
-        <Box flexGrow={1}>
-          <DirPanel
-            rootPath={leftDir}
-            currentPath={state.currentPath}
-            entries={state.entries}
-            cursorIndex={state.cursorIndex}
-            isFocused={state.focusedPanel === 'left'}
-            side="left"
-            visibleHeight={contentHeight}
-            scrollOffset={scrollOffset}
-          />
-          <DirPanel
-            rootPath={rightDir}
-            currentPath={state.currentPath}
-            entries={state.entries}
-            cursorIndex={state.cursorIndex}
-            isFocused={state.focusedPanel === 'right'}
-            side="right"
-            visibleHeight={contentHeight}
-            scrollOffset={scrollOffset}
-          />
-        </Box>
+        <DirectoryDiff
+          leftDir={leftDir}
+          rightDir={rightDir}
+          currentPath={state.currentPath}
+          entries={state.entries}
+          cursorIndex={state.cursorIndex}
+          focusedPanel={state.focusedPanel}
+          visibleHeight={contentHeight}
+          scrollOffset={scrollOffset}
+        />
       )}
       <StatusBar viewMode={state.viewMode} isLoading={isLoading} />
     </Box>

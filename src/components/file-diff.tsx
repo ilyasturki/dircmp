@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Box, Text } from 'ink';
 import type { DiffResult } from '~/utils/types.js';
 
-interface DiffViewProps {
+interface FileDiffProps {
   filePath: string;
   diffResult: DiffResult | null;
   scrollOffset: number;
@@ -35,12 +35,12 @@ function flattenDiff(diff: DiffResult): DisplayLine[] {
   return lines;
 }
 
-export function DiffView({
+export function FileDiff({
   filePath,
   diffResult,
   scrollOffset,
   visibleHeight,
-}: DiffViewProps) {
+}: FileDiffProps) {
   if (!diffResult) {
     return (
       <Box flexDirection="column" borderStyle="double" borderColor="cyan">
