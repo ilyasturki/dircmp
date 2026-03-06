@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { render } from 'ink';
-import { App } from './app.js';
+import { App } from '~/app.js';
 
 const args = process.argv.slice(2);
 

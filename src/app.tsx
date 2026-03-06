@@ -1,11 +1,11 @@
 import { useReducer, useEffect, useState, useCallback, useMemo } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import type { AppState, Action, CompareEntry } from './types.js';
-import { scanDirectory } from './scanner.js';
-import { compareAtPath, getFileDiff } from './compare.js';
-import { DirPanel } from './components/dir-panel.js';
-import { DiffView, getDiffLineCount } from './components/diff-view.js';
-import { StatusBar } from './components/status-bar.js';
+import type { AppState, Action, CompareEntry } from '~/types.js';
+import { scanDirectory } from '~/scanner.js';
+import { compareAtPath, getFileDiff } from '~/compare.js';
+import { DirPanel } from '~/components/dir-panel.js';
+import { DiffView, getDiffLineCount } from '~/components/diff-view.js';
+import { StatusBar } from '~/components/status-bar.js';
 
 interface AppProps {
   leftDir: string;

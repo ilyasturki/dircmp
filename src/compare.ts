@@ -8,8 +8,8 @@ import type {
   DiffHunk,
   DiffLine,
   DiffStatus,
-} from './types.js';
-import { getEntriesAtPath } from './scanner.js';
+} from '~/types.js';
+import { getEntriesAtPath } from '~/scanner.js';
 
 function hasDescendantDiff(
   leftScan: ScanResult,
