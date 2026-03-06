@@ -48,7 +48,7 @@ export function DirectoryPanel({
       borderColor={isFocused ? 'cyan' : 'gray'}
     >
       <Box>
-        <Text bold color={isFocused ? 'cyan' : undefined}>
+        <Text bold>
           {rootPath}
           {displayPath}
         </Text>
@@ -78,17 +78,7 @@ export function DirectoryPanel({
           const fileEntry = side === 'left' ? entry.left : entry.right;
           const hasError = fileEntry?.error;
 
-          let color: string | undefined;
-          let dimColor = false;
-          if (hasError) {
-            color = 'yellow';
-          } else if (entry.status === 'identical') {
-            dimColor = true;
-          } else if (entry.status === 'modified') {
-            color = 'red';
-          } else {
-            color = 'green';
-          }
+          const dimColor = !hasError && entry.status === 'identical';
 
           const name = entry.isDirectory ? `${entry.name}/` : entry.name;
           const size = entry.isDirectory ? '  <DIR>' : formatSize(fileEntry?.size ?? 0);
@@ -98,7 +88,6 @@ export function DirectoryPanel({
             <Box key={entry.relativePath + '-' + side}>
               <Text
                 bold={entry.isDirectory}
-                color={entry.isDirectory && !color ? 'blue' : color}
                 dimColor={dimColor}
                 inverse={isSelected}
               >
