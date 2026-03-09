@@ -13,6 +13,7 @@ export interface Shortcut {
   description: string;
   match: KeyMatcher;
   effect: ShortcutEffect;
+  sequence?: string;
 }
 
 export const keymap: Shortcut[] = [
@@ -51,17 +52,32 @@ export const keymap: Shortcut[] = [
   // Browser mode
   {
     mode: 'browser',
-    keyLabel: 'Up/Down',
+    keyLabel: 'j/k',
     description: 'navigate',
-    match: (_input, key) => key.upArrow,
+    match: (_input, key) => key.upArrow || _input === 'k',
     effect: { type: 'dispatch', action: { type: 'MOVE_CURSOR', direction: 'up' } },
   },
   {
     mode: 'browser',
     keyLabel: '',
     description: 'navigate',
-    match: (_input, key) => key.downArrow,
+    match: (_input, key) => key.downArrow || _input === 'j',
     effect: { type: 'dispatch', action: { type: 'MOVE_CURSOR', direction: 'down' } },
+  },
+  {
+    mode: 'browser',
+    keyLabel: 'G/gg',
+    description: 'top/bottom',
+    match: (input) => input === 'G',
+    effect: { type: 'dispatch', action: { type: 'MOVE_CURSOR', direction: 'bottom' } },
+  },
+  {
+    mode: 'browser',
+    keyLabel: '',
+    description: 'top',
+    sequence: 'gg',
+    match: () => false, // handled by sequence logic in useKeymap
+    effect: { type: 'dispatch', action: { type: 'MOVE_CURSOR', direction: 'top' } },
   },
   {
     mode: 'browser',
@@ -72,16 +88,16 @@ export const keymap: Shortcut[] = [
   },
   {
     mode: 'browser',
-    keyLabel: 'Enter',
+    keyLabel: 'l',
     description: 'open',
-    match: (_input, key) => key.return,
+    match: (_input, key) => key.return || _input === 'l',
     effect: { type: 'dispatch', action: { type: 'NAVIGATE_INTO' } },
   },
   {
     mode: 'browser',
-    keyLabel: 'Backspace',
+    keyLabel: 'h',
     description: 'collapse',
-    match: (_input, key) => key.backspace || key.delete,
+    match: (_input, key) => key.backspace || key.delete || _input === 'h',
     effect: { type: 'dispatch', action: { type: 'COLLAPSE_PARENT' } },
   },
 ];

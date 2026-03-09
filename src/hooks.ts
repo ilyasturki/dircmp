@@ -1,4 +1,4 @@
-import { useEffect, useState, type Dispatch } from 'react';
+import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { useInput, useApp } from 'ink';
 import type { WriteStream } from 'tty';
 import type { Action, ViewMode } from '~/utils/types';
@@ -40,9 +40,41 @@ export function useDirectoryScan(leftDir: string, rightDir: string, dispatch: Di
 
 export function useKeymap(viewMode: ViewMode, dispatch: Dispatch<Action>) {
   const { exit } = useApp();
+  const pendingKeyRef = useRef('');
+  const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useInput((input, key) => {
+    const pending = pendingKeyRef.current + input;
+
+    // Check for sequence matches first
     for (const shortcut of keymap) {
       if (shortcut.mode !== 'global' && shortcut.mode !== viewMode) continue;
+      if (!shortcut.sequence) continue;
+      if (pending === shortcut.sequence) {
+        pendingKeyRef.current = '';
+        if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+        if (shortcut.effect.type === 'exit') exit();
+        else dispatch(shortcut.effect.action);
+        return;
+      }
+      // If this input could be the start of a sequence, buffer it
+      if (shortcut.sequence.startsWith(pending) && pending.length < shortcut.sequence.length) {
+        pendingKeyRef.current = pending;
+        if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+        pendingTimerRef.current = setTimeout(() => {
+          pendingKeyRef.current = '';
+        }, 500);
+        return;
+      }
+    }
+
+    // No sequence match — clear pending and check normal shortcuts
+    pendingKeyRef.current = '';
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+
+    for (const shortcut of keymap) {
+      if (shortcut.mode !== 'global' && shortcut.mode !== viewMode) continue;
+      if (shortcut.sequence) continue;
       if (!shortcut.match(input, key)) continue;
       if (shortcut.effect.type === 'exit') exit();
       else dispatch(shortcut.effect.action);

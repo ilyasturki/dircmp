@@ -44,7 +44,7 @@ export interface DiffLine {
 export type Action =
   | { type: 'SCAN_COMPLETE'; leftScan: ScanResult; rightScan: ScanResult }
   | { type: 'SCAN_ERROR'; error: string }
-  | { type: 'MOVE_CURSOR'; direction: 'up' | 'down' }
+  | { type: 'MOVE_CURSOR'; direction: 'up' | 'down' | 'top' | 'bottom' }
   | { type: 'SWITCH_PANEL' }
   | { type: 'NAVIGATE_INTO' }
   | { type: 'COLLAPSE_PARENT' }
