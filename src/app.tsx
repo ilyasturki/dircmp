@@ -1,9 +1,8 @@
 import { useReducer } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import { reducer, initialState } from '~/reducer';
-import { useTerminalDimensions, useDirectoryScan, useFileDiff, useKeymap } from '~/hooks';
+import { useTerminalDimensions, useDirectoryScan, useKeymap } from '~/hooks';
 import { DirectoryDiff } from '~/components/directory-diff';
-import { FileDiff } from '~/components/file-diff';
 import { StatusBar } from '~/components/status-bar';
 import { keymap } from '~/keymap';
 
@@ -18,8 +17,7 @@ export function App({ leftDir, rightDir }: AppProps) {
 
   const { columns, rows } = useTerminalDimensions(stdout);
   useDirectoryScan(leftDir, rightDir, dispatch);
-  useFileDiff(state.selectedFile, leftDir, rightDir, dispatch);
-  useKeymap(state.viewMode, dispatch);
+  useKeymap(state, leftDir, rightDir, dispatch);
 
   if (columns < 40 || rows < 10) {
     return (
@@ -56,15 +54,6 @@ export function App({ leftDir, rightDir }: AppProps) {
         <Box flexGrow={1} justifyContent="center" alignItems="center">
           <Text color="yellow">Scanning directories...</Text>
         </Box>
-      ) : state.viewMode === 'diff' && state.selectedFile ? (
-        <Box flexGrow={1}>
-          <FileDiff
-            filePath={state.selectedFile}
-            diffResult={state.diffResult}
-            scrollOffset={state.diffScrollOffset}
-            visibleHeight={contentHeight}
-          />
-        </Box>
       ) : (
         <DirectoryDiff
           leftDir={leftDir}
@@ -76,7 +65,7 @@ export function App({ leftDir, rightDir }: AppProps) {
           scrollOffset={scrollOffset}
         />
       )}
-      <StatusBar viewMode={state.viewMode} isLoading={isLoading} keymap={keymap} />
+      <StatusBar isLoading={isLoading} keymap={keymap} />
     </Box>
   );
 }

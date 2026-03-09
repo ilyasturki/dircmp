@@ -1,9 +1,10 @@
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { useInput, useApp } from 'ink';
 import type { WriteStream } from 'tty';
-import type { Action, ViewMode } from '~/utils/types';
+import type { Action, AppState } from '~/utils/types';
 import { scanDirectory } from '~/utils/scanner';
-import { getFileDiff } from '~/utils/compare';
 import { keymap } from '~/keymap';
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
@@ -38,7 +39,7 @@ export function useDirectoryScan(leftDir: string, rightDir: string, dispatch: Di
   }, [leftDir, rightDir]);
 }
 
-export function useKeymap(viewMode: ViewMode, dispatch: Dispatch<Action>) {
+export function useKeymap(state: AppState, leftDir: string, rightDir: string, dispatch: Dispatch<Action>) {
   const { exit } = useApp();
   const pendingKeyRef = useRef('');
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,7 +49,7 @@ export function useKeymap(viewMode: ViewMode, dispatch: Dispatch<Action>) {
 
     // Check for sequence matches first
     for (const shortcut of keymap) {
-      if (shortcut.mode !== 'global' && shortcut.mode !== viewMode) continue;
+      if (shortcut.mode !== 'global' && shortcut.mode !== 'browser') continue;
       if (!shortcut.sequence) continue;
       if (pending === shortcut.sequence) {
         pendingKeyRef.current = '';
@@ -57,7 +58,6 @@ export function useKeymap(viewMode: ViewMode, dispatch: Dispatch<Action>) {
         else dispatch(shortcut.effect.action);
         return;
       }
-      // If this input could be the start of a sequence, buffer it
       if (shortcut.sequence.startsWith(pending) && pending.length < shortcut.sequence.length) {
         pendingKeyRef.current = pending;
         if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
@@ -73,27 +73,42 @@ export function useKeymap(viewMode: ViewMode, dispatch: Dispatch<Action>) {
     if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
 
     for (const shortcut of keymap) {
-      if (shortcut.mode !== 'global' && shortcut.mode !== viewMode) continue;
+      if (shortcut.mode !== 'global' && shortcut.mode !== 'browser') continue;
       if (shortcut.sequence) continue;
       if (!shortcut.match(input, key)) continue;
-      if (shortcut.effect.type === 'exit') exit();
-      else dispatch(shortcut.effect.action);
+
+      if (shortcut.effect.type === 'exit') {
+        exit();
+        return;
+      }
+
+      const action = shortcut.effect.action;
+
+      // Intercept NAVIGATE_INTO for files: open nvim diff instead of dispatching
+      if (action.type === 'NAVIGATE_INTO') {
+        const entry = state.entries[state.cursorIndex];
+        if (entry && !entry.isDirectory && entry.status !== 'identical') {
+          const leftPath = path.join(leftDir, entry.relativePath);
+          const rightPath = path.join(rightDir, entry.relativePath);
+
+          let args: string[];
+          if (entry.status === 'only-left') {
+            args = ['-d', leftPath, '/dev/null'];
+          } else if (entry.status === 'only-right') {
+            args = ['-d', '/dev/null', rightPath];
+          } else {
+            args = ['-d', leftPath, rightPath];
+          }
+
+          spawnSync('nvim', args, { stdio: 'inherit' });
+          process.stdout.write('\x1b[2J\x1b[H');
+          dispatch({ type: 'REDRAW' });
+          return;
+        }
+      }
+
+      dispatch(action);
       return;
     }
   });
-}
-
-export function useFileDiff(selectedFile: string | null, leftDir: string, rightDir: string, dispatch: Dispatch<Action>) {
-  useEffect(() => {
-    if (!selectedFile) return;
-    let cancelled = false;
-    getFileDiff(leftDir, rightDir, selectedFile).then((result) => {
-      if (!cancelled) {
-        dispatch({ type: 'DIFF_LOADED', diffResult: result });
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedFile, leftDir, rightDir]);
 }

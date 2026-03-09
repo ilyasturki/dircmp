@@ -1,5 +1,5 @@
 import type { Key } from 'ink';
-import type { Action, ViewMode } from '~/utils/types';
+import type { Action } from '~/utils/types';
 
 type KeyMatcher = (input: string, key: Key) => boolean;
 
@@ -8,7 +8,7 @@ type ShortcutEffect =
   | { type: 'exit' };
 
 export interface Shortcut {
-  mode: ViewMode | 'global';
+  mode: 'browser' | 'global';
   keyLabel: string;
   description: string;
   match: KeyMatcher;
@@ -24,29 +24,6 @@ export const keymap: Shortcut[] = [
     description: 'quit',
     match: (input) => input === 'q',
     effect: { type: 'exit' },
-  },
-
-  // Diff mode
-  {
-    mode: 'diff',
-    keyLabel: 'Up/Down',
-    description: 'scroll',
-    match: (_input, key) => key.upArrow,
-    effect: { type: 'dispatch', action: { type: 'SCROLL_DIFF', direction: 'up' } },
-  },
-  {
-    mode: 'diff',
-    keyLabel: '',
-    description: 'scroll',
-    match: (_input, key) => key.downArrow,
-    effect: { type: 'dispatch', action: { type: 'SCROLL_DIFF', direction: 'down' } },
-  },
-  {
-    mode: 'diff',
-    keyLabel: 'Esc',
-    description: 'back',
-    match: (_input, key) => key.escape,
-    effect: { type: 'dispatch', action: { type: 'CLOSE_DIFF' } },
   },
 
   // Browser mode

@@ -1,12 +1,7 @@
-import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { structuredPatch } from 'diff';
 import type {
   ScanResult,
   CompareEntry,
-  DiffResult,
-  DiffHunk,
-  DiffLine,
   DiffStatus,
 } from '~/utils/types';
 import { getEntriesAtPath } from '~/utils/scanner';
@@ -137,65 +132,3 @@ export function buildVisibleTree(
   return result;
 }
 
-function isBinary(buffer: Buffer): boolean {
-  const len = Math.min(buffer.length, 8192);
-  for (let i = 0; i < len; i++) {
-    if (buffer[i] === 0) return true;
-  }
-  return false;
-}
-
-export async function getFileDiff(
-  leftRoot: string,
-  rightRoot: string,
-  relativePath: string
-): Promise<DiffResult> {
-  let leftContent = '';
-  let rightContent = '';
-  let leftBuf: Buffer | null = null;
-  let rightBuf: Buffer | null = null;
-
-  const [leftResult, rightResult] = await Promise.allSettled([
-    fsp.readFile(path.join(leftRoot, relativePath)),
-    fsp.readFile(path.join(rightRoot, relativePath)),
-  ]);
-
-  if (leftResult.status === 'fulfilled') {
-    leftBuf = leftResult.value;
-    leftContent = leftBuf.toString('utf-8');
-  }
-  if (rightResult.status === 'fulfilled') {
-    rightBuf = rightResult.value;
-    rightContent = rightBuf.toString('utf-8');
-  }
-
-  if ((leftBuf && isBinary(leftBuf)) || (rightBuf && isBinary(rightBuf))) {
-    return { isBinary: true, hunks: [] };
-  }
-
-  const patch = structuredPatch(
-    `a/${relativePath}`,
-    `b/${relativePath}`,
-    leftContent,
-    rightContent,
-    '',
-    '',
-    { context: 3 }
-  );
-
-  const hunks: DiffHunk[] = patch.hunks.map((h) => {
-    const header = `@@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`;
-    const lines: DiffLine[] = h.lines.map((line) => {
-      if (line.startsWith('+')) {
-        return { type: 'added', content: line.slice(1) };
-      } else if (line.startsWith('-')) {
-        return { type: 'removed', content: line.slice(1) };
-      } else {
-        return { type: 'context', content: line.slice(1) };
-      }
-    });
-    return { header, lines };
-  });
-
-  return { isBinary: false, hunks };
-}
