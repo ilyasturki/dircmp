@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { useEffect, useRef, useState, type Dispatch } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch } from 'react';
 import { useInput, useApp } from 'ink';
 import type { WriteStream } from 'tty';
 import type { Action, AppState } from '~/utils/types';
@@ -28,6 +28,8 @@ export function useTerminalDimensions(stdout: WriteStream | undefined) {
 }
 
 export function useDirectoryScan(leftDir: string, rightDir: string, dispatch: Dispatch<Action>) {
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
   useEffect(() => {
     Promise.all([scanDirectory(leftDir), scanDirectory(rightDir)])
       .then(([leftScan, rightScan]) => {
@@ -36,10 +38,16 @@ export function useDirectoryScan(leftDir: string, rightDir: string, dispatch: Di
       .catch((err) => {
         dispatch({ type: 'SCAN_ERROR', error: String(err) });
       });
-  }, [leftDir, rightDir]);
+  }, [leftDir, rightDir, refreshCounter]);
+
+  const refresh = useCallback(() => {
+    setRefreshCounter((c) => c + 1);
+  }, []);
+
+  return { refresh };
 }
 
-export function useKeymap(state: AppState, leftDir: string, rightDir: string, dispatch: Dispatch<Action>, isActive: boolean = true) {
+export function useKeymap(state: AppState, leftDir: string, rightDir: string, dispatch: Dispatch<Action>, isActive: boolean = true, onRefresh?: () => void) {
   const { exit } = useApp();
   const pendingKeyRef = useRef('');
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,6 +91,13 @@ export function useKeymap(state: AppState, leftDir: string, rightDir: string, di
       }
 
       const action = shortcut.effect.action;
+
+      // Intercept REFRESH: dispatch to clear state, then trigger re-scan
+      if (action.type === 'REFRESH') {
+        dispatch(action);
+        onRefresh?.();
+        return;
+      }
 
       // Intercept NAVIGATE_INTO for files: open nvim diff instead of dispatching
       if (action.type === 'NAVIGATE_INTO') {

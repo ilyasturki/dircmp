@@ -84,4 +84,18 @@ export const keymap: Shortcut[] = [
     match: (input) => input === ',',
     effect: { type: 'dispatch', action: { type: 'TOGGLE_PREFERENCES' } },
   },
+  {
+    mode: 'browser',
+    keyLabel: 'r',
+    description: 'refresh',
+    match: (input) => input === 'r',
+    effect: { type: 'dispatch', action: { type: 'REFRESH' } },
+  },
+  {
+    mode: 'browser',
+    keyLabel: 's',
+    description: 'swap panels',
+    match: (input) => input === 's',
+    effect: { type: 'dispatch', action: { type: 'SWAP_PANELS' } },
+  },
 ];

@@ -8,9 +8,11 @@ import { saveConfig } from '~/utils/config';
 interface PreferencesDialogProps {
   config: AppConfig;
   dispatch: Dispatch<Action>;
+  columns: number;
+  rows: number;
 }
 
-export function PreferencesDialog({ config, dispatch }: PreferencesDialogProps) {
+export function PreferencesDialog({ config, dispatch, columns, rows }: PreferencesDialogProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [error, setError] = useState('');
@@ -70,37 +72,43 @@ export function PreferencesDialog({ config, dispatch }: PreferencesDialogProps) 
   return (
     <Box
       position="absolute"
-      flexDirection="column"
-      borderStyle="double"
-      borderColor="yellow"
-      paddingX={2}
-      paddingY={1}
-      marginLeft={10}
-      marginTop={3}
+      width={columns}
+      height={rows}
+      justifyContent="center"
+      alignItems="center"
+      backgroundColor="black"
     >
-      <Text bold underline>Preferences</Text>
-      <Text> </Text>
-      {editing ? (
-        <Box flexDirection="column">
-          <Text>
-            <Text bold>Date locale: </Text>
-            <Text inverse>{editValue || ' '}</Text>
-          </Text>
-          {error ? (
-            <Text color="red">{error}</Text>
-          ) : (
-            <Text dimColor>Enter to save, Esc to cancel, empty for system default</Text>
-          )}
-        </Box>
-      ) : (
-        <Box flexDirection="column">
-          <Text>
-            <Text bold inverse> Date locale </Text>
-            <Text> {displayValue}</Text>
-          </Text>
-          <Text dimColor>Enter to edit, Esc or , to close</Text>
-        </Box>
-      )}
+      <Box
+        flexDirection="column"
+        borderStyle="double"
+        borderColor="yellow"
+        paddingX={2}
+        paddingY={1}
+      >
+        <Text bold underline>Preferences</Text>
+        <Text> </Text>
+        {editing ? (
+          <Box flexDirection="column">
+            <Text>
+              <Text bold>Date locale: </Text>
+              <Text inverse>{editValue || ' '}</Text>
+            </Text>
+            {error ? (
+              <Text color="red">{error}</Text>
+            ) : (
+              <Text dimColor>Enter to save, Esc to cancel, empty for system default</Text>
+            )}
+          </Box>
+        ) : (
+          <Box flexDirection="column">
+            <Text>
+              <Text bold inverse> Date locale </Text>
+              <Text> {displayValue}</Text>
+            </Text>
+            <Text dimColor>Enter to edit, Esc or , to close</Text>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }

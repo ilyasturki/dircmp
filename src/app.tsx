@@ -19,8 +19,8 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
   const { stdout } = useStdout();
 
   const { columns, rows } = useTerminalDimensions(stdout);
-  useDirectoryScan(leftDir, rightDir, dispatch);
-  useKeymap(state, leftDir, rightDir, dispatch, !state.showPreferences);
+  const { refresh } = useDirectoryScan(leftDir, rightDir, dispatch);
+  useKeymap(state, leftDir, rightDir, dispatch, !state.showPreferences, refresh);
 
   if (columns < 40 || rows < 10) {
     return (
@@ -71,7 +71,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
       )}
       <StatusBar isLoading={isLoading} keymap={keymap} />
       {state.showPreferences && (
-        <PreferencesDialog config={state.config} dispatch={dispatch} />
+        <PreferencesDialog config={state.config} dispatch={dispatch} columns={columns} rows={rows} />
       )}
     </Box>
   );

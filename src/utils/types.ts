@@ -35,6 +35,8 @@ export type Action =
   | { type: 'REDRAW' }
   | { type: 'TOGGLE_PREFERENCES' }
   | { type: 'UPDATE_CONFIG'; config: import('~/utils/config').AppConfig }
+  | { type: 'REFRESH' }
+  | { type: 'SWAP_PANELS' }
 
 export interface AppState {
   focusedPanel: PanelSide;

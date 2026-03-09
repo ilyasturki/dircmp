@@ -114,6 +114,19 @@ export function reducer(state: AppState, action: Action): AppState {
       newState.cursorIndex = ancestorIndex >= 0 ? ancestorIndex : Math.min(state.cursorIndex, Math.max(0, newState.entries.length - 1));
       return newState;
     }
+    case 'REFRESH': {
+      return { ...state, leftScan: null, rightScan: null, entries: [], cursorIndex: 0, scrollOffset: 0 };
+    }
+    case 'SWAP_PANELS': {
+      const newState = {
+        ...state,
+        leftScan: state.rightScan,
+        rightScan: state.leftScan,
+      };
+      newState.entries = recomputeEntries(newState);
+      newState.cursorIndex = Math.min(state.cursorIndex, Math.max(0, newState.entries.length - 1));
+      return newState;
+    }
     case 'REDRAW':
       return { ...state };
     case 'TOGGLE_PREFERENCES':
