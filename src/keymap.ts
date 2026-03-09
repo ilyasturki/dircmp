@@ -77,4 +77,11 @@ export const keymap: Shortcut[] = [
     match: (_input, key) => key.backspace || key.delete || _input === 'h',
     effect: { type: 'dispatch', action: { type: 'COLLAPSE_PARENT' } },
   },
+  {
+    mode: 'browser',
+    keyLabel: ',',
+    description: 'preferences',
+    match: (input) => input === ',',
+    effect: { type: 'dispatch', action: { type: 'TOGGLE_PREFERENCES' } },
+  },
 ];

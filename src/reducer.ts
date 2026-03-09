@@ -1,16 +1,21 @@
 import type { AppState, Action, CompareEntry } from '~/utils/types';
+import type { AppConfig } from '~/utils/config';
 import { buildVisibleTree } from '~/utils/compare';
 
-export const initialState: AppState = {
-  focusedPanel: 'left',
-  expandedDirs: new Set(),
-  cursorIndex: 0,
-  scrollOffset: 0,
-  leftScan: null,
-  rightScan: null,
-  error: null,
-  entries: [],
-};
+export function createInitialState(config: AppConfig): AppState {
+  return {
+    focusedPanel: 'left',
+    expandedDirs: new Set(),
+    cursorIndex: 0,
+    scrollOffset: 0,
+    leftScan: null,
+    rightScan: null,
+    error: null,
+    entries: [],
+    showPreferences: false,
+    config,
+  };
+}
 
 function recomputeEntries(state: AppState): CompareEntry[] {
   if (!state.leftScan || !state.rightScan) return [];
@@ -111,6 +116,10 @@ export function reducer(state: AppState, action: Action): AppState {
     }
     case 'REDRAW':
       return { ...state };
+    case 'TOGGLE_PREFERENCES':
+      return { ...state, showPreferences: !state.showPreferences };
+    case 'UPDATE_CONFIG':
+      return { ...state, config: action.config };
     default:
       return state;
   }

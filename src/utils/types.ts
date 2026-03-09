@@ -33,6 +33,8 @@ export type Action =
   | { type: 'NAVIGATE_INTO' }
   | { type: 'COLLAPSE_PARENT' }
   | { type: 'REDRAW' }
+  | { type: 'TOGGLE_PREFERENCES' }
+  | { type: 'UPDATE_CONFIG'; config: import('~/utils/config').AppConfig }
 
 export interface AppState {
   focusedPanel: PanelSide;
@@ -43,4 +45,6 @@ export interface AppState {
   rightScan: ScanResult | null;
   error: string | null;
   entries: CompareEntry[];
+  showPreferences: boolean;
+  config: import('~/utils/config').AppConfig;
 }

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Box, Text } from "ink";
 import { TitledBox, titleStyles } from "@mishieck/ink-titled-box";
 import type { CompareEntry, FileEntry, PanelSide } from "~/utils/types";
@@ -11,6 +12,7 @@ interface DirectoryPanelProps {
   side: PanelSide;
   visibleHeight: number;
   scrollOffset: number;
+  dateLocale: string | undefined;
 }
 
 
@@ -30,7 +32,20 @@ export function DirectoryPanel({
   side,
   visibleHeight,
   scrollOffset,
+  dateLocale,
 }: DirectoryPanelProps) {
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(dateLocale, {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }),
+    [dateLocale],
+  );
+
   const visibleEntries = entries.slice(
     scrollOffset,
     scrollOffset + visibleHeight,
@@ -75,6 +90,7 @@ export function DirectoryPanel({
               fileEntry={fileEntry}
               isSelected={isSelected}
               isDimSelected={isDimSelected}
+              dateFormatter={dateFormatter}
             />
           );
         })

@@ -39,7 +39,7 @@ export function useDirectoryScan(leftDir: string, rightDir: string, dispatch: Di
   }, [leftDir, rightDir]);
 }
 
-export function useKeymap(state: AppState, leftDir: string, rightDir: string, dispatch: Dispatch<Action>) {
+export function useKeymap(state: AppState, leftDir: string, rightDir: string, dispatch: Dispatch<Action>, isActive: boolean = true) {
   const { exit } = useApp();
   const pendingKeyRef = useRef('');
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,5 +110,5 @@ export function useKeymap(state: AppState, leftDir: string, rightDir: string, di
       dispatch(action);
       return;
     }
-  });
+  }, { isActive });
 }

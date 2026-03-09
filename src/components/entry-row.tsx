@@ -1,19 +1,6 @@
 import { Box, Text } from "ink";
 import type { CompareEntry, FileEntry } from "~/utils/types";
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  day: "2-digit",
-  month: "2-digit",
-  year: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-function formatDate(date: Date): string {
-  return dateFormatter.format(date);
-}
-
 export function MissingEntryRow({
   isSelected,
   isDimSelected,
@@ -35,11 +22,13 @@ export function EntryRow({
   fileEntry,
   isSelected,
   isDimSelected,
+  dateFormatter,
 }: {
   entry: CompareEntry;
   fileEntry: FileEntry | undefined;
   isSelected: boolean;
   isDimSelected: boolean;
+  dateFormatter: Intl.DateTimeFormat;
 }) {
   const hasError = fileEntry?.error;
   const dimColor = !hasError && entry.status === "identical";
@@ -49,7 +38,7 @@ export function EntryRow({
     ? entry.isExpanded ? "▼ " : "▶ "
     : "  ";
   const nameWidth = Math.max(8, 24 - entry.depth * 2);
-  const date = fileEntry ? formatDate(fileEntry.modifiedTime) : "";
+  const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : "";
 
   return (
     <Box>

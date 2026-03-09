@@ -1,23 +1,26 @@
 import { useReducer } from 'react';
 import { Box, Text, useStdout } from 'ink';
-import { reducer, initialState } from '~/reducer';
+import type { AppConfig } from '~/utils/config';
+import { reducer, createInitialState } from '~/reducer';
 import { useTerminalDimensions, useDirectoryScan, useKeymap } from '~/hooks';
 import { DirectoryDiff } from '~/components/directory-diff';
 import { StatusBar } from '~/components/status-bar';
+import { PreferencesDialog } from '~/components/preferences-dialog';
 import { keymap } from '~/keymap';
 
 interface AppProps {
   leftDir: string;
   rightDir: string;
+  initialConfig: AppConfig;
 }
 
-export function App({ leftDir, rightDir }: AppProps) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+export function App({ leftDir, rightDir, initialConfig }: AppProps) {
+  const [state, dispatch] = useReducer(reducer, initialConfig, createInitialState);
   const { stdout } = useStdout();
 
   const { columns, rows } = useTerminalDimensions(stdout);
   useDirectoryScan(leftDir, rightDir, dispatch);
-  useKeymap(state, leftDir, rightDir, dispatch);
+  useKeymap(state, leftDir, rightDir, dispatch, !state.showPreferences);
 
   if (columns < 40 || rows < 10) {
     return (
@@ -63,9 +66,13 @@ export function App({ leftDir, rightDir }: AppProps) {
           focusedPanel={state.focusedPanel}
           visibleHeight={contentHeight}
           scrollOffset={scrollOffset}
+          dateLocale={state.config.dateLocale}
         />
       )}
       <StatusBar isLoading={isLoading} keymap={keymap} />
+      {state.showPreferences && (
+        <PreferencesDialog config={state.config} dispatch={dispatch} />
+      )}
     </Box>
   );
 }

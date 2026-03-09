@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { render } from 'ink';
 import { App } from '~/app';
+import { loadConfig } from '~/utils/config';
 
 const args = process.argv.slice(2);
 
@@ -26,5 +27,6 @@ for (const dir of [leftDir, rightDir]) {
   }
 }
 
-const { waitUntilExit } = render(<App leftDir={leftDir} rightDir={rightDir} />);
+const config = loadConfig();
+const { waitUntilExit } = render(<App leftDir={leftDir} rightDir={rightDir} initialConfig={config} />);
 await waitUntilExit();
