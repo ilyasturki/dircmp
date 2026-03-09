@@ -58,7 +58,7 @@ export function useKeymap(state: AppState, leftDir: string, rightDir: string, di
         else dispatch(shortcut.effect.action);
         return;
       }
-      if (shortcut.sequence.startsWith(pending) && pending.length < shortcut.sequence.length) {
+      if (pending.length > 0 && shortcut.sequence.startsWith(pending) && pending.length < shortcut.sequence.length) {
         pendingKeyRef.current = pending;
         if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
         pendingTimerRef.current = setTimeout(() => {
