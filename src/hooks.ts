@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Action, AppState } from '~/utils/types'
 import { keymap } from '~/keymap'
+import { copyEntry } from '~/utils/copy'
 import { scanDirectory } from '~/utils/scanner'
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
@@ -117,6 +118,32 @@ export function useKeymap(
                 // Intercept REFRESH: dispatch to clear state, then trigger re-scan
                 if (action.type === 'REFRESH') {
                     dispatch(action)
+                    onRefresh?.()
+                    return
+                }
+
+                // Intercept COPY_TO_RIGHT / COPY_TO_LEFT
+                if (
+                    action.type === 'COPY_TO_RIGHT'
+                    || action.type === 'COPY_TO_LEFT'
+                ) {
+                    const entry = state.entries[state.cursorIndex]
+                    if (!entry || entry.status === 'identical') return
+
+                    const copyRight = action.type === 'COPY_TO_RIGHT'
+                    if (copyRight && entry.status === 'only-right') return
+                    if (!copyRight && entry.status === 'only-left') return
+
+                    const sourcePath = path.join(
+                        copyRight ? leftDir : rightDir,
+                        entry.relativePath,
+                    )
+                    const destPath = path.join(
+                        copyRight ? rightDir : leftDir,
+                        entry.relativePath,
+                    )
+                    copyEntry(sourcePath, destPath, entry.isDirectory)
+                    dispatch({ type: 'REFRESH' })
                     onRefresh?.()
                     return
                 }

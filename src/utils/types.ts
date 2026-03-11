@@ -44,6 +44,8 @@ export type Action =
     | { type: 'EXPAND_ALL' }
     | { type: 'COLLAPSE_ALL' }
     | { type: 'TOGGLE_FILTER' }
+    | { type: 'COPY_TO_LEFT' }
+    | { type: 'COPY_TO_RIGHT' }
 
 export interface AppState {
     focusedPanel: PanelSide

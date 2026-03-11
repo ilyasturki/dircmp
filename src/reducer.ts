@@ -245,6 +245,9 @@ export function reducer(state: AppState, action: Action): AppState {
             )
             return newState
         }
+        case 'COPY_TO_LEFT':
+        case 'COPY_TO_RIGHT':
+            return state
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':

@@ -151,6 +151,20 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: '>/<',
+        description: 'copy right/left',
+        match: (input) => input === '>',
+        effect: { type: 'dispatch', action: { type: 'COPY_TO_RIGHT' } },
+    },
+    {
+        mode: 'browser',
+        keyLabel: '',
+        description: 'copy left',
+        match: (input) => input === '<',
+        effect: { type: 'dispatch', action: { type: 'COPY_TO_LEFT' } },
+    },
+    {
+        mode: 'browser',
         keyLabel: 'r',
         description: 'refresh',
         match: (input) => input === 'r',
