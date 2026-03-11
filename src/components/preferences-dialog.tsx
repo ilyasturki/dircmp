@@ -6,6 +6,7 @@ import { useState } from 'react'
 import type { AppConfig } from '~/utils/config'
 import type { Action } from '~/utils/types'
 import { saveConfig } from '~/utils/config'
+import { Dialog } from './dialog'
 
 interface PreferencesDialogProps {
     config: AppConfig
@@ -67,64 +68,40 @@ export function PreferencesDialog({
     const displayValue = config.dateLocale ?? '(system default)'
 
     return (
-        <Box
-            position='absolute'
-            width={columns}
-            height={rows}
-            justifyContent='center'
-            alignItems='center'
+        <Dialog
+            title='Preferences'
+            columns={columns}
+            rows={rows}
         >
-            <Box
-                flexDirection='column'
-                borderStyle='bold'
-                borderColor='cyan'
-                paddingX={2}
-                paddingY={1}
-            >
-                <Text
-                    bold
-                    underline
-                >
-                    Preferences
-                </Text>
-                <Text> </Text>
-                {editing ?
-                    <Box flexDirection='column'>
-                        <Text>
-                            <Text bold>Date locale: </Text>
-                            <TextInput
-                                value={editValue}
-                                onChange={(value) => {
-                                    setEditValue(value)
-                                    setError('')
-                                }}
-                                onSubmit={handleSubmit}
-                                focus={editing}
-                            />
+            {editing ?
+                <Box flexDirection='column'>
+                    <Text>
+                        <Text bold>Date locale: </Text>
+                        <TextInput
+                            value={editValue}
+                            onChange={(value) => {
+                                setEditValue(value)
+                                setError('')
+                            }}
+                            onSubmit={handleSubmit}
+                            focus={editing}
+                        />
+                    </Text>
+                    {error && <Text color='red'>{error}</Text>}
+                </Box>
+            :   <Box flexDirection='column'>
+                    <Text>
+                        <Text
+                            bold
+                            inverse
+                        >
+                            {' '}
+                            Date locale{' '}
                         </Text>
-                        {error ?
-                            <Text color='red'>{error}</Text>
-                        :   <Text dimColor>
-                                Enter to save, Esc to cancel, empty for system
-                                default
-                            </Text>
-                        }
-                    </Box>
-                :   <Box flexDirection='column'>
-                        <Text>
-                            <Text
-                                bold
-                                inverse
-                            >
-                                {' '}
-                                Date locale{' '}
-                            </Text>
-                            <Text> {displayValue}</Text>
-                        </Text>
-                        <Text dimColor>Enter to edit, Esc or , to close</Text>
-                    </Box>
-                }
-            </Box>
-        </Box>
+                        <Text> {displayValue}</Text>
+                    </Text>
+                </Box>
+            }
+        </Dialog>
     )
 }
