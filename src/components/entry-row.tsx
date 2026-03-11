@@ -1,7 +1,15 @@
-import { Box, Text } from 'ink'
+import { Box, Text, useStdout } from 'ink'
 
 import { getFileIcon } from '~/utils/file-icons'
 import type { CompareEntry, FileEntry } from '~/utils/types'
+
+/** Available width inside one panel (half terminal minus border chrome) */
+function usePanelWidth() {
+    const { stdout } = useStdout()
+    const columns = stdout?.columns ?? 80
+    // Each panel is 50% width, border takes 2 chars on each side
+    return Math.floor(columns / 2) - 2
+}
 
 export function MissingEntryRow({
     isSelected,
@@ -10,14 +18,17 @@ export function MissingEntryRow({
     isSelected: boolean
     isDimSelected: boolean
 }) {
+    const panelWidth = usePanelWidth()
+    const content = '    (missing)'
+
     return (
-        <Box>
+        <Box width="100%">
             <Text
                 dimColor
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? 'gray' : undefined}
             >
-                {'    (missing)'}
+                {content.padEnd(panelWidth)}
             </Text>
         </Box>
     )
@@ -44,16 +55,19 @@ export function EntryRow({
     const nameWidth = Math.max(8, 24 - entry.depth * 2)
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
+    const panelWidth = usePanelWidth()
+    let content = `${indent}${icon} ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`
+    if (hasError) content += ' !'
+
     return (
-        <Box>
+        <Box width="100%">
             <Text
                 bold={entry.isDirectory}
                 dimColor={dimColor}
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? 'gray' : undefined}
             >
-                {`${indent}${icon} ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`}
-                {hasError ? ' !' : ''}
+                {content.padEnd(panelWidth)}
             </Text>
         </Box>
     )
