@@ -18,7 +18,7 @@ export function Dialog({ title, columns, rows, children }: DialogProps) {
         if (ref.current) {
             setDims(measureElement(ref.current))
         }
-    })
+    }, [])
 
     return (
         <Box
