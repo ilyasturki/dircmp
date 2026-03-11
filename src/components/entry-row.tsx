@@ -41,13 +41,7 @@ export function EntryRow({
     const name = entry.isDirectory ? `${entry.name}/` : entry.name
     const indent = '  '.repeat(entry.depth)
     const icon = getFileIcon(entry.name, entry.isDirectory, entry.isExpanded)
-    const arrow =
-        entry.isDirectory ?
-            entry.isExpanded ?
-                '▼ '
-            :   '▶ '
-        :   '  '
-    const nameWidth = Math.max(8, 22 - entry.depth * 2)
+    const nameWidth = Math.max(8, 24 - entry.depth * 2)
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     return (
@@ -58,7 +52,7 @@ export function EntryRow({
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? 'gray' : undefined}
             >
-                {`${indent}${arrow}${icon} ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`}
+                {`${indent}${icon} ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`}
                 {hasError ? ' !' : ''}
             </Text>
         </Box>
