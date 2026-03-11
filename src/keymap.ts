@@ -98,14 +98,15 @@ export const keymap: Shortcut[] = [
         mode: 'browser',
         keyLabel: 'l',
         description: 'open',
-        match: (_input, key) => key.return || _input === 'l',
+        match: (_input, key) => key.return || _input === 'l' || key.rightArrow,
         effect: { type: 'dispatch', action: { type: 'NAVIGATE_INTO' } },
     },
     {
         mode: 'browser',
         keyLabel: 'h',
         description: 'collapse',
-        match: (_input, key) => key.backspace || key.delete || _input === 'h',
+        match: (_input, key) =>
+            key.backspace || key.delete || _input === 'h' || key.leftArrow,
         effect: { type: 'dispatch', action: { type: 'COLLAPSE_PARENT' } },
     },
     {
