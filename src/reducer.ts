@@ -98,6 +98,31 @@ export function reducer(state: AppState, action: Action): AppState {
             )
             return newState
         }
+        case 'OPEN_DIFF': {
+            const entry = state.entries[state.cursorIndex]
+            if (!entry || !entry.isDirectory) return state
+            let expandedDirs: Set<string>
+            if (state.expandedDirs.has(entry.relativePath)) {
+                expandedDirs = removeDescendants(
+                    state.expandedDirs,
+                    entry.relativePath,
+                )
+            } else {
+                expandedDirs = new Set(state.expandedDirs)
+                expandedDirs.add(entry.relativePath)
+            }
+            const newState = {
+                ...state,
+                expandedDirs,
+                cursorIndex: state.cursorIndex,
+            }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                newState.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
         case 'COLLAPSE_PARENT': {
             const entry = state.entries[state.cursorIndex]
             if (!entry) return state

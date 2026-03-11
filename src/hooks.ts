@@ -121,8 +121,8 @@ export function useKeymap(
                     return
                 }
 
-                // Intercept NAVIGATE_INTO for files: open nvim diff instead of dispatching
-                if (action.type === 'NAVIGATE_INTO') {
+                // Intercept OPEN_DIFF for files: open nvim diff instead of dispatching
+                if (action.type === 'OPEN_DIFF') {
                     const entry = state.entries[state.cursorIndex]
                     if (
                         entry

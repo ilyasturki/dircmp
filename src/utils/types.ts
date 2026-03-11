@@ -31,6 +31,7 @@ export type Action =
     | { type: 'MOVE_CURSOR'; direction: 'up' | 'down' | 'top' | 'bottom' }
     | { type: 'SWITCH_PANEL' }
     | { type: 'NAVIGATE_INTO' }
+    | { type: 'OPEN_DIFF' }
     | { type: 'COLLAPSE_PARENT' }
     | { type: 'REDRAW' }
     | { type: 'TOGGLE_PREFERENCES' }

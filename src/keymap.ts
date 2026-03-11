@@ -97,9 +97,16 @@ export const keymap: Shortcut[] = [
     {
         mode: 'browser',
         keyLabel: 'l',
-        description: 'open',
-        match: (input, key) => key.return || input === 'l' || key.rightArrow,
+        description: 'expand/collapse',
+        match: (input, key) => input === 'l' || key.rightArrow,
         effect: { type: 'dispatch', action: { type: 'NAVIGATE_INTO' } },
+    },
+    {
+        mode: 'browser',
+        keyLabel: 'Enter',
+        description: 'open',
+        match: (_input, key) => key.return,
+        effect: { type: 'dispatch', action: { type: 'OPEN_DIFF' } },
     },
     {
         mode: 'browser',
