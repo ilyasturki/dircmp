@@ -1,9 +1,9 @@
 import { Box, Text } from 'ink'
 import { useMemo } from 'react'
-import { TitledBox, titleStyles } from '@mishieck/ink-titled-box'
 
 import type { CompareEntry, FileEntry, PanelSide } from '~/utils/types'
 import { EntryRow, MissingEntryRow } from './entry-row'
+import { PanelBox } from './panel-box'
 
 interface DirectoryPanelProps {
     rootPath: string
@@ -53,12 +53,9 @@ export function DirectoryPanel({
     )
 
     return (
-        <TitledBox
-            flexDirection='column'
-            width='50%'
-            borderStyle='bold'
+        <PanelBox
+            title={rootPath}
             borderColor={isFocused ? 'cyan' : 'gray'}
-            titles={[rootPath]}
         >
             {entries.length === 0 ?
                 <EmptyPanel />
@@ -95,6 +92,6 @@ export function DirectoryPanel({
                     )
                 })
             }
-        </TitledBox>
+        </PanelBox>
     )
 }
