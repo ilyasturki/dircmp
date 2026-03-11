@@ -49,4 +49,5 @@ export interface AppState {
     entries: CompareEntry[]
     showPreferences: boolean
     config: import('~/utils/config').AppConfig
+    swapped: boolean
 }

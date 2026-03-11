@@ -25,10 +25,14 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
 
     const { columns, rows } = useTerminalDimensions(stdout)
     const { refresh } = useDirectoryScan(leftDir, rightDir, dispatch)
+
+    const effectiveLeftDir = state.swapped ? rightDir : leftDir
+    const effectiveRightDir = state.swapped ? leftDir : rightDir
+
     useKeymap(
         state,
-        leftDir,
-        rightDir,
+        effectiveLeftDir,
+        effectiveRightDir,
         dispatch,
         !state.showPreferences,
         refresh,
@@ -79,8 +83,8 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                     <Text color='yellow'>Scanning directories...</Text>
                 </Box>
             :   <DirectoryDiff
-                    leftDir={leftDir}
-                    rightDir={rightDir}
+                    leftDir={effectiveLeftDir}
+                    rightDir={effectiveRightDir}
                     entries={state.entries}
                     cursorIndex={state.cursorIndex}
                     focusedPanel={state.focusedPanel}

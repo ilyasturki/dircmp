@@ -1,5 +1,5 @@
 import type { AppConfig } from '~/utils/config'
-import type { Action, AppState, CompareEntry } from '~/utils/types'
+import type { Action, AppState, CompareEntry, PanelSide } from '~/utils/types'
 import { buildVisibleTree } from '~/utils/compare'
 
 export function createInitialState(config: AppConfig): AppState {
@@ -14,6 +14,7 @@ export function createInitialState(config: AppConfig): AppState {
         entries: [],
         showPreferences: false,
         config,
+        swapped: false,
     }
 }
 
@@ -155,13 +156,18 @@ export function reducer(state: AppState, action: Action): AppState {
                 entries: [],
                 cursorIndex: 0,
                 scrollOffset: 0,
+                swapped: false,
             }
         }
         case 'SWAP_PANELS': {
-            const newState = {
+            const flippedPanel: PanelSide =
+                state.focusedPanel === 'left' ? 'right' : 'left'
+            const newState: AppState = {
                 ...state,
                 leftScan: state.rightScan,
                 rightScan: state.leftScan,
+                swapped: !state.swapped,
+                focusedPanel: flippedPanel,
             }
             newState.entries = recomputeEntries(newState)
             newState.cursorIndex = Math.min(
