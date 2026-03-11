@@ -1,7 +1,7 @@
 import { Box, Text, useStdout } from 'ink'
 
-import { getFileIcon } from '~/utils/file-icons'
 import type { CompareEntry, FileEntry } from '~/utils/types'
+import { getFileIcon } from '~/utils/file-icons'
 
 /** Available width inside one panel (half terminal minus border chrome) */
 function usePanelWidth() {
@@ -22,7 +22,7 @@ export function MissingEntryRow({
     const content = '    (missing)'
 
     return (
-        <Box width="100%">
+        <Box width='100%'>
             <Text
                 dimColor
                 inverse={isSelected}
@@ -60,7 +60,7 @@ export function EntryRow({
     if (hasError) content += ' !'
 
     return (
-        <Box width="100%">
+        <Box width='100%'>
             <Text
                 bold={entry.isDirectory}
                 dimColor={dimColor}

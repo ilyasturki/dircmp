@@ -1,5 +1,7 @@
-import { useRef, useState, useEffect, type ReactNode } from 'react'
-import { Box, Text, measureElement, type DOMElement } from 'ink'
+import type { DOMElement } from 'ink'
+import type { ReactNode } from 'react'
+import { Box, measureElement, Text } from 'ink'
+import { useEffect, useRef, useState } from 'react'
 
 interface DialogProps {
     title: string
@@ -29,7 +31,10 @@ export function Dialog({ title, columns, rows, children }: DialogProps) {
             <Box>
                 {/* Backdrop sized to dialog only */}
                 {dims.width > 0 && (
-                    <Box position='absolute' flexDirection='column'>
+                    <Box
+                        position='absolute'
+                        flexDirection='column'
+                    >
                         {Array.from({ length: dims.height }, (_, i) => (
                             <Text key={i}>{' '.repeat(dims.width)}</Text>
                         ))}
@@ -45,7 +50,10 @@ export function Dialog({ title, columns, rows, children }: DialogProps) {
                     paddingY={1}
                     gap={1}
                 >
-                    <Text bold underline>
+                    <Text
+                        bold
+                        underline
+                    >
                         {title}
                     </Text>
 

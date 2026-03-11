@@ -2,7 +2,7 @@
     "tab_size": 4,
     "languages": {
         "JSON": {
-            "language_servers": ["eslint", "..."],
-        },
-    },
+            "language_servers": ["eslint", "..."]
+        }
+    }
 }
