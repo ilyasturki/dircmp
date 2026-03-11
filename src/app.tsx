@@ -1,12 +1,12 @@
-import { useReducer } from 'react';
-import { Box, Text, useStdout } from 'ink';
-import type { AppConfig } from '~/utils/config';
-import { reducer, createInitialState } from '~/reducer';
-import { useTerminalDimensions, useDirectoryScan, useKeymap } from '~/hooks';
-import { DirectoryDiff } from '~/components/directory-diff';
-import { StatusBar } from '~/components/status-bar';
-import { PreferencesDialog } from '~/components/preferences-dialog';
-import { keymap } from '~/keymap';
+import { useReducer } from "react";
+import { Box, Text, useStdout } from "ink";
+import type { AppConfig } from "~/utils/config";
+import { reducer, createInitialState } from "~/reducer";
+import { useTerminalDimensions, useDirectoryScan, useKeymap } from "~/hooks";
+import { DirectoryDiff } from "~/components/directory-diff";
+import { StatusBar } from "~/components/status-bar";
+import { PreferencesDialog } from "~/components/preferences-dialog";
+import { keymap } from "~/keymap";
 
 interface AppProps {
   leftDir: string;
@@ -15,12 +15,23 @@ interface AppProps {
 }
 
 export function App({ leftDir, rightDir, initialConfig }: AppProps) {
-  const [state, dispatch] = useReducer(reducer, initialConfig, createInitialState);
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialConfig,
+    createInitialState,
+  );
   const { stdout } = useStdout();
 
   const { columns, rows } = useTerminalDimensions(stdout);
   const { refresh } = useDirectoryScan(leftDir, rightDir, dispatch);
-  useKeymap(state, leftDir, rightDir, dispatch, !state.showPreferences, refresh);
+  useKeymap(
+    state,
+    leftDir,
+    rightDir,
+    dispatch,
+    !state.showPreferences,
+    refresh,
+  );
 
   if (columns < 40 || rows < 10) {
     return (
@@ -52,7 +63,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
   }
 
   return (
-    <Box flexDirection="column" width={columns} height={rows}>
+    <Box flexDirection="column" height={rows}>
       {isLoading ? (
         <Box flexGrow={1} justifyContent="center" alignItems="center">
           <Text color="yellow">Scanning directories...</Text>
@@ -71,7 +82,12 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
       )}
       <StatusBar isLoading={isLoading} keymap={keymap} />
       {state.showPreferences && (
-        <PreferencesDialog config={state.config} dispatch={dispatch} columns={columns} rows={rows} />
+        <PreferencesDialog
+          config={state.config}
+          dispatch={dispatch}
+          columns={columns}
+          rows={rows}
+        />
       )}
     </Box>
   );
