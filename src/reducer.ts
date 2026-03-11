@@ -15,12 +15,18 @@ export function createInitialState(config: AppConfig): AppState {
         showPreferences: false,
         config,
         swapped: false,
+        filterMode: 'all',
     }
 }
 
 function recomputeEntries(state: AppState): CompareEntry[] {
     if (!state.leftScan || !state.rightScan) return []
-    return buildVisibleTree(state.leftScan, state.rightScan, state.expandedDirs)
+    return buildVisibleTree(
+        state.leftScan,
+        state.rightScan,
+        state.expandedDirs,
+        state.filterMode,
+    )
 }
 
 function removeDescendants(
@@ -222,6 +228,16 @@ export function reducer(state: AppState, action: Action): AppState {
         }
         case 'COLLAPSE_ALL': {
             const newState = { ...state, expandedDirs: new Set<string>() }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'TOGGLE_FILTER': {
+            const filterMode = state.filterMode === 'all' ? 'diff-only' : 'all'
+            const newState = { ...state, filterMode } as AppState
             newState.entries = recomputeEntries(newState)
             newState.cursorIndex = Math.min(
                 state.cursorIndex,

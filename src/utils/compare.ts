@@ -1,6 +1,11 @@
 import path from 'node:path'
 
-import type { CompareEntry, DiffStatus, ScanResult } from '~/utils/types'
+import type {
+    CompareEntry,
+    DiffStatus,
+    FilterMode,
+    ScanResult,
+} from '~/utils/types'
 import { getEntriesAtPath } from '~/utils/scanner'
 
 function hasDescendantDiff(
@@ -128,12 +133,16 @@ export function buildVisibleTree(
     leftScan: ScanResult,
     rightScan: ScanResult,
     expandedDirs: Set<string>,
+    filterMode: FilterMode = 'all',
 ): CompareEntry[] {
     const result: CompareEntry[] = []
 
     function walk(dirPath: string, depth: number) {
         const entries = compareAtPath(leftScan, rightScan, dirPath)
         for (const entry of entries) {
+            if (filterMode === 'diff-only' && entry.status === 'identical') {
+                continue
+            }
             const isExpanded =
                 entry.isDirectory && expandedDirs.has(entry.relativePath)
             result.push({ ...entry, depth, isExpanded })

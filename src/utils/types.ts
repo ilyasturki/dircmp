@@ -25,6 +25,8 @@ export type ScanResult = Map<string, FileEntry>
 
 export type PanelSide = 'left' | 'right'
 
+export type FilterMode = 'all' | 'diff-only'
+
 export type Action =
     | { type: 'SCAN_COMPLETE'; leftScan: ScanResult; rightScan: ScanResult }
     | { type: 'SCAN_ERROR'; error: string }
@@ -41,6 +43,7 @@ export type Action =
     | { type: 'FOCUS_PANEL'; panel: PanelSide }
     | { type: 'EXPAND_ALL' }
     | { type: 'COLLAPSE_ALL' }
+    | { type: 'TOGGLE_FILTER' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -54,4 +57,5 @@ export interface AppState {
     showPreferences: boolean
     config: import('~/utils/config').AppConfig
     swapped: boolean
+    filterMode: FilterMode
 }

@@ -96,6 +96,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
             <StatusBar
                 isLoading={isLoading}
                 keymap={keymap}
+                filterMode={state.filterMode}
             />
             {state.showPreferences && (
                 <PreferencesDialog

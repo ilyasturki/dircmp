@@ -144,6 +144,13 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: 'd',
+        description: 'diff only',
+        match: (input) => input === 'd',
+        effect: { type: 'dispatch', action: { type: 'TOGGLE_FILTER' } },
+    },
+    {
+        mode: 'browser',
         keyLabel: 'r',
         description: 'refresh',
         match: (input) => input === 'r',
