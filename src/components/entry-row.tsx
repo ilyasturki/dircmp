@@ -19,7 +19,7 @@ export function MissingEntryRow({
     isDimSelected: boolean
 }) {
     const panelWidth = usePanelWidth()
-    const content = '    (missing)'
+    const content = ''
 
     return (
         <Box width='100%'>
@@ -64,19 +64,29 @@ export function EntryRow({
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const panelWidth = usePanelWidth()
-    let content = `${indent}${icon} ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`
-    if (hasError) content += ' !'
+    const colorIconOnly = entry.isDirectory && color
+    let rest = ` ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`
+    if (hasError) rest += ' !'
+    const content = `${indent}${icon}${rest}`
 
     return (
         <Box width='100%'>
             <Text
                 bold={entry.isDirectory}
                 dimColor={dimColor}
-                color={color}
+                color={colorIconOnly ? undefined : color}
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? 'gray' : undefined}
             >
-                {content.padEnd(panelWidth)}
+                {colorIconOnly ? (
+                    <>
+                        {indent}
+                        <Text color={color}>{icon}</Text>
+                        {rest.padEnd(panelWidth - indent.length - icon.length)}
+                    </>
+                ) : (
+                    content.padEnd(panelWidth)
+                )}
             </Text>
         </Box>
     )
