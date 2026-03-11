@@ -30,7 +30,7 @@ export const keymap: Shortcut[] = [
         mode: 'browser',
         keyLabel: 'j/k',
         description: 'navigate',
-        match: (_input, key) => key.upArrow || _input === 'k',
+        match: (input, key) => key.upArrow || input === 'k',
         effect: {
             type: 'dispatch',
             action: { type: 'MOVE_CURSOR', direction: 'up' },
@@ -40,7 +40,7 @@ export const keymap: Shortcut[] = [
         mode: 'browser',
         keyLabel: '',
         description: 'navigate',
-        match: (_input, key) => key.downArrow || _input === 'j',
+        match: (input, key) => key.downArrow || (input === 'j' && !key.shift),
         effect: {
             type: 'dispatch',
             action: { type: 'MOVE_CURSOR', direction: 'down' },
@@ -70,7 +70,7 @@ export const keymap: Shortcut[] = [
     {
         mode: 'browser',
         keyLabel: 'H/J',
-        description: 'focus left/right panel',
+        description: 'focus left panel',
         match: (input) => input === 'H',
         effect: {
             type: 'dispatch',
@@ -81,7 +81,7 @@ export const keymap: Shortcut[] = [
         mode: 'browser',
         keyLabel: '',
         description: 'focus right panel',
-        match: (input) => input === 'J',
+        match: (input) => input === 'L',
         effect: {
             type: 'dispatch',
             action: { type: 'FOCUS_PANEL', panel: 'right' },
@@ -98,15 +98,18 @@ export const keymap: Shortcut[] = [
         mode: 'browser',
         keyLabel: 'l',
         description: 'open',
-        match: (_input, key) => key.return || _input === 'l' || key.rightArrow,
+        match: (input, key) => key.return || input === 'l' || key.rightArrow,
         effect: { type: 'dispatch', action: { type: 'NAVIGATE_INTO' } },
     },
     {
         mode: 'browser',
         keyLabel: 'h',
         description: 'collapse',
-        match: (_input, key) =>
-            key.backspace || key.delete || _input === 'h' || key.leftArrow,
+        match: (input, key) =>
+            key.backspace
+            || key.delete
+            || (input === 'h' && !key.shift)
+            || key.leftArrow,
         effect: { type: 'dispatch', action: { type: 'COLLAPSE_PARENT' } },
     },
     {
