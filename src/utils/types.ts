@@ -37,6 +37,7 @@ export type Action =
     | { type: 'UPDATE_CONFIG'; config: import('~/utils/config').AppConfig }
     | { type: 'REFRESH' }
     | { type: 'SWAP_PANELS' }
+    | { type: 'FOCUS_PANEL'; panel: PanelSide }
 
 export interface AppState {
     focusedPanel: PanelSide

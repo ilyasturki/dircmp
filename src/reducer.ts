@@ -71,6 +71,8 @@ export function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 focusedPanel: state.focusedPanel === 'left' ? 'right' : 'left',
             }
+        case 'FOCUS_PANEL':
+            return { ...state, focusedPanel: action.panel }
         case 'NAVIGATE_INTO': {
             const entry = state.entries[state.cursorIndex]
             if (!entry || !entry.isDirectory) return state

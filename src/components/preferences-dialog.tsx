@@ -54,7 +54,7 @@ export function PreferencesDialog({
             return
         }
 
-        if (key.escape || input === ',') {
+        if (key.escape || input === ',' || input === 'q') {
             dispatch({ type: 'TOGGLE_PREFERENCES' })
             return
         }

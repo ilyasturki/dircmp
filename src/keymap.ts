@@ -69,6 +69,26 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: 'H/J',
+        description: 'focus left/right panel',
+        match: (input) => input === 'H',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'FOCUS_PANEL', panel: 'left' },
+        },
+    },
+    {
+        mode: 'browser',
+        keyLabel: '',
+        description: 'focus right panel',
+        match: (input) => input === 'J',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'FOCUS_PANEL', panel: 'right' },
+        },
+    },
+    {
+        mode: 'browser',
         keyLabel: 'Tab',
         description: 'switch panel',
         match: (_input, key) => key.tab,
