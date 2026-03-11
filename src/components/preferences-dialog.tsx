@@ -1,124 +1,130 @@
-import { useState } from "react";
-import { Box, Text, useInput } from "ink";
-import TextInput from "ink-text-input";
-import type { Dispatch } from "react";
-import type { Action } from "~/utils/types";
-import type { AppConfig } from "~/utils/config";
-import { saveConfig } from "~/utils/config";
+import type { Dispatch } from 'react'
+import { Box, Text, useInput } from 'ink'
+import TextInput from 'ink-text-input'
+import { useState } from 'react'
+
+import type { AppConfig } from '~/utils/config'
+import type { Action } from '~/utils/types'
+import { saveConfig } from '~/utils/config'
 
 interface PreferencesDialogProps {
-  config: AppConfig;
-  dispatch: Dispatch<Action>;
-  columns: number;
-  rows: number;
+    config: AppConfig
+    dispatch: Dispatch<Action>
+    columns: number
+    rows: number
 }
 
 export function PreferencesDialog({
-  config,
-  dispatch,
-  columns,
-  rows,
+    config,
+    dispatch,
+    columns,
+    rows,
 }: PreferencesDialogProps) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState("");
-  const [error, setError] = useState("");
+    const [editing, setEditing] = useState(false)
+    const [editValue, setEditValue] = useState('')
+    const [error, setError] = useState('')
 
-  const handleSubmit = (value: string) => {
-    const trimmed = value.trim();
-    const newLocale = trimmed === "" ? undefined : trimmed;
+    const handleSubmit = (value: string) => {
+        const trimmed = value.trim()
+        const newLocale = trimmed === '' ? undefined : trimmed
 
-    if (newLocale !== undefined) {
-      try {
-        new Intl.DateTimeFormat(newLocale);
-      } catch {
-        setError(`Invalid locale: "${trimmed}"`);
-        return;
-      }
+        if (newLocale !== undefined) {
+            try {
+                new Intl.DateTimeFormat(newLocale)
+            } catch {
+                setError(`Invalid locale: "${trimmed}"`)
+                return
+            }
+        }
+
+        const newConfig = { ...config, dateLocale: newLocale }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+        setEditing(false)
+        setError('')
     }
 
-    const newConfig = { ...config, dateLocale: newLocale };
-    dispatch({ type: "UPDATE_CONFIG", config: newConfig });
-    saveConfig(newConfig);
-    setEditing(false);
-    setError("");
-  };
+    useInput((input, key) => {
+        if (editing) {
+            if (key.escape) {
+                setEditing(false)
+                setError('')
+            }
+            return
+        }
 
-  useInput((input, key) => {
-    if (editing) {
-      if (key.escape) {
-        setEditing(false);
-        setError("");
-      }
-      return;
-    }
+        if (key.escape || input === ',') {
+            dispatch({ type: 'TOGGLE_PREFERENCES' })
+            return
+        }
+        if (key.return) {
+            setEditing(true)
+            setEditValue(config.dateLocale ?? '')
+            setError('')
+        }
+    })
 
-    if (key.escape || input === ",") {
-      dispatch({ type: "TOGGLE_PREFERENCES" });
-      return;
-    }
-    if (key.return) {
-      setEditing(true);
-      setEditValue(config.dateLocale ?? "");
-      setError("");
-    }
-  });
+    const displayValue = config.dateLocale ?? '(system default)'
 
-  const displayValue = config.dateLocale ?? "(system default)";
-
-  return (
-    <Box
-      position="absolute"
-      width={columns}
-      height={rows}
-      justifyContent="center"
-      alignItems="center"
-    >
-      <Box
-        flexDirection="column"
-        borderStyle="bold"
-        borderColor="cyan"
-        paddingX={2}
-        paddingY={1}
-      >
-        <Text bold underline>
-          Preferences
-        </Text>
-        <Text> </Text>
-        {editing ? (
-          <Box flexDirection="column">
-            <Text>
-              <Text bold>Date locale: </Text>
-              <TextInput
-                value={editValue}
-                onChange={(value) => {
-                  setEditValue(value);
-                  setError("");
-                }}
-                onSubmit={handleSubmit}
-                focus={editing}
-              />
-            </Text>
-            {error ? (
-              <Text color="red">{error}</Text>
-            ) : (
-              <Text dimColor>
-                Enter to save, Esc to cancel, empty for system default
-              </Text>
-            )}
-          </Box>
-        ) : (
-          <Box flexDirection="column">
-            <Text>
-              <Text bold inverse>
-                {" "}
-                Date locale{" "}
-              </Text>
-              <Text> {displayValue}</Text>
-            </Text>
-            <Text dimColor>Enter to edit, Esc or , to close</Text>
-          </Box>
-        )}
-      </Box>
-    </Box>
-  );
+    return (
+        <Box
+            position='absolute'
+            width={columns}
+            height={rows}
+            justifyContent='center'
+            alignItems='center'
+        >
+            <Box
+                flexDirection='column'
+                borderStyle='bold'
+                borderColor='cyan'
+                paddingX={2}
+                paddingY={1}
+            >
+                <Text
+                    bold
+                    underline
+                >
+                    Preferences
+                </Text>
+                <Text> </Text>
+                {editing ?
+                    <Box flexDirection='column'>
+                        <Text>
+                            <Text bold>Date locale: </Text>
+                            <TextInput
+                                value={editValue}
+                                onChange={(value) => {
+                                    setEditValue(value)
+                                    setError('')
+                                }}
+                                onSubmit={handleSubmit}
+                                focus={editing}
+                            />
+                        </Text>
+                        {error ?
+                            <Text color='red'>{error}</Text>
+                        :   <Text dimColor>
+                                Enter to save, Esc to cancel, empty for system
+                                default
+                            </Text>
+                        }
+                    </Box>
+                :   <Box flexDirection='column'>
+                        <Text>
+                            <Text
+                                bold
+                                inverse
+                            >
+                                {' '}
+                                Date locale{' '}
+                            </Text>
+                            <Text> {displayValue}</Text>
+                        </Text>
+                        <Text dimColor>Enter to edit, Esc or , to close</Text>
+                    </Box>
+                }
+            </Box>
+        </Box>
+    )
 }

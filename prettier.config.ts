@@ -9,20 +9,7 @@ const config: Config = {
     jsxSingleQuote: true,
     singleAttributePerLine: true,
 
-    plugins: [
-        '@ianvs/prettier-plugin-sort-imports',
-        'prettier-plugin-tailwindcss',
-    ],
-
-    // tailwindcss plugin options
-    tailwindStylesheet: './app/assets/css/main.css',
-    tailwindAttributes: [
-        'menu-class',
-        'slot-class',
-        'content-class',
-        'bg-class',
-    ],
-    tailwindFunctions: ['tw', 'cn', 'tv'],
+    plugins: ['@ianvs/prettier-plugin-sort-imports'],
 
     // sort imports plugin options
     importOrder: [
@@ -54,7 +41,7 @@ const config: Config = {
         // relative imports
         '^[.]',
     ],
-    importOrderTypeScriptVersion: '5.8.3',
+    importOrderTypeScriptVersion: '5.9.3',
 }
 
 export default config
