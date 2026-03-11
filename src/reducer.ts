@@ -178,6 +178,32 @@ export function reducer(state: AppState, action: Action): AppState {
             )
             return newState
         }
+        case 'EXPAND_ALL': {
+            if (!state.leftScan || !state.rightScan) return state
+            const expandedDirs = new Set<string>()
+            for (const [, entry] of state.leftScan) {
+                if (entry.isDirectory) expandedDirs.add(entry.relativePath)
+            }
+            for (const [, entry] of state.rightScan) {
+                if (entry.isDirectory) expandedDirs.add(entry.relativePath)
+            }
+            const newState = { ...state, expandedDirs }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'COLLAPSE_ALL': {
+            const newState = { ...state, expandedDirs: new Set<string>() }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':

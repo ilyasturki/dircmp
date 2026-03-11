@@ -114,6 +114,22 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: 'zR',
+        description: 'expand all',
+        sequence: 'zR',
+        match: () => false,
+        effect: { type: 'dispatch', action: { type: 'EXPAND_ALL' } },
+    },
+    {
+        mode: 'browser',
+        keyLabel: 'zM',
+        description: 'collapse all',
+        sequence: 'zM',
+        match: () => false,
+        effect: { type: 'dispatch', action: { type: 'COLLAPSE_ALL' } },
+    },
+    {
+        mode: 'browser',
         keyLabel: ',',
         description: 'preferences',
         match: (input) => input === ',',

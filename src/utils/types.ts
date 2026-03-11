@@ -38,6 +38,8 @@ export type Action =
     | { type: 'REFRESH' }
     | { type: 'SWAP_PANELS' }
     | { type: 'FOCUS_PANEL'; panel: PanelSide }
+    | { type: 'EXPAND_ALL' }
+    | { type: 'COLLAPSE_ALL' }
 
 export interface AppState {
     focusedPanel: PanelSide
