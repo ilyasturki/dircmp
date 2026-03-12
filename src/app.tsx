@@ -3,6 +3,7 @@ import { useReducer } from 'react'
 
 import type { AppConfig } from '~/utils/config'
 import { DateLocaleProvider } from '~/context/date-locale'
+import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
@@ -35,7 +36,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        !state.showPreferences,
+        !state.showPreferences && !state.showDeleteConfirm,
         refresh,
     )
 
@@ -104,6 +105,18 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 <PreferencesDialog
                     config={state.config}
                     dispatch={dispatch}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.showDeleteConfirm && state.entries[state.cursorIndex] && (
+                <ConfirmDeleteDialog
+                    entry={state.entries[state.cursorIndex]!}
+                    side={state.focusedPanel}
+                    leftDir={effectiveLeftDir}
+                    rightDir={effectiveRightDir}
+                    dispatch={dispatch}
+                    refresh={refresh}
                     columns={columns}
                     rows={rows}
                 />

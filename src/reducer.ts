@@ -13,6 +13,7 @@ export function createInitialState(config: AppConfig): AppState {
         error: null,
         entries: [],
         showPreferences: false,
+        showDeleteConfirm: false,
         config,
         swapped: false,
         filterMode: 'all',
@@ -264,6 +265,24 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
             return state
+        case 'CONFIRM_DELETE': {
+            const entry = state.entries[state.cursorIndex]
+            if (!entry) return state
+            const side = state.focusedPanel
+            const file = side === 'left' ? entry.left : entry.right
+            if (!file) return state
+            return { ...state, showDeleteConfirm: true }
+        }
+        case 'CANCEL_DELETE':
+            return { ...state, showDeleteConfirm: false }
+        case 'DELETE_COMPLETE':
+            return {
+                ...state,
+                showDeleteConfirm: false,
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+            }
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':

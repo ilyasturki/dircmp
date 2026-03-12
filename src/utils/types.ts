@@ -47,6 +47,9 @@ export type Action =
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
     | { type: 'COPY_COMPLETE'; entries: FileEntry[]; side: PanelSide }
+    | { type: 'CONFIRM_DELETE' }
+    | { type: 'CANCEL_DELETE' }
+    | { type: 'DELETE_COMPLETE' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -58,6 +61,7 @@ export interface AppState {
     error: string | null
     entries: CompareEntry[]
     showPreferences: boolean
+    showDeleteConfirm: boolean
     config: import('~/utils/config').AppConfig
     swapped: boolean
     filterMode: FilterMode

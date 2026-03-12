@@ -165,6 +165,13 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: 'x',
+        description: 'delete',
+        match: (input) => input === 'x',
+        effect: { type: 'dispatch', action: { type: 'CONFIRM_DELETE' } },
+    },
+    {
+        mode: 'browser',
         keyLabel: 'r',
         description: 'refresh',
         match: (input) => input === 'r',
