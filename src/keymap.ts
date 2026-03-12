@@ -19,7 +19,7 @@ export const keymap: Shortcut[] = [
     // Global
     {
         mode: 'global',
-        keyLabel: 'q',
+        keyLabel: '',
         description: 'quit',
         match: (input) => input === 'q',
         effect: { type: 'exit' },
@@ -28,7 +28,7 @@ export const keymap: Shortcut[] = [
     // Browser mode
     {
         mode: 'browser',
-        keyLabel: 'j/k',
+        keyLabel: '',
         description: 'navigate',
         match: (input, key) => key.upArrow || input === 'k',
         effect: {
@@ -48,7 +48,7 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'G/gg',
+        keyLabel: '',
         description: 'top/bottom',
         match: (input) => input === 'G',
         effect: {
@@ -69,7 +69,7 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'H/J',
+        keyLabel: '',
         description: 'focus left panel',
         match: (input) => input === 'H',
         effect: {
@@ -89,28 +89,28 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'Tab',
+        keyLabel: '',
         description: 'switch panel',
         match: (_input, key) => key.tab,
         effect: { type: 'dispatch', action: { type: 'SWITCH_PANEL' } },
     },
     {
         mode: 'browser',
-        keyLabel: 'l',
+        keyLabel: '',
         description: 'expand/collapse',
         match: (input, key) => input === 'l' || key.rightArrow,
         effect: { type: 'dispatch', action: { type: 'NAVIGATE_INTO' } },
     },
     {
         mode: 'browser',
-        keyLabel: 'Enter',
+        keyLabel: '',
         description: 'open',
         match: (_input, key) => key.return,
         effect: { type: 'dispatch', action: { type: 'OPEN_DIFF' } },
     },
     {
         mode: 'browser',
-        keyLabel: 'h',
+        keyLabel: '',
         description: 'collapse',
         match: (input, key) =>
             key.backspace
@@ -121,7 +121,7 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'zR',
+        keyLabel: '',
         description: 'expand all',
         sequence: 'zR',
         match: () => false,
@@ -129,7 +129,7 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'zM',
+        keyLabel: '',
         description: 'collapse all',
         sequence: 'zM',
         match: () => false,
@@ -172,7 +172,7 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'r',
+        keyLabel: '',
         description: 'refresh',
         match: (input) => input === 'r',
         effect: { type: 'dispatch', action: { type: 'REFRESH' } },
