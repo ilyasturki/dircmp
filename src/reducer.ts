@@ -264,20 +264,75 @@ export function reducer(state: AppState, action: Action): AppState {
             return newState
         }
         case 'JUMP_TO_DIFF': {
+            if (!state.leftScan || !state.rightScan) return state
             if (state.entries.length === 0) return state
-            const { cursorIndex, entries } = state
+
+            // Build fully expanded tree to see all files
+            const allDirs = new Set<string>()
+            for (const [, e] of state.leftScan) {
+                if (e.isDirectory) allDirs.add(e.relativePath)
+            }
+            for (const [, e] of state.rightScan) {
+                if (e.isDirectory) allDirs.add(e.relativePath)
+            }
+            const allEntries = buildVisibleTree(
+                state.leftScan,
+                state.rightScan,
+                allDirs,
+                state.filterMode,
+            )
+
+            // Find current entry in full tree
+            const currentPath = state.entries[state.cursorIndex]?.relativePath
+            const fullIdx = allEntries.findIndex(
+                (e) => e.relativePath === currentPath,
+            )
+            if (fullIdx === -1) return state
+
+            // Search for next/prev diff file (skip directories)
+            let target: CompareEntry | undefined
             if (action.direction === 'next') {
-                for (let i = cursorIndex + 1; i < entries.length; i++) {
-                    if (entries[i].status !== 'identical')
-                        return { ...state, cursorIndex: i }
+                for (let i = fullIdx + 1; i < allEntries.length; i++) {
+                    if (
+                        !allEntries[i].isDirectory
+                        && allEntries[i].status !== 'identical'
+                    ) {
+                        target = allEntries[i]
+                        break
+                    }
                 }
             } else {
-                for (let i = cursorIndex - 1; i >= 0; i--) {
-                    if (entries[i].status !== 'identical')
-                        return { ...state, cursorIndex: i }
+                for (let i = fullIdx - 1; i >= 0; i--) {
+                    if (
+                        !allEntries[i].isDirectory
+                        && allEntries[i].status !== 'identical'
+                    ) {
+                        target = allEntries[i]
+                        break
+                    }
                 }
             }
-            return state
+            if (!target) return state
+
+            // Expand all ancestor directories of the target
+            const expandedDirs = new Set(state.expandedDirs)
+            const parts = target.relativePath.split('/')
+            let ancestorPath = ''
+            for (let i = 0; i < parts.length - 1; i++) {
+                ancestorPath =
+                    i === 0 ? parts[i] : ancestorPath + '/' + parts[i]
+                expandedDirs.add(ancestorPath)
+            }
+
+            // Recompute entries and find target
+            const newState = { ...state, expandedDirs }
+            newState.entries = recomputeEntries(newState)
+            const newIdx = newState.entries.findIndex(
+                (e) => e.relativePath === target!.relativePath,
+            )
+            if (newIdx === -1) return state
+            newState.cursorIndex = newIdx
+            return newState
         }
         case 'YANK_PATH':
             return state

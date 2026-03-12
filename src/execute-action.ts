@@ -28,10 +28,18 @@ export function executeAction(
         const side = state.focusedPanel
         const baseDir = side === 'left' ? leftDir : rightDir
         const fullPath = path.join(baseDir, entry.relativePath)
-        const proc = process.platform === 'darwin' ? 'pbcopy' : 'xclip'
+        const proc =
+            process.platform === 'darwin' ? 'pbcopy'
+            : process.env.WAYLAND_DISPLAY ? 'wl-copy'
+            : 'xclip'
         const args =
-            process.platform === 'darwin' ? [] : ['-selection', 'clipboard']
-        spawnSync(proc, args, { input: fullPath })
+            process.platform === 'darwin' || process.env.WAYLAND_DISPLAY ?
+                []
+            :   ['-selection', 'clipboard']
+        spawnSync(proc, args, {
+            input: fullPath,
+            stdio: ['pipe', 'ignore', 'ignore'],
+        })
         return
     }
 
