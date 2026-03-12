@@ -81,8 +81,8 @@ export function EntryRow({
                 {colorIconOnly ? (
                     <>
                         {indent}
-                        <Text color={color}>{icon}</Text>
-                        {rest.padEnd(panelWidth - indent.length - icon.length)}
+                        <Text color={color}>{icon} </Text>
+                        {rest.slice(1).padEnd(panelWidth - indent.length - icon.length - 1)}
                     </>
                 ) : (
                     content.padEnd(panelWidth)
