@@ -19,10 +19,11 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          packageJson = builtins.fromJSON (builtins.readFile ./package.json);
 
           node_modules = pkgs.stdenv.mkDerivation {
             pname = "dirdiff-node-modules";
-            version = "0.1.0";
+            version = packageJson.version;
             src = ./.;
             nativeBuildInputs = [ pkgs.bun ];
             dontFixup = true;
@@ -41,7 +42,7 @@
         {
           default = pkgs.stdenv.mkDerivation {
             pname = "dirdiff";
-            version = "0.1.0";
+            version = packageJson.version;
             src = ./.;
             nativeBuildInputs = [
               pkgs.bun
