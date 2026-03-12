@@ -245,6 +245,22 @@ export function reducer(state: AppState, action: Action): AppState {
             )
             return newState
         }
+        case 'COPY_COMPLETE': {
+            const destKey = action.side === 'left' ? 'leftScan' : 'rightScan'
+            const destScan = state[destKey]
+            if (!destScan) return state
+            const patched = new Map(destScan)
+            for (const fe of action.entries) {
+                patched.set(fe.relativePath, fe)
+            }
+            const newState = { ...state, [destKey]: patched }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
             return state

@@ -46,6 +46,7 @@ export type Action =
     | { type: 'TOGGLE_FILTER' }
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
+    | { type: 'COPY_COMPLETE'; entries: FileEntry[]; side: PanelSide }
 
 export interface AppState {
     focusedPanel: PanelSide

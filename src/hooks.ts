@@ -5,7 +5,7 @@ import path from 'node:path'
 import { useApp, useInput } from 'ink'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { Action, AppState } from '~/utils/types'
+import type { Action, AppState, FileEntry, PanelSide } from '~/utils/types'
 import { keymap } from '~/keymap'
 import { copyEntry } from '~/utils/copy'
 import { scanDirectory } from '~/utils/scanner'
@@ -143,8 +143,27 @@ export function useKeymap(
                         entry.relativePath,
                     )
                     copyEntry(sourcePath, destPath, entry.isDirectory)
-                    dispatch({ type: 'REFRESH' })
-                    onRefresh?.()
+
+                    const destSide: PanelSide = copyRight ? 'right' : 'left'
+                    const sourceScan =
+                        copyRight ? state.leftScan : state.rightScan
+                    const patchEntries: FileEntry[] = []
+                    if (sourceScan) {
+                        const sourceEntry = sourceScan.get(entry.relativePath)
+                        if (sourceEntry) patchEntries.push(sourceEntry)
+                        if (entry.isDirectory) {
+                            const prefix = entry.relativePath + '/'
+                            for (const [relPath, fe] of sourceScan) {
+                                if (relPath.startsWith(prefix))
+                                    patchEntries.push(fe)
+                            }
+                        }
+                    }
+                    dispatch({
+                        type: 'COPY_COMPLETE',
+                        entries: patchEntries,
+                        side: destSide,
+                    })
                     return
                 }
 
