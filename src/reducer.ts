@@ -14,6 +14,7 @@ export function createInitialState(config: AppConfig): AppState {
         entries: [],
         showPreferences: false,
         showDeleteConfirm: false,
+        showContextMenu: false,
         config,
         swapped: false,
         filterMode: 'all',
@@ -301,6 +302,13 @@ export function reducer(state: AppState, action: Action): AppState {
                 rightScan: null,
                 entries: [],
             }
+        case 'SHOW_CONTEXT_MENU': {
+            const entry = state.entries[state.cursorIndex]
+            if (!entry) return state
+            return { ...state, showContextMenu: true }
+        }
+        case 'HIDE_CONTEXT_MENU':
+            return { ...state, showContextMenu: false }
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':

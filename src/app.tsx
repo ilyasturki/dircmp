@@ -1,12 +1,15 @@
-import { Box, Text, useStdout } from 'ink'
-import { useReducer } from 'react'
+import { Box, Text, useApp, useStdout } from 'ink'
+import { useCallback, useReducer } from 'react'
 
+import type { Action } from '~/utils/types'
 import type { AppConfig } from '~/utils/config'
 import { DateLocaleProvider } from '~/context/date-locale'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
+import { ContextMenu } from '~/components/context-menu'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
+import { executeAction } from '~/execute-action'
 import { useDirectoryScan, useKeymap, useTerminalDimensions } from '~/hooks'
 import { keymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
@@ -34,14 +37,31 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
     // Reserve rows: 1 for status bar, 3 for borders (top/bottom + status border)
     const contentHeight = Math.max(1, rows - 4)
 
+    const { exit } = useApp()
+
     useKeymap(
         state,
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        !state.showPreferences && !state.showDeleteConfirm,
+        !state.showPreferences && !state.showDeleteConfirm && !state.showContextMenu,
         refresh,
         contentHeight,
+    )
+
+    const onExecuteAction = useCallback(
+        (action: Action) => {
+            executeAction(
+                action,
+                state,
+                effectiveLeftDir,
+                effectiveRightDir,
+                dispatch,
+                exit,
+                refresh,
+            )
+        },
+        [state, effectiveLeftDir, effectiveRightDir, dispatch, exit, refresh],
     )
 
     if (columns < 40 || rows < 10) {
@@ -118,6 +138,16 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                     rightDir={effectiveRightDir}
                     dispatch={dispatch}
                     refresh={refresh}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.showContextMenu && state.entries[state.cursorIndex] && (
+                <ContextMenu
+                    entry={state.entries[state.cursorIndex]!}
+                    side={state.focusedPanel}
+                    dispatch={dispatch}
+                    onExecuteAction={onExecuteAction}
                     columns={columns}
                     rows={rows}
                 />

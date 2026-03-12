@@ -186,6 +186,13 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: '.',
+        description: 'actions',
+        match: (input) => input === '.',
+        effect: { type: 'dispatch', action: { type: 'SHOW_CONTEXT_MENU' } },
+    },
+    {
+        mode: 'browser',
         keyLabel: ',',
         description: 'preferences',
         match: (input) => input === ',',

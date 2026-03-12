@@ -56,6 +56,8 @@ export type Action =
     | { type: 'CONFIRM_DELETE' }
     | { type: 'CANCEL_DELETE' }
     | { type: 'DELETE_COMPLETE' }
+    | { type: 'SHOW_CONTEXT_MENU' }
+    | { type: 'HIDE_CONTEXT_MENU' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -68,6 +70,7 @@ export interface AppState {
     entries: CompareEntry[]
     showPreferences: boolean
     showDeleteConfirm: boolean
+    showContextMenu: boolean
     config: import('~/utils/config').AppConfig
     swapped: boolean
     filterMode: FilterMode
