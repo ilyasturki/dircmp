@@ -137,13 +137,52 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'C-d/C-u',
+        keyLabel: '',
         description: 'half page',
         match: () => false, // handled directly in useKeymap before keymap matching
         effect: {
             type: 'dispatch',
             action: { type: 'MOVE_CURSOR', direction: 'down' },
         },
+    },
+    {
+        mode: 'browser',
+        keyLabel: '',
+        description: 'full page',
+        match: () => false, // handled directly in useKeymap before keymap matching
+        effect: {
+            type: 'dispatch',
+            action: { type: 'MOVE_CURSOR', direction: 'down' },
+        },
+    },
+    {
+        mode: 'browser',
+        keyLabel: '',
+        description: 'next/prev diff',
+        sequence: ']c',
+        match: () => false,
+        effect: {
+            type: 'dispatch',
+            action: { type: 'JUMP_TO_DIFF', direction: 'next' },
+        },
+    },
+    {
+        mode: 'browser',
+        keyLabel: '',
+        description: 'prev diff',
+        sequence: '[c',
+        match: () => false,
+        effect: {
+            type: 'dispatch',
+            action: { type: 'JUMP_TO_DIFF', direction: 'prev' },
+        },
+    },
+    {
+        mode: 'browser',
+        keyLabel: '',
+        description: 'yank path',
+        match: (input) => input === 'y',
+        effect: { type: 'dispatch', action: { type: 'YANK_PATH' } },
     },
     {
         mode: 'browser',

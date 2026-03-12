@@ -51,6 +51,8 @@ export type Action =
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
     | { type: 'COPY_COMPLETE'; entries: FileEntry[]; side: PanelSide }
+    | { type: 'JUMP_TO_DIFF'; direction: 'next' | 'prev' }
+    | { type: 'YANK_PATH' }
     | { type: 'CONFIRM_DELETE' }
     | { type: 'CANCEL_DELETE' }
     | { type: 'DELETE_COMPLETE' }

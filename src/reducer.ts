@@ -262,6 +262,24 @@ export function reducer(state: AppState, action: Action): AppState {
             )
             return newState
         }
+        case 'JUMP_TO_DIFF': {
+            if (state.entries.length === 0) return state
+            const { cursorIndex, entries } = state
+            if (action.direction === 'next') {
+                for (let i = cursorIndex + 1; i < entries.length; i++) {
+                    if (entries[i].status !== 'identical')
+                        return { ...state, cursorIndex: i }
+                }
+            } else {
+                for (let i = cursorIndex - 1; i >= 0; i--) {
+                    if (entries[i].status !== 'identical')
+                        return { ...state, cursorIndex: i }
+                }
+            }
+            return state
+        }
+        case 'YANK_PATH':
+            return state
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
             return state

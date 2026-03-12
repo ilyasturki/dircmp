@@ -87,6 +87,24 @@ export function useKeymap(
                 return
             }
 
+            // ctrl+f / ctrl+b: full-page scroll
+            if (key.ctrl && input === 'f') {
+                dispatch({
+                    type: 'MOVE_CURSOR',
+                    direction: 'down',
+                    count: contentHeight,
+                })
+                return
+            }
+            if (key.ctrl && input === 'b') {
+                dispatch({
+                    type: 'MOVE_CURSOR',
+                    direction: 'up',
+                    count: contentHeight,
+                })
+                return
+            }
+
             const pending = pendingKeyRef.current + input
 
             // Check for sequence matches first
@@ -138,6 +156,23 @@ export function useKeymap(
                 if (action.type === 'REFRESH') {
                     dispatch(action)
                     onRefresh?.()
+                    return
+                }
+
+                // Intercept YANK_PATH: copy file path to clipboard
+                if (action.type === 'YANK_PATH') {
+                    const entry = state.entries[state.cursorIndex]
+                    if (!entry) return
+                    const side = state.focusedPanel
+                    const baseDir = side === 'left' ? leftDir : rightDir
+                    const fullPath = path.join(baseDir, entry.relativePath)
+                    const proc =
+                        process.platform === 'darwin' ? 'pbcopy' : 'xclip'
+                    const args =
+                        process.platform === 'darwin' ?
+                            []
+                        :   ['-selection', 'clipboard']
+                    spawnSync(proc, args, { input: fullPath })
                     return
                 }
 
