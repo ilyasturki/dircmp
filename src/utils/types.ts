@@ -30,7 +30,11 @@ export type FilterMode = 'all' | 'diff-only'
 export type Action =
     | { type: 'SCAN_COMPLETE'; leftScan: ScanResult; rightScan: ScanResult }
     | { type: 'SCAN_ERROR'; error: string }
-    | { type: 'MOVE_CURSOR'; direction: 'up' | 'down' | 'top' | 'bottom' }
+    | {
+          type: 'MOVE_CURSOR'
+          direction: 'up' | 'down' | 'top' | 'bottom'
+          count?: number
+      }
     | { type: 'SWITCH_PANEL' }
     | { type: 'NAVIGATE_INTO' }
     | { type: 'OPEN_DIFF' }

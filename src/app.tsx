@@ -31,6 +31,9 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
     const effectiveRightDir = state.swapped ? leftDir : rightDir
 
+    // Reserve rows: 1 for status bar, 3 for borders (top/bottom + status border)
+    const contentHeight = Math.max(1, rows - 4)
+
     useKeymap(
         state,
         effectiveLeftDir,
@@ -38,6 +41,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         dispatch,
         !state.showPreferences && !state.showDeleteConfirm,
         refresh,
+        contentHeight,
     )
 
     if (columns < 40 || rows < 10) {
@@ -59,9 +63,6 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
             </Box>
         )
     }
-
-    // Reserve rows: 1 for status bar, 3 for borders (top/bottom + status border)
-    const contentHeight = Math.max(1, rows - 4)
 
     // Adjust scroll offset to keep cursor in view
     let { scrollOffset } = state

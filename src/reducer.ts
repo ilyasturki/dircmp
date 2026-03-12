@@ -60,11 +60,11 @@ export function reducer(state: AppState, action: Action): AppState {
             if (state.entries.length === 0) return state
             let newIndex = state.cursorIndex
             if (action.direction === 'up') {
-                newIndex = Math.max(0, state.cursorIndex - 1)
+                newIndex = Math.max(0, state.cursorIndex - (action.count ?? 1))
             } else if (action.direction === 'down') {
                 newIndex = Math.min(
                     state.entries.length - 1,
-                    state.cursorIndex + 1,
+                    state.cursorIndex + (action.count ?? 1),
                 )
             } else if (action.direction === 'top') {
                 newIndex = 0

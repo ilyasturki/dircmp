@@ -61,6 +61,7 @@ export function useKeymap(
     dispatch: Dispatch<Action>,
     isActive: boolean = true,
     onRefresh?: () => void,
+    contentHeight: number = 20,
 ) {
     const { exit } = useApp()
     const pendingKeyRef = useRef('')
@@ -68,6 +69,24 @@ export function useKeymap(
 
     useInput(
         (input, key) => {
+            // ctrl+d / ctrl+u: half-page scroll (before sequence/keymap processing)
+            if (key.ctrl && input === 'd') {
+                dispatch({
+                    type: 'MOVE_CURSOR',
+                    direction: 'down',
+                    count: Math.floor(contentHeight / 2),
+                })
+                return
+            }
+            if (key.ctrl && input === 'u') {
+                dispatch({
+                    type: 'MOVE_CURSOR',
+                    direction: 'up',
+                    count: Math.floor(contentHeight / 2),
+                })
+                return
+            }
+
             const pending = pendingKeyRef.current + input
 
             // Check for sequence matches first
