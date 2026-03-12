@@ -200,9 +200,9 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'd',
+        keyLabel: 'f',
         description: 'diff only',
-        match: (input) => input === 'd',
+        match: (input) => input === 'f',
         effect: { type: 'dispatch', action: { type: 'TOGGLE_FILTER' } },
     },
     {
@@ -221,23 +221,23 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'x',
+        keyLabel: 'd',
         description: 'delete',
-        match: (input) => input === 'x',
+        match: (input) => input === 'd',
         effect: { type: 'dispatch', action: { type: 'CONFIRM_DELETE' } },
     },
     {
         mode: 'browser',
-        keyLabel: '',
+        keyLabel: 'r',
         description: 'refresh',
         match: (input) => input === 'r',
         effect: { type: 'dispatch', action: { type: 'REFRESH' } },
     },
     {
         mode: 'browser',
-        keyLabel: 's',
+        keyLabel: 'S',
         description: 'swap panels',
-        match: (input) => input === 's',
+        match: (input) => input === 'S',
         effect: { type: 'dispatch', action: { type: 'SWAP_PANELS' } },
     },
 ]
