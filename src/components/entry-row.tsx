@@ -1,6 +1,7 @@
 import { Box, Text, useStdout } from 'ink'
 
 import type { CompareEntry, FileEntry } from '~/utils/types'
+import { useDateFormatter } from '~/context/date-locale'
 import { getFileIcon } from '~/utils/file-icons'
 
 /** Available width inside one panel (half terminal minus border chrome) */
@@ -39,14 +40,13 @@ export function EntryRow({
     fileEntry,
     isSelected,
     isDimSelected,
-    dateFormatter,
 }: {
     entry: CompareEntry
     fileEntry: FileEntry | undefined
     isSelected: boolean
     isDimSelected: boolean
-    dateFormatter: Intl.DateTimeFormat
 }) {
+    const dateFormatter = useDateFormatter()
     const hasError = fileEntry?.error
     const dimColor = !hasError && entry.status === 'identical'
     const color =

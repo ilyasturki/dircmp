@@ -1,5 +1,4 @@
 import { Box, Text } from 'ink'
-import { useMemo } from 'react'
 
 import type { CompareEntry, FileEntry, PanelSide } from '~/utils/types'
 import { EntryRow, MissingEntryRow } from './entry-row'
@@ -13,7 +12,6 @@ interface DirectoryPanelProps {
     side: PanelSide
     visibleHeight: number
     scrollOffset: number
-    dateLocale: string | undefined
 }
 
 function EmptyPanel() {
@@ -32,21 +30,7 @@ export function DirectoryPanel({
     side,
     visibleHeight,
     scrollOffset,
-    dateLocale,
 }: DirectoryPanelProps) {
-    const dateFormatter = useMemo(
-        () =>
-            new Intl.DateTimeFormat(dateLocale, {
-                day: '2-digit',
-                month: '2-digit',
-                year: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
-            }),
-        [dateLocale],
-    )
-
     const visibleEntries = entries.slice(
         scrollOffset,
         scrollOffset + visibleHeight,
@@ -87,7 +71,6 @@ export function DirectoryPanel({
                             fileEntry={fileEntry}
                             isSelected={isSelected}
                             isDimSelected={isDimSelected}
-                            dateFormatter={dateFormatter}
                         />
                     )
                 })

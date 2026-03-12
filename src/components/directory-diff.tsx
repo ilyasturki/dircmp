@@ -11,7 +11,6 @@ interface DirectoryDiffProps {
     focusedPanel: PanelSide
     visibleHeight: number
     scrollOffset: number
-    dateLocale: string | undefined
 }
 
 export function DirectoryDiff({
@@ -22,7 +21,6 @@ export function DirectoryDiff({
     focusedPanel,
     visibleHeight,
     scrollOffset,
-    dateLocale,
 }: DirectoryDiffProps) {
     return (
         <Box flexGrow={1}>
@@ -34,7 +32,6 @@ export function DirectoryDiff({
                 side='left'
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
-                dateLocale={dateLocale}
             />
             <DirectoryPanel
                 rootPath={rightDir}
@@ -44,7 +41,6 @@ export function DirectoryDiff({
                 side='right'
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
-                dateLocale={dateLocale}
             />
         </Box>
     )

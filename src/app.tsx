@@ -2,6 +2,7 @@ import { Box, Text, useStdout } from 'ink'
 import { useReducer } from 'react'
 
 import type { AppConfig } from '~/utils/config'
+import { DateLocaleProvider } from '~/context/date-locale'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
@@ -82,16 +83,17 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 >
                     <Text color='yellow'>Scanning directories...</Text>
                 </Box>
-            :   <DirectoryDiff
-                    leftDir={effectiveLeftDir}
-                    rightDir={effectiveRightDir}
-                    entries={state.entries}
-                    cursorIndex={state.cursorIndex}
-                    focusedPanel={state.focusedPanel}
-                    visibleHeight={contentHeight}
-                    scrollOffset={scrollOffset}
-                    dateLocale={state.config.dateLocale}
-                />
+            :   <DateLocaleProvider value={state.config.dateLocale}>
+                    <DirectoryDiff
+                        leftDir={effectiveLeftDir}
+                        rightDir={effectiveRightDir}
+                        entries={state.entries}
+                        cursorIndex={state.cursorIndex}
+                        focusedPanel={state.focusedPanel}
+                        visibleHeight={contentHeight}
+                        scrollOffset={scrollOffset}
+                    />
+                </DateLocaleProvider>
             }
             <StatusBar
                 isLoading={isLoading}
