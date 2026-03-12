@@ -31,14 +31,14 @@ export function ConfirmDeleteDialog({
     const fullPath = path.join(dir, entry.relativePath)
 
     useInput((input, key) => {
-        if (input === 'y') {
+        if (input === 'y' || key.return) {
             fs.rm(fullPath, { recursive: true, force: true }, () => {
                 dispatch({ type: 'DELETE_COMPLETE' })
                 refresh()
             })
             return
         }
-        if (key.escape || input === 'n') {
+        if (key.escape || input === 'n' || input === 'q') {
             dispatch({ type: 'CANCEL_DELETE' })
         }
     })
