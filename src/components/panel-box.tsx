@@ -1,38 +1,46 @@
-import { Box, Text, useStdout } from 'ink'
 import type { ReactNode } from 'react'
+import { Box, Text, useStdout } from 'ink'
+
+import type { PanelSide } from '~/utils/types'
 
 interface PanelBoxProps {
     title: string
     borderColor: string
+    side: PanelSide
     children: ReactNode
 }
 
-export function PanelBox({ title, borderColor, children }: PanelBoxProps) {
+export function PanelBox({ title, borderColor, side, children }: PanelBoxProps) {
     const { stdout } = useStdout()
-    const panelWidth = Math.floor((stdout?.columns ?? 80) / 2)
+    const columns = stdout?.columns ?? 80
+    // Yoga gives the first (left) child Math.ceil and the second (right) Math.floor
+    const panelWidth =
+        side === 'left' ? Math.ceil(columns / 2) : Math.floor(columns / 2)
 
-    // Build top border: ┏ title ━━━┓
-    // Account for ┏ + space before title + space after title + ┓ = 4 chars
-    const maxTitleLen = panelWidth - 4
-    const displayTitle =
-        title.length > maxTitleLen
-            ? title.slice(0, maxTitleLen - 1) + '…'
-            : title
-    const fillLen = panelWidth - 3 - displayTitle.length // ┏ + title + fill + ┓
-    const topBorder = `┏ ${displayTitle} ${'━'.repeat(Math.max(0, fillLen - 1))}┓`
+    const topBorder = buildTopBorder(title, panelWidth)
 
     return (
-        <Box flexDirection="column" width="50%">
+        <Box flexDirection='column' width={panelWidth}>
             <Text color={borderColor}>{topBorder}</Text>
             <Box
-                borderStyle="bold"
+                borderStyle='bold'
                 borderTop={false}
                 borderColor={borderColor}
-                flexDirection="column"
+                flexDirection='column'
                 flexGrow={1}
             >
                 {children}
             </Box>
         </Box>
     )
+}
+
+function buildTopBorder(title: string, width: number): string {
+    const maxTitleLen = width - 4
+    const displayTitle =
+        title.length > maxTitleLen ?
+            title.slice(0, Math.max(0, maxTitleLen - 1)) + '…'
+        :   title
+    const fillLen = width - 3 - displayTitle.length
+    return `┏ ${displayTitle} ${'━'.repeat(Math.max(0, fillLen - 1))}┓`
 }

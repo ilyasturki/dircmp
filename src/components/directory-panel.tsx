@@ -40,6 +40,7 @@ export function DirectoryPanel({
         <PanelBox
             title={rootPath}
             borderColor={isFocused ? 'cyan' : 'gray'}
+            side={side}
         >
             {entries.length === 0 ?
                 <EmptyPanel />
