@@ -9,7 +9,7 @@ export interface AppConfig {
 export const defaultConfig: AppConfig = { dateLocale: undefined }
 
 function getConfigPath(): string {
-    return path.join(os.homedir(), '.config', 'ddiff', 'config.json')
+    return path.join(os.homedir(), '.config', 'dircmp', 'config.json')
 }
 
 export function loadConfig(): AppConfig {

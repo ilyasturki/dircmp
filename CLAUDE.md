@@ -1,4 +1,4 @@
-# dirdiff
+# dircmp
 
 Terminal TUI for comparing two directories side by side.
 

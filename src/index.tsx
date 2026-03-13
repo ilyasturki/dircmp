@@ -8,7 +8,7 @@ import { loadConfig } from '~/utils/config'
 const args = process.argv.slice(2)
 
 if (args.length !== 2) {
-    console.error('Usage: dirdiff <left-dir> <right-dir>')
+    console.error('Usage: dircmp <left-dir> <right-dir>')
     process.exit(1)
 }
 

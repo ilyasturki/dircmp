@@ -22,7 +22,7 @@
           packageJson = builtins.fromJSON (builtins.readFile ./package.json);
 
           node_modules = pkgs.stdenv.mkDerivation {
-            pname = "dirdiff-node-modules";
+            pname = "dircmp-node-modules";
             version = packageJson.version;
             src = ./.;
             nativeBuildInputs = [ pkgs.bun ];
@@ -41,7 +41,7 @@
         in
         {
           default = pkgs.stdenv.mkDerivation {
-            pname = "dirdiff";
+            pname = "dircmp";
             version = packageJson.version;
             src = ./.;
             nativeBuildInputs = [
@@ -53,10 +53,10 @@
               bun build src/index.tsx --outfile dist/index.js --target=bun --external react-devtools-core
             '';
             installPhase = ''
-              mkdir -p $out/lib/dirdiff $out/bin
-              cp dist/index.js $out/lib/dirdiff/
-              makeWrapper ${pkgs.bun}/bin/bun $out/bin/dirdiff \
-                --add-flags "$out/lib/dirdiff/index.js"
+              mkdir -p $out/lib/dircmp $out/bin
+              cp dist/index.js $out/lib/dircmp/
+              makeWrapper ${pkgs.bun}/bin/bun $out/bin/dircmp \
+                --add-flags "$out/lib/dircmp/index.js"
             '';
           };
         }
