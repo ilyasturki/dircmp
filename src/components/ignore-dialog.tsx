@@ -6,6 +6,7 @@ import { useState } from 'react'
 import type { Action } from '~/utils/types'
 import { saveIgnorePattern, saveIgnorePatterns } from '~/utils/ignore'
 import { Dialog } from './dialog'
+import { KeyboardHints } from './keyboard-hints'
 
 type Mode = 'browse' | 'add' | 'edit'
 
@@ -201,11 +202,21 @@ export function IgnoreDialog({
                     </Box>
                 )}
             </Box>
-            <Text dimColor>
-                {mode === 'browse' ?
-                    'a add · d delete · ↵ edit · esc close'
-                :   '↵ save · esc cancel'}
-            </Text>
+            <KeyboardHints
+                items={
+                    mode === 'browse'
+                        ? [
+                              { key: 'a', label: 'add' },
+                              { key: 'd', label: 'delete' },
+                              { key: '↵', label: 'edit' },
+                              { key: 'esc', label: 'close' },
+                          ]
+                        : [
+                              { key: '↵', label: 'save' },
+                              { key: 'esc', label: 'cancel' },
+                          ]
+                }
+            />
         </Dialog>
     )
 }

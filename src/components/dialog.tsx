@@ -40,7 +40,6 @@ export function Dialog({ title, columns, rows, children }: DialogProps) {
                         ))}
                     </Box>
                 )}
-                {/* Dialog box */}
                 <Box
                     ref={ref}
                     flexDirection='column'

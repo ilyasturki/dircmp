@@ -2,6 +2,7 @@ import { Box, Text } from 'ink'
 
 import type { Shortcut } from '~/keymap'
 import type { FilterMode } from '~/utils/types'
+import { KeyboardHints } from './keyboard-hints'
 
 interface StatusBarProps {
     isLoading: boolean
@@ -26,16 +27,15 @@ export function StatusBar({
 
     const filterLabel = filterMode === 'all' ? '[all]' : '[diff only]'
 
-    const helpText = keymap
+    const helpItems = keymap
         .filter((s) => s.keyLabel !== '')
-        .map((s) => `${s.keyLabel}: ${s.description}`)
-        .join(' | ')
+        .map((s) => ({ key: s.keyLabel, label: s.description }))
 
     return (
         <Box>
             <Text color='cyan'>{filterLabel} </Text>
             {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
-            <Text dimColor>{helpText}</Text>
+            <KeyboardHints items={helpItems} />
         </Box>
     )
 }
