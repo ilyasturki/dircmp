@@ -120,7 +120,7 @@ export function ContextMenu({
 
     return (
         <Dialog
-            title={entry.name}
+            title={entry.relativePath}
             columns={columns}
             rows={rows}
         >
