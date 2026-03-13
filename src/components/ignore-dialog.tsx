@@ -4,8 +4,10 @@ import TextInput from 'ink-text-input'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
-import { saveIgnorePattern } from '~/utils/ignore'
+import { saveIgnorePattern, saveIgnorePatterns } from '~/utils/ignore'
 import { Dialog } from './dialog'
+
+type Mode = 'browse' | 'add' | 'edit'
 
 interface IgnoreDialogProps {
     patterns: string[]
@@ -22,10 +24,12 @@ export function IgnoreDialog({
     columns,
     rows,
 }: IgnoreDialogProps) {
-    const [value, setValue] = useState('')
+    const [selectedIndex, setSelectedIndex] = useState(0)
+    const [mode, setMode] = useState<Mode>('browse')
+    const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
 
-    const handleSubmit = async (input: string) => {
+    const handleAddSubmit = async (input: string) => {
         const pattern = input.trim()
         if (pattern === '') return
         if (patterns.includes(pattern)) {
@@ -35,52 +39,173 @@ export function IgnoreDialog({
         await saveIgnorePattern(pattern)
         dispatch({ type: 'ADD_IGNORE_PATTERN', pattern })
         refresh()
+        setEditValue('')
+        setError('')
+        setMode('browse')
+        setSelectedIndex(patterns.length)
     }
 
-    useInput((_input, key) => {
+    const handleEditSubmit = async (input: string) => {
+        const newPattern = input.trim()
+        if (newPattern === '') return
+        const oldPattern = patterns[selectedIndex]
+        if (!oldPattern) return
+        if (newPattern === oldPattern) {
+            setMode('browse')
+            setError('')
+            return
+        }
+        if (patterns.includes(newPattern)) {
+            setError(`Pattern "${newPattern}" already exists`)
+            return
+        }
+        const updated = patterns.map((p) =>
+            p === oldPattern ? newPattern : p,
+        )
+        await saveIgnorePatterns(updated)
+        dispatch({
+            type: 'UPDATE_IGNORE_PATTERN',
+            oldPattern,
+            newPattern,
+        })
+        refresh()
+        setEditValue('')
+        setError('')
+        setMode('browse')
+    }
+
+    const handleDelete = async () => {
+        const pattern = patterns[selectedIndex]
+        if (!pattern) return
+        const remaining = patterns.filter((p) => p !== pattern)
+        await saveIgnorePatterns(remaining)
+        dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
+        refresh()
+        setSelectedIndex(Math.min(selectedIndex, Math.max(0, remaining.length - 1)))
+    }
+
+    useInput((input, key) => {
+        if (mode === 'browse') {
+            if (key.escape || input === 'q') {
+                dispatch({ type: 'HIDE_IGNORE_DIALOG' })
+                return
+            }
+            if (patterns.length > 0) {
+                if (input === 'j' || key.downArrow) {
+                    setSelectedIndex((i) =>
+                        Math.min(patterns.length - 1, i + 1),
+                    )
+                    return
+                }
+                if (input === 'k' || key.upArrow) {
+                    setSelectedIndex((i) => Math.max(0, i - 1))
+                    return
+                }
+                if (input === 'd') {
+                    handleDelete()
+                    return
+                }
+                if (key.return) {
+                    setEditValue(patterns[selectedIndex] ?? '')
+                    setError('')
+                    setMode('edit')
+                    return
+                }
+            }
+            if (input === 'a') {
+                setEditValue('')
+                setError('')
+                setMode('add')
+                return
+            }
+            return
+        }
+
+        // add/edit mode: only handle escape (TextInput handles the rest)
         if (key.escape) {
-            dispatch({ type: 'HIDE_IGNORE_DIALOG' })
+            setMode('browse')
+            setEditValue('')
+            setError('')
         }
     })
 
     return (
         <Dialog
-            title='Add Ignore Pattern'
+            title='Ignore Patterns'
             columns={columns}
             rows={rows}
         >
             <Box flexDirection='column'>
-                <Text>
-                    <Text bold>Pattern: </Text>
-                    <TextInput
-                        value={value}
-                        onChange={(v) => {
-                            setValue(v)
-                            setError('')
-                        }}
-                        onSubmit={handleSubmit}
-                        focus
-                    />
-                </Text>
-                {error && <Text color='red'>{error}</Text>}
+                {patterns.length === 0 && mode === 'browse' && (
+                    <Text dimColor>No patterns defined</Text>
+                )}
                 {patterns.length > 0 && (
-                    <Box
-                        flexDirection='column'
-                        marginTop={1}
-                    >
-                        <Text dimColor>Current patterns:</Text>
-                        {patterns.map((p) => (
-                            <Text
-                                key={p}
-                                dimColor
-                            >
-                                {'  '}
-                                {p}
+                    <Box flexDirection='column'>
+                        {patterns.map((p, i) => (
+                            <Text key={p}>
+                                {mode === 'browse' && i === selectedIndex ?
+                                    <Text bold color='cyan'>
+                                        {'▸ '}
+                                    </Text>
+                                :   <Text>{'  '}</Text>}
+                                <Text
+                                    bold={
+                                        mode === 'browse'
+                                        && i === selectedIndex
+                                    }
+                                >
+                                    {p}
+                                </Text>
                             </Text>
                         ))}
                     </Box>
                 )}
+                {mode === 'edit' && (
+                    <Box
+                        flexDirection='column'
+                        marginTop={1}
+                    >
+                        <Text>
+                            <Text bold>Edit: </Text>
+                            <TextInput
+                                value={editValue}
+                                onChange={(v) => {
+                                    setEditValue(v)
+                                    setError('')
+                                }}
+                                onSubmit={handleEditSubmit}
+                                focus
+                            />
+                        </Text>
+                        {error && <Text color='red'>{error}</Text>}
+                    </Box>
+                )}
+                {mode === 'add' && (
+                    <Box
+                        flexDirection='column'
+                        marginTop={1}
+                    >
+                        <Text>
+                            <Text bold>Add: </Text>
+                            <TextInput
+                                value={editValue}
+                                onChange={(v) => {
+                                    setEditValue(v)
+                                    setError('')
+                                }}
+                                onSubmit={handleAddSubmit}
+                                focus
+                            />
+                        </Text>
+                        {error && <Text color='red'>{error}</Text>}
+                    </Box>
+                )}
             </Box>
+            <Text dimColor>
+                {mode === 'browse' ?
+                    'a add · d delete · ↵ edit · esc close'
+                :   '↵ save · esc cancel'}
+            </Text>
         </Dialog>
     )
 }

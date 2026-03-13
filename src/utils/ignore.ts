@@ -35,6 +35,12 @@ export async function saveIgnorePattern(pattern: string): Promise<void> {
     await fs.promises.appendFile(ignorePath, pattern + '\n')
 }
 
+export async function saveIgnorePatterns(patterns: string[]): Promise<void> {
+    const ignorePath = getIgnorePath()
+    await fs.promises.mkdir(path.dirname(ignorePath), { recursive: true })
+    await fs.promises.writeFile(ignorePath, patterns.join('\n') + '\n')
+}
+
 export function compileIgnoreMatcher(
     patterns: string[],
 ): (relativePath: string) => boolean {

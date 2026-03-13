@@ -387,8 +387,33 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'ADD_IGNORE_PATTERN': {
             return {
                 ...state,
-                showIgnoreDialog: false,
                 ignorePatterns: [...state.ignorePatterns, action.pattern],
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
+        case 'REMOVE_IGNORE_PATTERN': {
+            return {
+                ...state,
+                ignorePatterns: state.ignorePatterns.filter(
+                    (p) => p !== action.pattern,
+                ),
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
+        case 'UPDATE_IGNORE_PATTERN': {
+            return {
+                ...state,
+                ignorePatterns: state.ignorePatterns.map((p) =>
+                    p === action.oldPattern ? action.newPattern : p,
+                ),
                 leftScan: null,
                 rightScan: null,
                 entries: [],

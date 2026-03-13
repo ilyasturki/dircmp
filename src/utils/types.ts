@@ -62,6 +62,8 @@ export type Action =
     | { type: 'SHOW_IGNORE_DIALOG' }
     | { type: 'HIDE_IGNORE_DIALOG' }
     | { type: 'ADD_IGNORE_PATTERN'; pattern: string }
+    | { type: 'REMOVE_IGNORE_PATTERN'; pattern: string }
+    | { type: 'UPDATE_IGNORE_PATTERN'; oldPattern: string; newPattern: string }
     | { type: 'SET_IGNORE_PATTERNS'; patterns: string[] }
 
 export interface AppState {
