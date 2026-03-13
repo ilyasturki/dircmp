@@ -60,14 +60,16 @@ export function EntryRow({
     const name = entry.isDirectory ? `${entry.name}/` : entry.name
     const indent = '  '.repeat(entry.depth)
     const icon = getFileIcon(entry.name, entry.isDirectory, entry.isExpanded)
-    const nameWidth = Math.max(8, 24 - entry.depth * 2)
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const panelWidth = usePanelWidth()
     const colorIconOnly = entry.isDirectory && color
-    let rest = ` ${name.padEnd(nameWidth).slice(0, nameWidth)} ${date}`
-    if (hasError) rest += ' !'
-    const content = `${indent}${icon}${rest}`
+
+    const left = `${indent}${icon} ${name}`
+    const right = `${date}${hasError ? ' !' : ''}`
+    const maxLeft = panelWidth - right.length - 1 // at least 1 space gap
+    const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left
+    const gap = Math.max(1, panelWidth - truncLeft.length - right.length)
 
     return (
         <Box width='100%'>
@@ -82,10 +84,10 @@ export function EntryRow({
                     <>
                         {indent}
                         <Text color={color}>{icon} </Text>
-                        {rest.slice(1).padEnd(panelWidth - indent.length - icon.length - 1)}
+                        {truncLeft.slice(indent.length + icon.length + 1)}{' '.repeat(gap)}{right}
                     </>
                 ) : (
-                    content.padEnd(panelWidth)
+                    `${truncLeft}${' '.repeat(gap)}${right}`
                 )}
             </Text>
         </Box>
