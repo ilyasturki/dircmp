@@ -19,6 +19,8 @@ export function createInitialState(config: AppConfig): AppState {
         swapped: false,
         filterMode: 'all',
         ignoreEnabled: true,
+        showIgnoreDialog: false,
+        ignorePatterns: [],
     }
 }
 
@@ -369,6 +371,24 @@ export function reducer(state: AppState, action: Action): AppState {
             return {
                 ...state,
                 ignoreEnabled: !state.ignoreEnabled,
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
+        case 'SHOW_IGNORE_DIALOG':
+            return { ...state, showIgnoreDialog: true }
+        case 'HIDE_IGNORE_DIALOG':
+            return { ...state, showIgnoreDialog: false }
+        case 'SET_IGNORE_PATTERNS':
+            return { ...state, ignorePatterns: action.patterns }
+        case 'ADD_IGNORE_PATTERN': {
+            return {
+                ...state,
+                showIgnoreDialog: false,
+                ignorePatterns: [...state.ignorePatterns, action.pattern],
                 leftScan: null,
                 rightScan: null,
                 entries: [],

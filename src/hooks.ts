@@ -38,8 +38,10 @@ export function useDirectoryScan(
     const [refreshCounter, setRefreshCounter] = useState(0)
 
     useEffect(() => {
+        const patterns = loadIgnorePatterns()
+        dispatch({ type: 'SET_IGNORE_PATTERNS', patterns })
         const shouldIgnore =
-            ignoreEnabled ? compileIgnoreMatcher(loadIgnorePatterns()) : null
+            ignoreEnabled ? compileIgnoreMatcher(patterns) : null
         Promise.all([
             scanDirectory(leftDir, shouldIgnore),
             scanDirectory(rightDir, shouldIgnore),

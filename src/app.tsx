@@ -5,6 +5,7 @@ import type { Action } from '~/utils/types'
 import type { AppConfig } from '~/utils/config'
 import { DateLocaleProvider } from '~/context/date-locale'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
+import { IgnoreDialog } from '~/components/ignore-dialog'
 import { ContextMenu } from '~/components/context-menu'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { PreferencesDialog } from '~/components/preferences-dialog'
@@ -49,7 +50,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        !state.showPreferences && !state.showDeleteConfirm && !state.showContextMenu,
+        !state.showPreferences && !state.showDeleteConfirm && !state.showContextMenu && !state.showIgnoreDialog,
         refresh,
         contentHeight,
     )
@@ -142,6 +143,15 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                     side={state.focusedPanel}
                     leftDir={effectiveLeftDir}
                     rightDir={effectiveRightDir}
+                    dispatch={dispatch}
+                    refresh={refresh}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.showIgnoreDialog && (
+                <IgnoreDialog
+                    patterns={state.ignorePatterns}
                     dispatch={dispatch}
                     refresh={refresh}
                     columns={columns}

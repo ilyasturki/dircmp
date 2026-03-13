@@ -59,6 +59,10 @@ export type Action =
     | { type: 'SHOW_CONTEXT_MENU' }
     | { type: 'HIDE_CONTEXT_MENU' }
     | { type: 'TOGGLE_IGNORE' }
+    | { type: 'SHOW_IGNORE_DIALOG' }
+    | { type: 'HIDE_IGNORE_DIALOG' }
+    | { type: 'ADD_IGNORE_PATTERN'; pattern: string }
+    | { type: 'SET_IGNORE_PATTERNS'; patterns: string[] }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -76,4 +80,6 @@ export interface AppState {
     swapped: boolean
     filterMode: FilterMode
     ignoreEnabled: boolean
+    showIgnoreDialog: boolean
+    ignorePatterns: string[]
 }

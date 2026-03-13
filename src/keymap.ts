@@ -207,10 +207,17 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
-        keyLabel: 'i',
+        keyLabel: 'I',
         description: 'ignore',
-        match: (input) => input === 'i',
+        match: (input) => input === 'I',
         effect: { type: 'dispatch', action: { type: 'TOGGLE_IGNORE' } },
+    },
+    {
+        mode: 'browser',
+        keyLabel: 'i',
+        description: 'ignore patterns',
+        match: (input, key) => input === 'i' && !key.shift,
+        effect: { type: 'dispatch', action: { type: 'SHOW_IGNORE_DIALOG' } },
     },
     {
         mode: 'browser',
