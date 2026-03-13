@@ -18,6 +18,7 @@ export function createInitialState(config: AppConfig): AppState {
         config,
         swapped: false,
         filterMode: 'all',
+        ignoreEnabled: true,
     }
 }
 
@@ -364,6 +365,17 @@ export function reducer(state: AppState, action: Action): AppState {
         }
         case 'HIDE_CONTEXT_MENU':
             return { ...state, showContextMenu: false }
+        case 'TOGGLE_IGNORE': {
+            return {
+                ...state,
+                ignoreEnabled: !state.ignoreEnabled,
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':

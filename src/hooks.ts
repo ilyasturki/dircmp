@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Action, AppState } from '~/utils/types'
 import { executeAction } from '~/execute-action'
 import { keymap } from '~/keymap'
+import { compileIgnoreMatcher, loadIgnorePatterns } from '~/utils/ignore'
 import { scanDirectory } from '~/utils/scanner'
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
@@ -32,18 +33,24 @@ export function useDirectoryScan(
     leftDir: string,
     rightDir: string,
     dispatch: Dispatch<Action>,
+    ignoreEnabled: boolean,
 ) {
     const [refreshCounter, setRefreshCounter] = useState(0)
 
     useEffect(() => {
-        Promise.all([scanDirectory(leftDir), scanDirectory(rightDir)])
+        const shouldIgnore =
+            ignoreEnabled ? compileIgnoreMatcher(loadIgnorePatterns()) : null
+        Promise.all([
+            scanDirectory(leftDir, shouldIgnore),
+            scanDirectory(rightDir, shouldIgnore),
+        ])
             .then(([leftScan, rightScan]) => {
                 dispatch({ type: 'SCAN_COMPLETE', leftScan, rightScan })
             })
             .catch((err) => {
                 dispatch({ type: 'SCAN_ERROR', error: String(err) })
             })
-    }, [leftDir, rightDir, refreshCounter])
+    }, [leftDir, rightDir, refreshCounter, ignoreEnabled])
 
     const refresh = useCallback(() => {
         setRefreshCounter((c) => c + 1)

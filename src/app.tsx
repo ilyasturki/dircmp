@@ -29,7 +29,12 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
     const { stdout } = useStdout()
 
     const { columns, rows } = useTerminalDimensions(stdout)
-    const { refresh } = useDirectoryScan(leftDir, rightDir, dispatch)
+    const { refresh } = useDirectoryScan(
+        leftDir,
+        rightDir,
+        dispatch,
+        state.ignoreEnabled,
+    )
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
     const effectiveRightDir = state.swapped ? leftDir : rightDir
@@ -121,6 +126,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 isLoading={isLoading}
                 keymap={keymap}
                 filterMode={state.filterMode}
+                ignoreEnabled={state.ignoreEnabled}
             />
             {state.showPreferences && (
                 <PreferencesDialog

@@ -207,6 +207,13 @@ export const keymap: Shortcut[] = [
     },
     {
         mode: 'browser',
+        keyLabel: 'i',
+        description: 'ignore',
+        match: (input) => input === 'i',
+        effect: { type: 'dispatch', action: { type: 'TOGGLE_IGNORE' } },
+    },
+    {
+        mode: 'browser',
         keyLabel: '>/<',
         description: 'copy right/left',
         match: (input) => input === '>',

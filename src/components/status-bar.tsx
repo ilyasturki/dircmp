@@ -7,9 +7,15 @@ interface StatusBarProps {
     isLoading: boolean
     keymap: Shortcut[]
     filterMode: FilterMode
+    ignoreEnabled: boolean
 }
 
-export function StatusBar({ isLoading, keymap, filterMode }: StatusBarProps) {
+export function StatusBar({
+    isLoading,
+    keymap,
+    filterMode,
+    ignoreEnabled,
+}: StatusBarProps) {
     if (isLoading) {
         return (
             <Box>
@@ -28,6 +34,7 @@ export function StatusBar({ isLoading, keymap, filterMode }: StatusBarProps) {
     return (
         <Box>
             <Text color='cyan'>{filterLabel} </Text>
+            {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
             <Text dimColor>{helpText}</Text>
         </Box>
     )

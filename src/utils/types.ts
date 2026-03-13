@@ -58,6 +58,7 @@ export type Action =
     | { type: 'DELETE_COMPLETE' }
     | { type: 'SHOW_CONTEXT_MENU' }
     | { type: 'HIDE_CONTEXT_MENU' }
+    | { type: 'TOGGLE_IGNORE' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -74,4 +75,5 @@ export interface AppState {
     config: import('~/utils/config').AppConfig
     swapped: boolean
     filterMode: FilterMode
+    ignoreEnabled: boolean
 }

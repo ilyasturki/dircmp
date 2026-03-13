@@ -19,6 +19,7 @@ async function walkDirectory(
     rootPath: string,
     currentPath: string,
     result: ScanResult,
+    shouldIgnore: ((relativePath: string) => boolean) | null,
 ): Promise<void> {
     let entries
     try {
@@ -44,6 +45,8 @@ async function walkDirectory(
     for (const entry of entries) {
         const fullPath = path.join(currentPath, entry.name)
         const relativePath = path.relative(rootPath, fullPath)
+
+        if (shouldIgnore && shouldIgnore(relativePath)) continue
 
         try {
             let isDirectory = entry.isDirectory()
@@ -78,7 +81,7 @@ async function walkDirectory(
                     modifiedTime: stat.mtime,
                     contentHash: null,
                 })
-                await walkDirectory(rootPath, fullPath, result)
+                await walkDirectory(rootPath, fullPath, result, shouldIgnore)
             } else {
                 const stat = await fsp.stat(resolvedPath)
                 let contentHash: string | null = null
@@ -115,9 +118,12 @@ async function walkDirectory(
     }
 }
 
-export async function scanDirectory(rootPath: string): Promise<ScanResult> {
+export async function scanDirectory(
+    rootPath: string,
+    shouldIgnore: ((relativePath: string) => boolean) | null = null,
+): Promise<ScanResult> {
     const result: ScanResult = new Map()
-    await walkDirectory(rootPath, rootPath, result)
+    await walkDirectory(rootPath, rootPath, result, shouldIgnore)
     return result
 }
 
