@@ -109,6 +109,12 @@ export function ContextMenu({
             if (!item) return
             dispatch({ type: 'HIDE_CONTEXT_MENU' })
             onExecuteAction(item.action)
+            return
+        }
+
+        const hintIndex = items.findIndex((item) => item.hint === input)
+        if (hintIndex !== -1) {
+            setSelectedIndex(hintIndex)
         }
     })
 
