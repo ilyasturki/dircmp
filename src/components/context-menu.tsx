@@ -11,10 +11,7 @@ interface MenuItem {
     action: Action
 }
 
-function getMenuItems(
-    entry: CompareEntry,
-    side: PanelSide,
-): MenuItem[] {
+function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
     const items: MenuItem[] = []
 
     if (entry.isDirectory) {
@@ -33,10 +30,7 @@ function getMenuItems(
         }
     }
 
-    if (
-        entry.status === 'modified'
-        || entry.status === 'only-left'
-    ) {
+    if (entry.status === 'modified' || entry.status === 'only-left') {
         items.push({
             label: 'Copy to right',
             hint: '>',
@@ -44,10 +38,7 @@ function getMenuItems(
         })
     }
 
-    if (
-        entry.status === 'modified'
-        || entry.status === 'only-right'
-    ) {
+    if (entry.status === 'modified' || entry.status === 'only-right') {
         items.push({
             label: 'Copy to left',
             hint: '<',
@@ -130,21 +121,20 @@ export function ContextMenu({
                     {items.map((item, i) => (
                         <Text key={item.label}>
                             {i === selectedIndex ?
-                                <Text bold color='cyan'>
+                                <Text
+                                    bold
+                                    color='cyan'
+                                >
                                     {'▸ '}
                                 </Text>
                             :   <Text>{'  '}</Text>}
-                            <Text bold={i === selectedIndex}>
-                                {item.label}
-                            </Text>
+                            <Text bold={i === selectedIndex}>{item.label}</Text>
                             <Text dimColor>{`  ${item.hint}`}</Text>
                         </Text>
                     ))}
                 </Box>
             }
-            <Text dimColor>
-                j/k navigate  Enter select  Esc close
-            </Text>
+            <Text dimColor>j/k navigate Enter select Esc close</Text>
         </Dialog>
     )
 }

@@ -52,7 +52,10 @@ export function ConfirmDeleteDialog({
             <Box flexDirection='column'>
                 <Text>
                     Delete{' '}
-                    <Text bold color='red'>
+                    <Text
+                        bold
+                        color='red'
+                    >
                         {entry.name}
                     </Text>
                     {' from '}
@@ -62,11 +65,17 @@ export function ConfirmDeleteDialog({
                 <Text dimColor>{fullPath}</Text>
             </Box>
             <Text>
-                <Text bold color='green'>
+                <Text
+                    bold
+                    color='green'
+                >
                     y
                 </Text>
                 {' confirm  '}
-                <Text bold color='yellow'>
+                <Text
+                    bold
+                    color='yellow'
+                >
                     n/Esc
                 </Text>
                 {' cancel'}

@@ -1,15 +1,15 @@
 import { Box, Text, useApp, useStdout } from 'ink'
 import { useCallback, useReducer } from 'react'
 
-import type { Action } from '~/utils/types'
 import type { AppConfig } from '~/utils/config'
-import { DateLocaleProvider } from '~/context/date-locale'
+import type { Action } from '~/utils/types'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
-import { IgnoreDialog } from '~/components/ignore-dialog'
 import { ContextMenu } from '~/components/context-menu'
 import { DirectoryDiff } from '~/components/directory-diff'
+import { IgnoreDialog } from '~/components/ignore-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
+import { DateLocaleProvider } from '~/context/date-locale'
 import { executeAction } from '~/execute-action'
 import { useDirectoryScan, useKeymap, useTerminalDimensions } from '~/hooks'
 import { keymap } from '~/keymap'
@@ -50,7 +50,10 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        !state.showPreferences && !state.showDeleteConfirm && !state.showContextMenu && !state.showIgnoreDialog,
+        !state.showPreferences
+            && !state.showDeleteConfirm
+            && !state.showContextMenu
+            && !state.showIgnoreDialog,
         refresh,
         contentHeight,
     )

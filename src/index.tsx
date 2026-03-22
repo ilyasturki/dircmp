@@ -1,27 +1,30 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import meow from 'meow'
 import { render } from 'ink'
+import meow from 'meow'
 
 import { App } from '~/app'
 import { loadConfig } from '~/utils/config'
 
-const cli = meow(`
+const cli = meow(
+    `
   Usage
     $ dircmp <left-dir> <right-dir>
 
   Options
     -h, --help     Show this help message
     -v, --version  Show version number
-`, {
-    importMeta: import.meta,
-    flags: {
-        version: {
-            type: 'boolean',
-            shortFlag: 'v',
+`,
+    {
+        importMeta: import.meta,
+        flags: {
+            version: {
+                type: 'boolean',
+                shortFlag: 'v',
+            },
         },
     },
-})
+)
 
 if (cli.input.length === 0) {
     cli.showHelp(0)
@@ -51,6 +54,10 @@ for (const dir of [leftDir, rightDir]) {
 
 const config = loadConfig()
 const { waitUntilExit } = render(
-    <App leftDir={leftDir} rightDir={rightDir} initialConfig={config} />,
+    <App
+        leftDir={leftDir}
+        rightDir={rightDir}
+        initialConfig={config}
+    />,
 )
 await waitUntilExit()

@@ -10,7 +10,12 @@ interface PanelBoxProps {
     children: ReactNode
 }
 
-export function PanelBox({ title, borderColor, side, children }: PanelBoxProps) {
+export function PanelBox({
+    title,
+    borderColor,
+    side,
+    children,
+}: PanelBoxProps) {
     const { stdout } = useStdout()
     const columns = stdout?.columns ?? 80
     // Yoga gives the first (left) child Math.ceil and the second (right) Math.floor
@@ -20,7 +25,10 @@ export function PanelBox({ title, borderColor, side, children }: PanelBoxProps) 
     const topBorder = buildTopBorder(title, panelWidth)
 
     return (
-        <Box flexDirection='column' width={panelWidth}>
+        <Box
+            flexDirection='column'
+            width={panelWidth}
+        >
             <Text color={borderColor}>{topBorder}</Text>
             <Box
                 borderStyle='bold'
