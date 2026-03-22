@@ -1,12 +1,12 @@
 import type { Dispatch } from 'react'
-import { Box, Text, useInput } from 'ink'
-import TextInput from 'ink-text-input'
+import { Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { AppConfig } from '~/utils/config'
 import type { Action } from '~/utils/types'
 import { saveConfig } from '~/utils/config'
 import { Dialog } from './dialog'
+import { InputField } from './input-field'
 
 interface PreferencesDialogProps {
     config: AppConfig
@@ -73,35 +73,19 @@ export function PreferencesDialog({
             columns={columns}
             rows={rows}
         >
-            {editing ?
-                <Box flexDirection='column'>
-                    <Text>
-                        <Text bold>Date locale: </Text>
-                        <TextInput
-                            value={editValue}
-                            onChange={(value) => {
-                                setEditValue(value)
-                                setError('')
-                            }}
-                            onSubmit={handleSubmit}
-                            focus={editing}
-                        />
-                    </Text>
-                    {error && <Text color='red'>{error}</Text>}
-                </Box>
-            :   <Box flexDirection='column'>
-                    <Text>
-                        <Text
-                            bold
-                            inverse
-                        >
-                            {' '}
-                            Date locale{' '}
-                        </Text>
-                        <Text> {displayValue}</Text>
-                    </Text>
-                </Box>
-            }
+            <InputField
+                label='Date locale'
+                editing={editing}
+                value={editValue}
+                onChange={(value) => {
+                    setEditValue(value)
+                    setError('')
+                }}
+                onSubmit={handleSubmit}
+                focus={editing}
+                error={error}
+                displayValue={displayValue}
+            />
         </Dialog>
     )
 }

@@ -25,7 +25,7 @@ export function MissingEntryRow({
     return (
         <Box width='100%'>
             <Text
-                color="red"
+                color='red'
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? 'gray' : undefined}
             >
@@ -50,13 +50,11 @@ export function EntryRow({
     const hasError = fileEntry?.error
     const dimColor = !hasError && entry.status === 'identical'
     const color =
-        hasError || dimColor
-            ? undefined
-            : entry.status === 'modified'
-              ? 'yellow'
-              : entry.status === 'only-left' || entry.status === 'only-right'
-                ? 'green'
-                : undefined
+        hasError || dimColor ? undefined
+        : entry.status === 'modified' ? 'yellow'
+        : entry.status === 'only-left' || entry.status === 'only-right' ?
+            'green'
+        :   undefined
     const name = entry.isDirectory ? `${entry.name}/` : entry.name
     const indent = '  '.repeat(entry.depth)
     const icon = getFileIcon(entry.name, entry.isDirectory, entry.isExpanded)
@@ -80,15 +78,15 @@ export function EntryRow({
                 inverse={isSelected}
                 backgroundColor={isDimSelected ? 'gray' : undefined}
             >
-                {colorIconOnly ? (
+                {colorIconOnly ?
                     <>
                         {indent}
                         <Text color={color}>{icon} </Text>
-                        {truncLeft.slice(indent.length + icon.length + 1)}{' '.repeat(gap)}{right}
+                        {truncLeft.slice(indent.length + icon.length + 1)}
+                        {' '.repeat(gap)}
+                        {right}
                     </>
-                ) : (
-                    `${truncLeft}${' '.repeat(gap)}${right}`
-                )}
+                :   `${truncLeft}${' '.repeat(gap)}${right}`}
             </Text>
         </Box>
     )

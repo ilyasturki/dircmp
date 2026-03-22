@@ -1,11 +1,11 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import TextInput from 'ink-text-input'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
 import { saveIgnorePattern, saveIgnorePatterns } from '~/utils/ignore'
 import { Dialog } from './dialog'
+import { InputField } from './input-field'
 import { KeyboardHints } from './keyboard-hints'
 
 type Mode = 'browse' | 'add' | 'edit'
@@ -60,9 +60,7 @@ export function IgnoreDialog({
             setError(`Pattern "${newPattern}" already exists`)
             return
         }
-        const updated = patterns.map((p) =>
-            p === oldPattern ? newPattern : p,
-        )
+        const updated = patterns.map((p) => (p === oldPattern ? newPattern : p))
         await saveIgnorePatterns(updated)
         dispatch({
             type: 'UPDATE_IGNORE_PATTERN',
@@ -82,7 +80,9 @@ export function IgnoreDialog({
         await saveIgnorePatterns(remaining)
         dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
         refresh()
-        setSelectedIndex(Math.min(selectedIndex, Math.max(0, remaining.length - 1)))
+        setSelectedIndex(
+            Math.min(selectedIndex, Math.max(0, remaining.length - 1)),
+        )
     }
 
     useInput((input, key) => {
@@ -145,14 +145,16 @@ export function IgnoreDialog({
                         {patterns.map((p, i) => (
                             <Text key={p}>
                                 {mode === 'browse' && i === selectedIndex ?
-                                    <Text bold color='cyan'>
+                                    <Text
+                                        bold
+                                        color='cyan'
+                                    >
                                         {'▸ '}
                                     </Text>
                                 :   <Text>{'  '}</Text>}
                                 <Text
                                     bold={
-                                        mode === 'browse'
-                                        && i === selectedIndex
+                                        mode === 'browse' && i === selectedIndex
                                     }
                                 >
                                     {p}
@@ -162,59 +164,43 @@ export function IgnoreDialog({
                     </Box>
                 )}
                 {mode === 'edit' && (
-                    <Box
-                        flexDirection='column'
-                        marginTop={1}
-                    >
-                        <Text>
-                            <Text bold>Edit: </Text>
-                            <TextInput
-                                value={editValue}
-                                onChange={(v) => {
-                                    setEditValue(v)
-                                    setError('')
-                                }}
-                                onSubmit={handleEditSubmit}
-                                focus
-                            />
-                        </Text>
-                        {error && <Text color='red'>{error}</Text>}
-                    </Box>
+                    <InputField
+                        label='Edit'
+                        value={editValue}
+                        onChange={(v) => {
+                            setEditValue(v)
+                            setError('')
+                        }}
+                        onSubmit={handleEditSubmit}
+                        error={error}
+                    />
                 )}
                 {mode === 'add' && (
-                    <Box
-                        flexDirection='column'
-                        marginTop={1}
-                    >
-                        <Text>
-                            <Text bold>Add: </Text>
-                            <TextInput
-                                value={editValue}
-                                onChange={(v) => {
-                                    setEditValue(v)
-                                    setError('')
-                                }}
-                                onSubmit={handleAddSubmit}
-                                focus
-                            />
-                        </Text>
-                        {error && <Text color='red'>{error}</Text>}
-                    </Box>
+                    <InputField
+                        label='Add'
+                        value={editValue}
+                        onChange={(v) => {
+                            setEditValue(v)
+                            setError('')
+                        }}
+                        onSubmit={handleAddSubmit}
+                        error={error}
+                    />
                 )}
             </Box>
             <KeyboardHints
                 items={
-                    mode === 'browse'
-                        ? [
-                              { key: 'a', label: 'add' },
-                              { key: 'd', label: 'delete' },
-                              { key: '↵', label: 'edit' },
-                              { key: 'esc', label: 'close' },
-                          ]
-                        : [
-                              { key: '↵', label: 'save' },
-                              { key: 'esc', label: 'cancel' },
-                          ]
+                    mode === 'browse' ?
+                        [
+                            { key: 'a', label: 'add' },
+                            { key: 'd', label: 'delete' },
+                            { key: '<enter>', label: 'edit' },
+                            { key: 'esc', label: 'close' },
+                        ]
+                    :   [
+                            { key: '<enter>', label: 'save' },
+                            { key: 'esc', label: 'cancel' },
+                        ]
                 }
             />
         </Dialog>
