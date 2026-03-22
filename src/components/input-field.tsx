@@ -41,7 +41,7 @@ export function InputField({
 
     return (
         <Box flexDirection='column'>
-            <Text>
+            <Text wrap='wrap'>
                 <Text bold>{label}: </Text>
                 <TextInput
                     value={value}

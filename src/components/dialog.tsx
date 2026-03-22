@@ -7,10 +7,11 @@ interface DialogProps {
     title: string
     columns: number
     rows: number
+    width?: number
     children: ReactNode
 }
 
-export function Dialog({ title, columns, rows, children }: DialogProps) {
+export function Dialog({ title, columns, rows, width, children }: DialogProps) {
     const ref = useRef<DOMElement>(null)
     const [dims, setDims] = useState({ width: 0, height: 0 })
 
@@ -48,6 +49,7 @@ export function Dialog({ title, columns, rows, children }: DialogProps) {
                     paddingX={2}
                     paddingY={1}
                     gap={1}
+                    width={width}
                 >
                     <Text
                         bold

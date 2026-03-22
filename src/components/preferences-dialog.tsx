@@ -72,6 +72,7 @@ export function PreferencesDialog({
             title='Preferences'
             columns={columns}
             rows={rows}
+            width={40}
         >
             <InputField
                 label='Date locale'
