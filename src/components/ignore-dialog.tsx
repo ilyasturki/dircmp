@@ -85,6 +85,11 @@ export function IgnoreDialog({
         )
     }
 
+    const handleInputChange = (v: string) => {
+        setEditValue(v)
+        setError('')
+    }
+
     useInput((input, key) => {
         if (mode === 'browse') {
             if (key.escape || input === 'q') {
@@ -135,6 +140,7 @@ export function IgnoreDialog({
             title='Ignore Patterns'
             columns={columns}
             rows={rows}
+            width={40}
         >
             <Box flexDirection='column'>
                 {patterns.length === 0 && mode === 'browse' && (
@@ -142,47 +148,42 @@ export function IgnoreDialog({
                 )}
                 {patterns.length > 0 && (
                     <Box flexDirection='column'>
-                        {patterns.map((p, i) => (
-                            <Text key={p}>
-                                {mode === 'browse' && i === selectedIndex ?
+                        {patterns.map((p, i) =>
+                            mode === 'edit' && i === selectedIndex ?
+                                <InputField
+                                    key={p}
+                                    label='Edit'
+                                    value={editValue}
+                                    onChange={handleInputChange}
+                                    onSubmit={handleEditSubmit}
+                                    error={error}
+                                />
+                            :   <Text key={p}>
+                                    {mode === 'browse' && i === selectedIndex ?
+                                        <Text
+                                            bold
+                                            color='cyan'
+                                        >
+                                            {'▸ '}
+                                        </Text>
+                                    :   <Text>{'  '}</Text>}
                                     <Text
-                                        bold
-                                        color='cyan'
+                                        bold={
+                                            mode === 'browse'
+                                            && i === selectedIndex
+                                        }
                                     >
-                                        {'▸ '}
+                                        {p}
                                     </Text>
-                                :   <Text>{'  '}</Text>}
-                                <Text
-                                    bold={
-                                        mode === 'browse' && i === selectedIndex
-                                    }
-                                >
-                                    {p}
-                                </Text>
-                            </Text>
-                        ))}
+                                </Text>,
+                        )}
                     </Box>
-                )}
-                {mode === 'edit' && (
-                    <InputField
-                        label='Edit'
-                        value={editValue}
-                        onChange={(v) => {
-                            setEditValue(v)
-                            setError('')
-                        }}
-                        onSubmit={handleEditSubmit}
-                        error={error}
-                    />
                 )}
                 {mode === 'add' && (
                     <InputField
                         label='Add'
                         value={editValue}
-                        onChange={(v) => {
-                            setEditValue(v)
-                            setError('')
-                        }}
+                        onChange={handleInputChange}
                         onSubmit={handleAddSubmit}
                         error={error}
                     />
