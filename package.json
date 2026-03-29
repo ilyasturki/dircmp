@@ -7,7 +7,8 @@
         "dev:watch": "tsx --watch src/index.tsx",
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "postversion": "./scripts/update-nix-hash.sh"
     },
     "dependencies": {
         "diff": "^8.0.3",
