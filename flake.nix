@@ -29,7 +29,7 @@
             dontFixup = true;
             impureEnvVars = pkgs.lib.fetchers.proxyImpureEnvVars;
             outputHashMode = "recursive";
-            outputHash = "sha256-/gKi/0I2+qSg+3ollB5wHJXIzo2BvkRZ7bKoa3VQ4zs=";
+            outputHash = "sha256-l2AUlUVqCm/YtnhHE9ou29c8Htytp/bS7iBDn8d2iIA=";
             buildPhase = ''
               export HOME=$TMPDIR
               bun install --frozen-lockfile --no-progress
