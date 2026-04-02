@@ -73,16 +73,6 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         [state, effectiveLeftDir, effectiveRightDir, dispatch, exit, refresh],
     )
 
-    if (columns < 40 || rows < 10) {
-        return (
-            <Box>
-                <Text color='red'>
-                    Terminal too small. Need at least 40x10.
-                </Text>
-            </Box>
-        )
-    }
-
     const isLoading = !state.leftScan || !state.rightScan
 
     if (state.error) {
