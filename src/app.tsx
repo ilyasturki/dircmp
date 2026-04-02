@@ -149,7 +149,10 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
             )}
             {state.showIgnoreDialog && (
                 <IgnoreDialog
-                    patterns={state.ignorePatterns}
+                    globalPatterns={state.globalIgnorePatterns}
+                    pairPatterns={state.pairIgnorePatterns}
+                    leftDir={leftDir}
+                    rightDir={rightDir}
                     dispatch={dispatch}
                     refresh={refresh}
                     columns={columns}

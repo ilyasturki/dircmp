@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Action, AppState } from '~/utils/types'
 import { executeAction } from '~/execute-action'
 import { keymap } from '~/keymap'
-import { compileIgnoreMatcher, loadIgnorePatterns } from '~/utils/ignore'
+import { compileIgnoreMatcher, loadAllIgnorePatterns } from '~/utils/ignore'
 import { scanDirectory } from '~/utils/scanner'
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
@@ -38,10 +38,10 @@ export function useDirectoryScan(
     const [refreshCounter, setRefreshCounter] = useState(0)
 
     useEffect(() => {
-        const patterns = loadIgnorePatterns()
-        dispatch({ type: 'SET_IGNORE_PATTERNS', patterns })
+        const { global, pair } = loadAllIgnorePatterns(leftDir, rightDir)
+        dispatch({ type: 'SET_IGNORE_PATTERNS', global, pair })
         const shouldIgnore =
-            ignoreEnabled ? compileIgnoreMatcher(patterns) : null
+            ignoreEnabled ? compileIgnoreMatcher([...global, ...pair]) : null
         Promise.all([
             scanDirectory(leftDir, shouldIgnore),
             scanDirectory(rightDir, shouldIgnore),

@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -5,40 +6,106 @@ import ignore from 'ignore'
 
 const DEFAULT_IGNORE_PATTERNS = ['.git', 'node_modules', '.DS_Store']
 
-function getIgnoreFilePath(): string {
-    return path.join(os.homedir(), '.local', 'share', 'dircmp', 'ignore')
+function getDataDir(): string {
+    return path.join(os.homedir(), '.local', 'share', 'dircmp')
 }
 
-export function loadIgnorePatterns(): string[] {
+function getGlobalIgnoreFilePath(): string {
+    return path.join(getDataDir(), 'ignore')
+}
+
+function getPairKey(leftDir: string, rightDir: string): string {
+    const sorted = [leftDir, rightDir].sort()
+    return crypto
+        .createHash('sha256')
+        .update(sorted.join('\n'))
+        .digest('hex')
+        .slice(0, 12)
+}
+
+function getPairIgnoreFilePath(leftDir: string, rightDir: string): string {
+    return path.join(
+        getDataDir(),
+        'pairs',
+        getPairKey(leftDir, rightDir) + '.ignore',
+    )
+}
+
+function buildPairHeader(leftDir: string, rightDir: string): string {
+    const sorted = [leftDir, rightDir].sort()
+    return `# left: ${sorted[0]}\n# right: ${sorted[1]}\n`
+}
+
+function parsePatterns(raw: string): string[] {
+    return raw
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line !== '' && !line.startsWith('#'))
+}
+
+export function loadGlobalIgnorePatterns(): string[] {
     try {
-        const raw = fs.readFileSync(getIgnoreFilePath(), 'utf-8')
-        return raw
-            .split('\n')
-            .map((line) => line.trim())
-            .filter((line) => line !== '' && !line.startsWith('#'))
+        const raw = fs.readFileSync(getGlobalIgnoreFilePath(), 'utf-8')
+        return parsePatterns(raw)
     } catch {
         return [...DEFAULT_IGNORE_PATTERNS]
     }
 }
 
-export async function saveIgnorePattern(pattern: string): Promise<void> {
-    const ignorePath = getIgnoreFilePath()
-    await fs.promises.mkdir(path.dirname(ignorePath), { recursive: true })
+export function loadPairIgnorePatterns(
+    leftDir: string,
+    rightDir: string,
+): string[] {
     try {
-        await fs.promises.access(ignorePath)
-    } catch {
-        await fs.promises.writeFile(
-            ignorePath,
-            DEFAULT_IGNORE_PATTERNS.join('\n') + '\n',
+        const raw = fs.readFileSync(
+            getPairIgnoreFilePath(leftDir, rightDir),
+            'utf-8',
         )
+        return parsePatterns(raw)
+    } catch {
+        return []
     }
-    await fs.promises.appendFile(ignorePath, pattern + '\n')
 }
 
-export async function saveIgnorePatterns(patterns: string[]): Promise<void> {
-    const ignorePath = getIgnoreFilePath()
-    await fs.promises.mkdir(path.dirname(ignorePath), { recursive: true })
-    await fs.promises.writeFile(ignorePath, patterns.join('\n') + '\n')
+export function loadAllIgnorePatterns(
+    leftDir: string,
+    rightDir: string,
+): { global: string[]; pair: string[] } {
+    return {
+        global: loadGlobalIgnorePatterns(),
+        pair: loadPairIgnorePatterns(leftDir, rightDir),
+    }
+}
+
+export async function savePairIgnorePattern(
+    pattern: string,
+    leftDir: string,
+    rightDir: string,
+): Promise<void> {
+    const pairPath = getPairIgnoreFilePath(leftDir, rightDir)
+    await fs.promises.mkdir(path.dirname(pairPath), { recursive: true })
+    try {
+        await fs.promises.access(pairPath)
+    } catch {
+        await fs.promises.writeFile(
+            pairPath,
+            buildPairHeader(leftDir, rightDir),
+        )
+    }
+    await fs.promises.appendFile(pairPath, pattern + '\n')
+}
+
+export async function savePairIgnorePatterns(
+    patterns: string[],
+    leftDir: string,
+    rightDir: string,
+): Promise<void> {
+    const pairPath = getPairIgnoreFilePath(leftDir, rightDir)
+    await fs.promises.mkdir(path.dirname(pairPath), { recursive: true })
+    await fs.promises.writeFile(
+        pairPath,
+        buildPairHeader(leftDir, rightDir) + patterns.join('\n') + '\n',
+    )
 }
 
 export function compileIgnoreMatcher(

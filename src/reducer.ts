@@ -20,7 +20,8 @@ export function createInitialState(config: AppConfig): AppState {
         filterMode: 'all',
         ignoreEnabled: true,
         showIgnoreDialog: false,
-        ignorePatterns: [],
+        globalIgnorePatterns: [],
+        pairIgnorePatterns: [],
     }
 }
 
@@ -389,11 +390,18 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'HIDE_IGNORE_DIALOG':
             return { ...state, showIgnoreDialog: false }
         case 'SET_IGNORE_PATTERNS':
-            return { ...state, ignorePatterns: action.patterns }
+            return {
+                ...state,
+                globalIgnorePatterns: action.global,
+                pairIgnorePatterns: action.pair,
+            }
         case 'ADD_IGNORE_PATTERN': {
             return {
                 ...state,
-                ignorePatterns: [...state.ignorePatterns, action.pattern],
+                pairIgnorePatterns: [
+                    ...state.pairIgnorePatterns,
+                    action.pattern,
+                ],
                 leftScan: null,
                 rightScan: null,
                 entries: [],
@@ -404,7 +412,7 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'REMOVE_IGNORE_PATTERN': {
             return {
                 ...state,
-                ignorePatterns: state.ignorePatterns.filter(
+                pairIgnorePatterns: state.pairIgnorePatterns.filter(
                     (p) => p !== action.pattern,
                 ),
                 leftScan: null,
@@ -417,7 +425,7 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'UPDATE_IGNORE_PATTERN': {
             return {
                 ...state,
-                ignorePatterns: state.ignorePatterns.map((p) =>
+                pairIgnorePatterns: state.pairIgnorePatterns.map((p) =>
                     p === action.oldPattern ? action.newPattern : p,
                 ),
                 leftScan: null,

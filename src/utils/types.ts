@@ -64,7 +64,7 @@ export type Action =
     | { type: 'ADD_IGNORE_PATTERN'; pattern: string }
     | { type: 'REMOVE_IGNORE_PATTERN'; pattern: string }
     | { type: 'UPDATE_IGNORE_PATTERN'; oldPattern: string; newPattern: string }
-    | { type: 'SET_IGNORE_PATTERNS'; patterns: string[] }
+    | { type: 'SET_IGNORE_PATTERNS'; global: string[]; pair: string[] }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -83,5 +83,6 @@ export interface AppState {
     filterMode: FilterMode
     ignoreEnabled: boolean
     showIgnoreDialog: boolean
-    ignorePatterns: string[]
+    globalIgnorePatterns: string[]
+    pairIgnorePatterns: string[]
 }

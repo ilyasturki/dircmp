@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
-import { saveIgnorePattern, saveIgnorePatterns } from '~/utils/ignore'
+import { savePairIgnorePattern, savePairIgnorePatterns } from '~/utils/ignore'
 import { Dialog } from './dialog'
 import { InputField } from './input-field'
 import { KeyboardHints } from './keyboard-hints'
@@ -11,7 +11,10 @@ import { KeyboardHints } from './keyboard-hints'
 type DisplayMode = 'browse' | 'edit'
 
 interface IgnoreDialogProps {
-    patterns: string[]
+    globalPatterns: string[]
+    pairPatterns: string[]
+    leftDir: string
+    rightDir: string
     dispatch: Dispatch<Action>
     refresh: () => void
     columns: number
@@ -19,7 +22,10 @@ interface IgnoreDialogProps {
 }
 
 export function IgnoreDialog({
-    patterns,
+    globalPatterns,
+    pairPatterns,
+    leftDir,
+    rightDir,
     dispatch,
     refresh,
     columns,
@@ -31,39 +37,43 @@ export function IgnoreDialog({
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
 
+    const allPatterns = [...globalPatterns, ...pairPatterns]
+
     const handleEditSubmit = async (input: string) => {
         const newPattern = input.trim()
         if (newPattern === '') return
 
         if (isAdding) {
-            if (patterns.includes(newPattern)) {
+            if (allPatterns.includes(newPattern)) {
                 setError(`Pattern "${newPattern}" already exists`)
                 return
             }
-            await saveIgnorePattern(newPattern)
+            await savePairIgnorePattern(newPattern, leftDir, rightDir)
             dispatch({ type: 'ADD_IGNORE_PATTERN', pattern: newPattern })
             refresh()
             setEditValue('')
             setError('')
             setIsAdding(false)
             setDisplayMode('browse')
-            setSelectedIndex(patterns.length)
+            setSelectedIndex(pairPatterns.length)
             return
         }
 
-        const oldPattern = patterns[selectedIndex]
+        const oldPattern = pairPatterns[selectedIndex]
         if (!oldPattern) return
         if (newPattern === oldPattern) {
             setDisplayMode('browse')
             setError('')
             return
         }
-        if (patterns.includes(newPattern)) {
+        if (allPatterns.includes(newPattern)) {
             setError(`Pattern "${newPattern}" already exists`)
             return
         }
-        const updated = patterns.map((p) => (p === oldPattern ? newPattern : p))
-        await saveIgnorePatterns(updated)
+        const updated = pairPatterns.map((p) =>
+            p === oldPattern ? newPattern : p,
+        )
+        await savePairIgnorePatterns(updated, leftDir, rightDir)
         dispatch({
             type: 'UPDATE_IGNORE_PATTERN',
             oldPattern,
@@ -76,10 +86,10 @@ export function IgnoreDialog({
     }
 
     const handleDelete = async () => {
-        const pattern = patterns[selectedIndex]
+        const pattern = pairPatterns[selectedIndex]
         if (!pattern) return
-        const remaining = patterns.filter((p) => p !== pattern)
-        await saveIgnorePatterns(remaining)
+        const remaining = pairPatterns.filter((p) => p !== pattern)
+        await savePairIgnorePatterns(remaining, leftDir, rightDir)
         dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
         refresh()
         setSelectedIndex(
@@ -98,10 +108,10 @@ export function IgnoreDialog({
                 dispatch({ type: 'HIDE_IGNORE_DIALOG' })
                 return
             }
-            if (patterns.length > 0) {
+            if (pairPatterns.length > 0) {
                 if (input === 'j' || key.downArrow) {
                     setSelectedIndex((i) =>
-                        Math.min(patterns.length - 1, i + 1),
+                        Math.min(pairPatterns.length - 1, i + 1),
                     )
                     return
                 }
@@ -114,14 +124,14 @@ export function IgnoreDialog({
                     return
                 }
                 if (key.return) {
-                    setEditValue(patterns[selectedIndex] ?? '')
+                    setEditValue(pairPatterns[selectedIndex] ?? '')
                     setError('')
                     setDisplayMode('edit')
                     return
                 }
             }
             if (input === 'a') {
-                setSelectedIndex(patterns.length)
+                setSelectedIndex(pairPatterns.length)
                 setEditValue('')
                 setError('')
                 setIsAdding(true)
@@ -148,13 +158,35 @@ export function IgnoreDialog({
             width={40}
         >
             <Box flexDirection='column'>
-                {patterns.length === 0
-                    && !isAdding
-                    && displayMode === 'browse' && (
-                        <Text dimColor>No patterns defined</Text>
-                    )}
+                {globalPatterns.length > 0 && (
+                    <Box flexDirection='column'>
+                        <Text dimColor bold>
+                            Global:
+                        </Text>
+                        {globalPatterns.map((p) => (
+                            <Text
+                                key={p}
+                                dimColor
+                            >
+                                {'  '}
+                                {p}
+                            </Text>
+                        ))}
+                    </Box>
+                )}
                 <Box flexDirection='column'>
-                    {patterns.map((p, i) =>
+                    <Text
+                        dimColor
+                        bold
+                    >
+                        This comparison:
+                    </Text>
+                    {pairPatterns.length === 0
+                        && !isAdding
+                        && displayMode === 'browse' && (
+                            <Text dimColor>{'  '}No patterns defined</Text>
+                        )}
+                    {pairPatterns.map((p, i) =>
                         (
                             displayMode === 'edit'
                             && !isAdding
