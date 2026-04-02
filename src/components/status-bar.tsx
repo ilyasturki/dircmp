@@ -113,6 +113,7 @@ function getEntryInfo(
                 return `${count} different file${count !== 1 ? 's' : ''}`
             }
             if (lineDiffCount === null) return '...'
+            if (lineDiffCount === 0) return 'date modified'
             return `${lineDiffCount} different line${lineDiffCount !== 1 ? 's' : ''}`
         default:
             return ''
