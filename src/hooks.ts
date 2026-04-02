@@ -29,11 +29,33 @@ export function useTerminalDimensions(stdout: WriteStream | undefined) {
     return dimensions
 }
 
+export function useToast() {
+    const [toastMessage, setToastMessage] = useState<string | null>(null)
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const showToast = useCallback((message: string, durationMs = 4000) => {
+        if (timerRef.current) clearTimeout(timerRef.current)
+        setToastMessage(message)
+        timerRef.current = setTimeout(() => {
+            setToastMessage(null)
+            timerRef.current = null
+        }, durationMs)
+    }, [])
+
+    return { toastMessage, showToast }
+}
+
+function formatDuration(ms: number): string {
+    if (ms < 1000) return `${Math.round(ms)}ms`
+    return `${(ms / 1000).toFixed(1)}s`
+}
+
 export function useDirectoryScan(
     leftDir: string,
     rightDir: string,
     dispatch: Dispatch<Action>,
     ignoreEnabled: boolean,
+    showToast: (message: string) => void,
 ) {
     const [refreshCounter, setRefreshCounter] = useState(0)
 
@@ -42,12 +64,15 @@ export function useDirectoryScan(
         dispatch({ type: 'SET_IGNORE_PATTERNS', global, pair })
         const shouldIgnore =
             ignoreEnabled ? compileIgnoreMatcher([...global, ...pair]) : null
+        const start = performance.now()
         Promise.all([
             scanDirectory(leftDir, shouldIgnore),
             scanDirectory(rightDir, shouldIgnore),
         ])
             .then(([leftScan, rightScan]) => {
+                const elapsed = performance.now() - start
                 dispatch({ type: 'SCAN_COMPLETE', leftScan, rightScan })
+                showToast(`Scanned in ${formatDuration(elapsed)}`)
             })
             .catch((err) => {
                 dispatch({ type: 'SCAN_ERROR', error: String(err) })

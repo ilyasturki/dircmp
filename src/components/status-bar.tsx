@@ -19,6 +19,7 @@ interface StatusBarProps {
     rightDir: string
     leftScan: ScanResult | null
     rightScan: ScanResult | null
+    toastMessage: string | null
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -130,6 +131,7 @@ export function StatusBar({
     rightDir,
     leftScan,
     rightScan,
+    toastMessage,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
 
@@ -157,10 +159,13 @@ export function StatusBar({
 
     return (
         <Box flexDirection='column'>
-            <Box>
-                <Text color='cyan'>{filterLabel} </Text>
-                {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
-                {entryInfo !== '' && <Text dimColor>{entryInfo}</Text>}
+            <Box justifyContent='space-between'>
+                <Box>
+                    <Text color='cyan'>{filterLabel} </Text>
+                    {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
+                    {entryInfo !== '' && <Text dimColor>{entryInfo}</Text>}
+                </Box>
+                {toastMessage && <Text dimColor>{toastMessage}</Text>}
             </Box>
             <Box>
                 <KeyboardHints items={helpItems} />

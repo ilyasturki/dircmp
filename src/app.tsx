@@ -11,7 +11,12 @@ import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
 import { executeAction } from '~/execute-action'
-import { useDirectoryScan, useKeymap, useTerminalDimensions } from '~/hooks'
+import {
+    useDirectoryScan,
+    useKeymap,
+    useTerminalDimensions,
+    useToast,
+} from '~/hooks'
 import { keymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
 
@@ -30,11 +35,13 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
     const { stdout } = useStdout()
 
     const { columns, rows } = useTerminalDimensions(stdout)
+    const { toastMessage, showToast } = useToast()
     const { refresh } = useDirectoryScan(
         leftDir,
         rightDir,
         dispatch,
         state.ignoreEnabled,
+        showToast,
     )
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
@@ -126,6 +133,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 rightDir={effectiveRightDir}
                 leftScan={state.leftScan}
                 rightScan={state.rightScan}
+                toastMessage={toastMessage}
             />
             {state.showPreferences && (
                 <PreferencesDialog
