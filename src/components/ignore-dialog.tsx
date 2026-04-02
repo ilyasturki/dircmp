@@ -8,7 +8,7 @@ import { Dialog } from './dialog'
 import { InputField } from './input-field'
 import { KeyboardHints } from './keyboard-hints'
 
-type Mode = 'browse' | 'add' | 'edit'
+type DisplayMode = 'browse' | 'edit'
 
 interface IgnoreDialogProps {
     patterns: string[]
@@ -26,33 +26,35 @@ export function IgnoreDialog({
     rows,
 }: IgnoreDialogProps) {
     const [selectedIndex, setSelectedIndex] = useState(0)
-    const [mode, setMode] = useState<Mode>('browse')
+    const [displayMode, setDisplayMode] = useState<DisplayMode>('browse')
+    const [isAdding, setIsAdding] = useState(false)
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
-
-    const handleAddSubmit = async (input: string) => {
-        const pattern = input.trim()
-        if (pattern === '') return
-        if (patterns.includes(pattern)) {
-            setError(`Pattern "${pattern}" already exists`)
-            return
-        }
-        await saveIgnorePattern(pattern)
-        dispatch({ type: 'ADD_IGNORE_PATTERN', pattern })
-        refresh()
-        setEditValue('')
-        setError('')
-        setMode('browse')
-        setSelectedIndex(patterns.length)
-    }
 
     const handleEditSubmit = async (input: string) => {
         const newPattern = input.trim()
         if (newPattern === '') return
+
+        if (isAdding) {
+            if (patterns.includes(newPattern)) {
+                setError(`Pattern "${newPattern}" already exists`)
+                return
+            }
+            await saveIgnorePattern(newPattern)
+            dispatch({ type: 'ADD_IGNORE_PATTERN', pattern: newPattern })
+            refresh()
+            setEditValue('')
+            setError('')
+            setIsAdding(false)
+            setDisplayMode('browse')
+            setSelectedIndex(patterns.length)
+            return
+        }
+
         const oldPattern = patterns[selectedIndex]
         if (!oldPattern) return
         if (newPattern === oldPattern) {
-            setMode('browse')
+            setDisplayMode('browse')
             setError('')
             return
         }
@@ -70,7 +72,7 @@ export function IgnoreDialog({
         refresh()
         setEditValue('')
         setError('')
-        setMode('browse')
+        setDisplayMode('browse')
     }
 
     const handleDelete = async () => {
@@ -91,7 +93,7 @@ export function IgnoreDialog({
     }
 
     useInput((input, key) => {
-        if (mode === 'browse') {
+        if (displayMode === 'browse') {
             if (key.escape || input === 'q') {
                 dispatch({ type: 'HIDE_IGNORE_DIALOG' })
                 return
@@ -114,14 +116,16 @@ export function IgnoreDialog({
                 if (key.return) {
                     setEditValue(patterns[selectedIndex] ?? '')
                     setError('')
-                    setMode('edit')
+                    setDisplayMode('edit')
                     return
                 }
             }
             if (input === 'a') {
+                setSelectedIndex(patterns.length)
                 setEditValue('')
                 setError('')
-                setMode('add')
+                setIsAdding(true)
+                setDisplayMode('edit')
                 return
             }
             return
@@ -129,9 +133,10 @@ export function IgnoreDialog({
 
         // add/edit mode: only handle escape (TextInput handles the rest)
         if (key.escape) {
-            setMode('browse')
+            setDisplayMode('browse')
             setEditValue('')
             setError('')
+            setIsAdding(false)
         }
     })
 
@@ -143,55 +148,62 @@ export function IgnoreDialog({
             width={40}
         >
             <Box flexDirection='column'>
-                {patterns.length === 0 && mode === 'browse' && (
-                    <Text dimColor>No patterns defined</Text>
-                )}
-                {patterns.length > 0 && (
-                    <Box flexDirection='column'>
-                        {patterns.map((p, i) =>
-                            mode === 'edit' && i === selectedIndex ?
-                                <InputField
-                                    key={p}
-                                    label='Edit'
-                                    value={editValue}
-                                    onChange={handleInputChange}
-                                    onSubmit={handleEditSubmit}
-                                    error={error}
-                                />
-                            :   <Text key={p}>
-                                    {mode === 'browse' && i === selectedIndex ?
-                                        <Text
-                                            bold
-                                            color='cyan'
-                                        >
-                                            {'▸ '}
-                                        </Text>
-                                    :   <Text>{'  '}</Text>}
+                {patterns.length === 0
+                    && !isAdding
+                    && displayMode === 'browse' && (
+                        <Text dimColor>No patterns defined</Text>
+                    )}
+                <Box flexDirection='column'>
+                    {patterns.map((p, i) =>
+                        (
+                            displayMode === 'edit'
+                            && !isAdding
+                            && i === selectedIndex
+                        ) ?
+                            <InputField
+                                key={p}
+                                label='Edit'
+                                value={editValue}
+                                onChange={handleInputChange}
+                                onSubmit={handleEditSubmit}
+                                error={error}
+                            />
+                        :   <Text key={p}>
+                                {(
+                                    displayMode === 'browse'
+                                    && i === selectedIndex
+                                ) ?
                                     <Text
-                                        bold={
-                                            mode === 'browse'
-                                            && i === selectedIndex
-                                        }
+                                        bold
+                                        color='cyan'
                                     >
-                                        {p}
+                                        {'▸ '}
                                     </Text>
-                                </Text>,
-                        )}
-                    </Box>
-                )}
-                {mode === 'add' && (
-                    <InputField
-                        label='Add'
-                        value={editValue}
-                        onChange={handleInputChange}
-                        onSubmit={handleAddSubmit}
-                        error={error}
-                    />
-                )}
+                                :   <Text>{'  '}</Text>}
+                                <Text
+                                    bold={
+                                        displayMode === 'browse'
+                                        && i === selectedIndex
+                                    }
+                                >
+                                    {p}
+                                </Text>
+                            </Text>,
+                    )}
+                    {isAdding && (
+                        <InputField
+                            label='Add'
+                            value={editValue}
+                            onChange={handleInputChange}
+                            onSubmit={handleEditSubmit}
+                            error={error}
+                        />
+                    )}
+                </Box>
             </Box>
             <KeyboardHints
                 items={
-                    mode === 'browse' ?
+                    displayMode === 'browse' ?
                         [
                             { key: 'a', label: 'add' },
                             { key: 'd', label: 'delete' },
