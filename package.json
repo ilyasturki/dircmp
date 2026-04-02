@@ -12,16 +12,15 @@
     },
     "dependencies": {
         "diff": "^8.0.3",
+        "ignore": "^7.0.5",
         "ink": "^6.8.0",
         "ink-text-input": "^6.0.0",
         "meow": "^14.1.0",
-        "picomatch": "^4.0.3",
         "react": "^19.2.4"
     },
     "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
         "@types/node": "^25.3.4",
-        "@types/picomatch": "^4.0.2",
         "@types/react": "^19.2.14",
         "prettier": "^3.8.1",
         "tsx": "^4.21.0",

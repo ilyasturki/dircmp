@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import picomatch from 'picomatch'
+import ignore from 'ignore'
 
 const DEFAULT_IGNORE_PATTERNS = ['.git', 'node_modules', '.DS_Store']
 
@@ -44,9 +44,6 @@ export async function saveIgnorePatterns(patterns: string[]): Promise<void> {
 export function compileIgnoreMatcher(
     patterns: string[],
 ): (relativePath: string) => boolean {
-    const normalized = patterns.map((p) =>
-        p.includes('/') || p.includes('*') ? p : `**/${p}`,
-    )
-    const isMatch = picomatch(normalized, { dot: true })
-    return isMatch
+    const ig = ignore().add(patterns)
+    return (relativePath) => ig.ignores(relativePath)
 }
