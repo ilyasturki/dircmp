@@ -33,7 +33,12 @@ function hasDescendantDiff(
         const rightEntry = rightScan.get(p)
         if (!rightEntry) return true
         const leftEntry = leftScan.get(p)!
-        if (leftEntry.contentHash !== rightEntry.contentHash) return true
+        if (
+            leftEntry.size !== rightEntry.size
+            || leftEntry.modifiedTime.getTime()
+                !== rightEntry.modifiedTime.getTime()
+        )
+            return true
     }
 
     for (const p of rightPaths) {
@@ -104,7 +109,11 @@ export function compareAtPath(
                 :   'identical'
         } else {
             status =
-                left.contentHash === right.contentHash ?
+                (
+                    left.size === right.size
+                    && left.modifiedTime.getTime()
+                        === right.modifiedTime.getTime()
+                ) ?
                     'identical'
                 :   'modified'
         }
