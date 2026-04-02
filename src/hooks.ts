@@ -7,7 +7,7 @@ import type { Action, AppState } from '~/utils/types'
 import { executeAction } from '~/execute-action'
 import { keymap } from '~/keymap'
 import { compileIgnoreMatcher, loadIgnorePatterns } from '~/utils/ignore'
-import { scanDirectory } from '~/utils/scanner'
+import { computeDirectorySizes, scanDirectory } from '~/utils/scanner'
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
     const [dimensions, setDimensions] = useState({
@@ -47,6 +47,8 @@ export function useDirectoryScan(
             scanDirectory(rightDir, shouldIgnore),
         ])
             .then(([leftScan, rightScan]) => {
+                computeDirectorySizes(leftScan)
+                computeDirectorySizes(rightScan)
                 dispatch({ type: 'SCAN_COMPLETE', leftScan, rightScan })
             })
             .catch((err) => {

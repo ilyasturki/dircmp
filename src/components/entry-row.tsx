@@ -3,6 +3,7 @@ import { Box, Text, useStdout } from 'ink'
 import type { CompareEntry, FileEntry } from '~/utils/types'
 import { useDateFormatter } from '~/context/date-locale'
 import { getFileIcon } from '~/utils/file-icons'
+import { formatSize } from '~/utils/format-size'
 
 /** Available width inside one panel (half terminal minus border chrome) */
 function usePanelWidth() {
@@ -58,13 +59,14 @@ export function EntryRow({
     const name = entry.isDirectory ? `${entry.name}/` : entry.name
     const indent = '  '.repeat(entry.depth)
     const icon = getFileIcon(entry.name, entry.isDirectory, entry.isExpanded)
+    const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const panelWidth = usePanelWidth()
     const colorIconOnly = entry.isDirectory && color
 
     const left = `${indent}${icon} ${name}`
-    const right = `${date}${hasError ? ' !' : ''}`
+    const right = `${size}  ${date}${hasError ? ' !' : ''}`
     const maxLeft = panelWidth - right.length - 1 // at least 1 space gap
     const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left
     const gap = Math.max(1, panelWidth - truncLeft.length - right.length)

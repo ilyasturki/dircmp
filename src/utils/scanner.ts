@@ -127,6 +127,24 @@ export async function scanDirectory(
     return result
 }
 
+export function computeDirectorySizes(scan: ScanResult): void {
+    for (const [relPath, entry] of scan) {
+        if (!entry.isDirectory) continue
+        const prefix = relPath === '' ? '' : relPath + '/'
+        let total = 0
+        for (const [childPath, child] of scan) {
+            if (
+                !child.isDirectory
+                && childPath.startsWith(prefix)
+                && childPath !== relPath
+            ) {
+                total += child.size
+            }
+        }
+        entry.size = total
+    }
+}
+
 export function getEntriesAtPath(
     scan: ScanResult,
     dirPath: string,
