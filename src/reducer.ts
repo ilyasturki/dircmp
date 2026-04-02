@@ -56,6 +56,14 @@ export function reducer(state: AppState, action: Action): AppState {
                 rightScan: action.rightScan,
             }
             newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            newState.scrollOffset = Math.min(
+                state.scrollOffset,
+                Math.max(0, newState.entries.length - 1),
+            )
             return newState
         }
         case 'SCAN_ERROR':
@@ -192,8 +200,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
                 swapped: false,
             }
         }
