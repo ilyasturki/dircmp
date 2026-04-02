@@ -48,6 +48,51 @@ function hasDescendantDiff(
     return false
 }
 
+export function countDescendantDiffs(
+    leftScan: ScanResult,
+    rightScan: ScanResult,
+    dirPath: string,
+): number {
+    const prefix = dirPath === '' ? '' : dirPath + path.sep
+    let count = 0
+
+    const leftPaths = new Set<string>()
+    for (const [relPath, entry] of leftScan) {
+        if (relPath.startsWith(prefix) && !entry.isDirectory) {
+            leftPaths.add(relPath)
+        }
+    }
+
+    const rightPaths = new Set<string>()
+    for (const [relPath, entry] of rightScan) {
+        if (relPath.startsWith(prefix) && !entry.isDirectory) {
+            rightPaths.add(relPath)
+        }
+    }
+
+    for (const p of leftPaths) {
+        const rightEntry = rightScan.get(p)
+        if (!rightEntry) {
+            count++
+            continue
+        }
+        const leftEntry = leftScan.get(p)!
+        if (
+            leftEntry.size !== rightEntry.size
+            || leftEntry.modifiedTime.getTime()
+                !== rightEntry.modifiedTime.getTime()
+        ) {
+            count++
+        }
+    }
+
+    for (const p of rightPaths) {
+        if (!leftPaths.has(p)) count++
+    }
+
+    return count
+}
+
 export function compareAtPath(
     leftScan: ScanResult,
     rightScan: ScanResult,

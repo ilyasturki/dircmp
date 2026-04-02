@@ -40,8 +40,8 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
     const effectiveRightDir = state.swapped ? leftDir : rightDir
 
-    // Reserve rows: 1 for status bar, 3 for borders (top/bottom + status border)
-    const contentHeight = Math.max(1, rows - 4)
+    // Reserve rows: 2 for status bar, 3 for borders (top/bottom + status border)
+    const contentHeight = Math.max(1, rows - 5)
 
     const { exit } = useApp()
 
@@ -121,6 +121,11 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 keymap={keymap}
                 filterMode={state.filterMode}
                 ignoreEnabled={state.ignoreEnabled}
+                focusedEntry={state.entries[state.cursorIndex]}
+                leftDir={effectiveLeftDir}
+                rightDir={effectiveRightDir}
+                leftScan={state.leftScan}
+                rightScan={state.rightScan}
             />
             {state.showPreferences && (
                 <PreferencesDialog
