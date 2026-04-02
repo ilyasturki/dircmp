@@ -201,6 +201,7 @@ export function IgnoreDialog({
                     )}
                 </Box>
             </Box>
+            <Text dimColor>Uses .gitignore syntax</Text>
             <KeyboardHints
                 items={
                     displayMode === 'browse' ?
