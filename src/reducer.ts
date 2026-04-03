@@ -2,7 +2,10 @@ import type { AppConfig } from '~/utils/config'
 import type { Action, AppState, CompareEntry, PanelSide } from '~/utils/types'
 import { buildVisibleTree } from '~/utils/compare'
 
-export function createInitialState(config: AppConfig): AppState {
+export function createInitialState(init: {
+    config: AppConfig
+    ignoreEnabled: boolean
+}): AppState {
     return {
         focusedPanel: 'left',
         expandedDirs: new Set(),
@@ -13,10 +16,10 @@ export function createInitialState(config: AppConfig): AppState {
         error: null,
         entries: [],
         dialog: null,
-        config,
+        config: init.config,
         swapped: false,
         filterMode: 'all',
-        ignoreEnabled: true,
+        ignoreEnabled: init.ignoreEnabled,
         globalIgnorePatterns: [],
         pairIgnorePatterns: [],
     }

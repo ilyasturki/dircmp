@@ -1,6 +1,7 @@
 import { Box, Text, useApp, useStdout } from 'ink'
 import { useCallback, useReducer } from 'react'
 
+import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
 import type { Action } from '~/utils/types'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
@@ -25,12 +26,13 @@ interface AppProps {
     leftDir: string
     rightDir: string
     initialConfig: AppConfig
+    ignoreOptions?: CliIgnoreOptions
 }
 
-export function App({ leftDir, rightDir, initialConfig }: AppProps) {
+export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProps) {
     const [state, dispatch] = useReducer(
         reducer,
-        initialConfig,
+        { config: initialConfig, ignoreEnabled: !ignoreOptions?.noIgnore },
         createInitialState,
     )
     const { stdout } = useStdout()
@@ -43,6 +45,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         dispatch,
         state.ignoreEnabled,
         showToast,
+        ignoreOptions?.extraIgnorePatterns,
     )
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir

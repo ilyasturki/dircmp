@@ -62,6 +62,7 @@ export function useDirectoryScan(
     dispatch: Dispatch<Action>,
     ignoreEnabled: boolean,
     showToast: (message: string) => void,
+    extraIgnorePatterns: string[] = [],
 ) {
     const [refreshCounter, setRefreshCounter] = useState(0)
 
@@ -69,7 +70,13 @@ export function useDirectoryScan(
         const { global, pair } = loadAllIgnorePatterns(leftDir, rightDir)
         dispatch({ type: 'SET_IGNORE_PATTERNS', global, pair })
         const shouldIgnore =
-            ignoreEnabled ? compileIgnoreMatcher([...global, ...pair]) : null
+            ignoreEnabled ?
+                compileIgnoreMatcher([
+                    ...global,
+                    ...pair,
+                    ...extraIgnorePatterns,
+                ])
+            :   null
         const start = performance.now()
         Promise.all([
             scanDirectory(leftDir, shouldIgnore),
