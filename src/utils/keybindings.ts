@@ -5,9 +5,9 @@ import path from 'node:path'
 
 import type { Shortcut } from '~/keymap'
 
-type KeyDef = string | string[] | null
+export type KeyDef = string | string[] | null
 
-type KeybindingOverrides = Record<string, KeyDef>
+export type KeybindingOverrides = Record<string, KeyDef>
 
 interface ParsedKey {
     match: (input: string, key: Key) => boolean
@@ -70,7 +70,7 @@ function parseKeyString(keyStr: string): ParsedKey {
     }
 }
 
-function parseKeyDef(def: string | string[]): ParsedKey {
+export function parseKeyDef(def: string | string[]): ParsedKey {
     if (typeof def === 'string') {
         return parseKeyString(def)
     }
@@ -139,4 +139,21 @@ export function resolveKeymap(
             }
         })
         .filter((s): s is Shortcut => s !== null)
+}
+
+export async function saveKeybindings(
+    overrides: KeybindingOverrides,
+): Promise<void> {
+    const keybindingsPath = getKeybindingsPath()
+    await fs.promises.mkdir(path.dirname(keybindingsPath), { recursive: true })
+    await fs.promises.writeFile(
+        keybindingsPath,
+        JSON.stringify(overrides, null, 2) + '\n',
+    )
+}
+
+export function formatKeyDef(override: KeyDef): string {
+    if (override === null) return ''
+    if (typeof override === 'string') return override
+    return override.join(', ')
 }

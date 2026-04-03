@@ -32,6 +32,7 @@ export type DialogType =
     | 'ignoreDialog'
     | 'help'
     | 'diffView'
+    | 'keybindingsEditor'
 
 export type FilterMode = 'all' | 'diff-only'
 
@@ -84,6 +85,9 @@ export type Action =
     | { type: 'HIDE_HELP' }
     | { type: 'SHOW_DIFF_VIEW'; entryIndex: number }
     | { type: 'HIDE_DIFF_VIEW' }
+    | { type: 'SHOW_KEYBINDINGS_EDITOR' }
+    | { type: 'HIDE_KEYBINDINGS_EDITOR' }
+    | { type: 'KEYBINDINGS_UPDATED' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -102,4 +106,5 @@ export interface AppState {
     globalIgnorePatterns: string[]
     pairIgnorePatterns: string[]
     diffViewEntryIndex: number | null
+    keybindingVersion: number
 }

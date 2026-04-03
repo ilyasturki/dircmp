@@ -9,6 +9,7 @@ import { ContextMenu } from '~/components/context-menu'
 import { DiffView } from '~/components/diff-view'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { HelpDialog } from '~/components/help-dialog'
+import { KeybindingsDialog } from '~/components/keybindings-dialog'
 import { IgnoreDialog } from '~/components/ignore-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
@@ -61,7 +62,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
     const keymap = useMemo(() => {
         const overrides = loadKeybindings()
         return resolveKeymap(defaultKeymap, overrides)
-    }, [])
+    }, [state.keybindingVersion])
 
     useKeymap(
         state,
@@ -196,6 +197,14 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                     dispatch={dispatch}
                     onExecuteAction={onExecuteAction}
                     onExit={exit}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.dialog === 'keybindingsEditor' && (
+                <KeybindingsDialog
+                    defaults={defaultKeymap}
+                    dispatch={dispatch}
                     columns={columns}
                     rows={rows}
                 />

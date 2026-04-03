@@ -23,6 +23,7 @@ export function createInitialState(init: {
         globalIgnorePatterns: [],
         pairIgnorePatterns: [],
         diffViewEntryIndex: null,
+        keybindingVersion: 0,
     }
 }
 
@@ -497,6 +498,15 @@ export function reducer(state: AppState, action: Action): AppState {
             }
         case 'UPDATE_CONFIG':
             return { ...state, config: action.config }
+        case 'SHOW_KEYBINDINGS_EDITOR':
+            return { ...state, dialog: 'keybindingsEditor' }
+        case 'HIDE_KEYBINDINGS_EDITOR':
+            return { ...state, dialog: null }
+        case 'KEYBINDINGS_UPDATED':
+            return {
+                ...state,
+                keybindingVersion: state.keybindingVersion + 1,
+            }
         default:
             return state
     }

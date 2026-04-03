@@ -361,4 +361,16 @@ export const defaultKeymap: Shortcut[] = [
         match: (input) => input === '?',
         effect: { type: 'dispatch', action: { type: 'SHOW_HELP' } },
     },
+    {
+        id: 'editKeybindings',
+        mode: 'browser',
+        keyLabel: 'K',
+        description: 'edit keybindings',
+        helpKey: 'K',
+        match: (input) => input === 'K',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'SHOW_KEYBINDINGS_EDITOR' },
+        },
+    },
 ]
