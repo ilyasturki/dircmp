@@ -435,6 +435,46 @@ export function reducer(state: AppState, action: Action): AppState {
                 scrollOffset: 0,
             }
         }
+        case 'ADD_GLOBAL_IGNORE_PATTERN': {
+            return {
+                ...state,
+                globalIgnorePatterns: [
+                    ...state.globalIgnorePatterns,
+                    action.pattern,
+                ],
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
+        case 'REMOVE_GLOBAL_IGNORE_PATTERN': {
+            return {
+                ...state,
+                globalIgnorePatterns: state.globalIgnorePatterns.filter(
+                    (p) => p !== action.pattern,
+                ),
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
+        case 'UPDATE_GLOBAL_IGNORE_PATTERN': {
+            return {
+                ...state,
+                globalIgnorePatterns: state.globalIgnorePatterns.map((p) =>
+                    p === action.oldPattern ? action.newPattern : p,
+                ),
+                leftScan: null,
+                rightScan: null,
+                entries: [],
+                cursorIndex: 0,
+                scrollOffset: 0,
+            }
+        }
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':

@@ -64,6 +64,13 @@ export type Action =
     | { type: 'ADD_IGNORE_PATTERN'; pattern: string }
     | { type: 'REMOVE_IGNORE_PATTERN'; pattern: string }
     | { type: 'UPDATE_IGNORE_PATTERN'; oldPattern: string; newPattern: string }
+    | { type: 'ADD_GLOBAL_IGNORE_PATTERN'; pattern: string }
+    | { type: 'REMOVE_GLOBAL_IGNORE_PATTERN'; pattern: string }
+    | {
+          type: 'UPDATE_GLOBAL_IGNORE_PATTERN'
+          oldPattern: string
+          newPattern: string
+      }
     | { type: 'SET_IGNORE_PATTERNS'; global: string[]; pair: string[] }
 
 export interface AppState {

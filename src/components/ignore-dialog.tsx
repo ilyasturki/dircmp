@@ -3,7 +3,11 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
-import { savePairIgnorePattern, savePairIgnorePatterns } from '~/utils/ignore'
+import {
+    saveGlobalIgnorePatterns,
+    savePairIgnorePattern,
+    savePairIgnorePatterns,
+} from '~/utils/ignore'
 import { Dialog } from './dialog'
 import { InputField } from './input-field'
 import { KeyboardHints } from './keyboard-hints'
@@ -33,17 +37,22 @@ export function IgnoreDialog({
 }: IgnoreDialogProps) {
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [displayMode, setDisplayMode] = useState<DisplayMode>('browse')
-    const [isAdding, setIsAdding] = useState(false)
+    const [addingSection, setAddingSection] = useState<
+        'pair' | 'global' | null
+    >(null)
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
 
-    const allPatterns = [...globalPatterns, ...pairPatterns]
+    const totalLength = pairPatterns.length + globalPatterns.length
+    const inGlobalSection = selectedIndex >= pairPatterns.length
+    const globalIndex = selectedIndex - pairPatterns.length
+    const allPatterns = [...pairPatterns, ...globalPatterns]
 
     const handleEditSubmit = async (input: string) => {
         const newPattern = input.trim()
         if (newPattern === '') return
 
-        if (isAdding) {
+        if (addingSection === 'pair') {
             if (allPatterns.includes(newPattern)) {
                 setError(`Pattern "${newPattern}" already exists`)
                 return
@@ -53,48 +62,113 @@ export function IgnoreDialog({
             refresh()
             setEditValue('')
             setError('')
-            setIsAdding(false)
+            setAddingSection(null)
             setDisplayMode('browse')
             setSelectedIndex(pairPatterns.length)
             return
         }
 
-        const oldPattern = pairPatterns[selectedIndex]
-        if (!oldPattern) return
-        if (newPattern === oldPattern) {
-            setDisplayMode('browse')
+        if (addingSection === 'global') {
+            if (allPatterns.includes(newPattern)) {
+                setError(`Pattern "${newPattern}" already exists`)
+                return
+            }
+            await saveGlobalIgnorePatterns([...globalPatterns, newPattern])
+            dispatch({
+                type: 'ADD_GLOBAL_IGNORE_PATTERN',
+                pattern: newPattern,
+            })
+            refresh()
+            setEditValue('')
             setError('')
+            setAddingSection(null)
+            setDisplayMode('browse')
+            setSelectedIndex(pairPatterns.length + globalPatterns.length)
             return
         }
-        if (allPatterns.includes(newPattern)) {
-            setError(`Pattern "${newPattern}" already exists`)
-            return
+
+        // Editing existing pattern
+        if (inGlobalSection) {
+            const oldPattern = globalPatterns[globalIndex]
+            if (!oldPattern) return
+            if (newPattern === oldPattern) {
+                setDisplayMode('browse')
+                setError('')
+                return
+            }
+            if (allPatterns.includes(newPattern)) {
+                setError(`Pattern "${newPattern}" already exists`)
+                return
+            }
+            const updated = globalPatterns.map((p) =>
+                p === oldPattern ? newPattern : p,
+            )
+            await saveGlobalIgnorePatterns(updated)
+            dispatch({
+                type: 'UPDATE_GLOBAL_IGNORE_PATTERN',
+                oldPattern,
+                newPattern,
+            })
+            refresh()
+        } else {
+            const oldPattern = pairPatterns[selectedIndex]
+            if (!oldPattern) return
+            if (newPattern === oldPattern) {
+                setDisplayMode('browse')
+                setError('')
+                return
+            }
+            if (allPatterns.includes(newPattern)) {
+                setError(`Pattern "${newPattern}" already exists`)
+                return
+            }
+            const updated = pairPatterns.map((p) =>
+                p === oldPattern ? newPattern : p,
+            )
+            await savePairIgnorePatterns(updated, leftDir, rightDir)
+            dispatch({
+                type: 'UPDATE_IGNORE_PATTERN',
+                oldPattern,
+                newPattern,
+            })
+            refresh()
         }
-        const updated = pairPatterns.map((p) =>
-            p === oldPattern ? newPattern : p,
-        )
-        await savePairIgnorePatterns(updated, leftDir, rightDir)
-        dispatch({
-            type: 'UPDATE_IGNORE_PATTERN',
-            oldPattern,
-            newPattern,
-        })
-        refresh()
         setEditValue('')
         setError('')
         setDisplayMode('browse')
     }
 
     const handleDelete = async () => {
-        const pattern = pairPatterns[selectedIndex]
-        if (!pattern) return
-        const remaining = pairPatterns.filter((p) => p !== pattern)
-        await savePairIgnorePatterns(remaining, leftDir, rightDir)
-        dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
-        refresh()
-        setSelectedIndex(
-            Math.min(selectedIndex, Math.max(0, remaining.length - 1)),
-        )
+        if (inGlobalSection) {
+            const pattern = globalPatterns[globalIndex]
+            if (!pattern) return
+            const remaining = globalPatterns.filter((p) => p !== pattern)
+            await saveGlobalIgnorePatterns(remaining)
+            dispatch({ type: 'REMOVE_GLOBAL_IGNORE_PATTERN', pattern })
+            refresh()
+            setSelectedIndex(
+                Math.min(
+                    selectedIndex,
+                    Math.max(
+                        0,
+                        pairPatterns.length + remaining.length - 1,
+                    ),
+                ),
+            )
+        } else {
+            const pattern = pairPatterns[selectedIndex]
+            if (!pattern) return
+            const remaining = pairPatterns.filter((p) => p !== pattern)
+            await savePairIgnorePatterns(remaining, leftDir, rightDir)
+            dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
+            refresh()
+            setSelectedIndex(
+                Math.min(
+                    selectedIndex,
+                    Math.max(0, remaining.length + globalPatterns.length - 1),
+                ),
+            )
+        }
     }
 
     const handleInputChange = (v: string) => {
@@ -108,10 +182,10 @@ export function IgnoreDialog({
                 dispatch({ type: 'HIDE_IGNORE_DIALOG' })
                 return
             }
-            if (pairPatterns.length > 0) {
+            if (totalLength > 0) {
                 if (input === 'j' || key.downArrow) {
                     setSelectedIndex((i) =>
-                        Math.min(pairPatterns.length - 1, i + 1),
+                        Math.min(totalLength - 1, i + 1),
                     )
                     return
                 }
@@ -124,17 +198,25 @@ export function IgnoreDialog({
                     return
                 }
                 if (key.return) {
-                    setEditValue(pairPatterns[selectedIndex] ?? '')
+                    const pattern = inGlobalSection
+                        ? globalPatterns[globalIndex]
+                        : pairPatterns[selectedIndex]
+                    setEditValue(pattern ?? '')
                     setError('')
                     setDisplayMode('edit')
                     return
                 }
             }
             if (input === 'a') {
-                setSelectedIndex(pairPatterns.length)
+                const section = inGlobalSection ? 'global' : 'pair'
+                const insertIndex =
+                    section === 'global'
+                        ? pairPatterns.length + globalPatterns.length
+                        : pairPatterns.length
+                setSelectedIndex(insertIndex)
                 setEditValue('')
                 setError('')
-                setIsAdding(true)
+                setAddingSection(section)
                 setDisplayMode('edit')
                 return
             }
@@ -146,9 +228,51 @@ export function IgnoreDialog({
             setDisplayMode('browse')
             setEditValue('')
             setError('')
-            setIsAdding(false)
+            setAddingSection(null)
         }
     })
+
+    const renderPatternList = (
+        patterns: string[],
+        indexOffset: number,
+        isEditing: boolean,
+    ) =>
+        patterns.map((p, i) => {
+            const flatIndex = indexOffset + i
+            if (
+                displayMode === 'edit'
+                && !addingSection
+                && flatIndex === selectedIndex
+            ) {
+                return (
+                    <InputField
+                        key={p}
+                        label='Edit'
+                        value={editValue}
+                        onChange={handleInputChange}
+                        onSubmit={handleEditSubmit}
+                        error={error}
+                    />
+                )
+            }
+            return (
+                <Text key={p}>
+                    {displayMode === 'browse' && flatIndex === selectedIndex ?
+                        <Text bold color='cyan'>
+                            {'▸ '}
+                        </Text>
+                    :   <Text>{'  '}</Text>}
+                    <Text
+                        bold={
+                            displayMode === 'browse'
+                            && flatIndex === selectedIndex
+                        }
+                    >
+                        {p}
+                    </Text>
+                </Text>
+            )
+        })
 
     return (
         <Dialog
@@ -158,71 +282,41 @@ export function IgnoreDialog({
             width={40}
         >
             <Box flexDirection='column'>
-                {globalPatterns.length > 0 && (
-                    <Box flexDirection='column'>
-                        <Text dimColor bold>
-                            Global:
-                        </Text>
-                        {globalPatterns.map((p) => (
-                            <Text
-                                key={p}
-                                dimColor
-                            >
-                                {'  '}
-                                {p}
-                            </Text>
-                        ))}
-                    </Box>
-                )}
                 <Box flexDirection='column'>
-                    <Text
-                        dimColor
-                        bold
-                    >
+                    <Text dimColor bold>
                         This comparison:
                     </Text>
                     {pairPatterns.length === 0
-                        && !isAdding
+                        && addingSection !== 'pair'
                         && displayMode === 'browse' && (
                             <Text dimColor>{'  '}No patterns defined</Text>
                         )}
-                    {pairPatterns.map((p, i) =>
-                        (
-                            displayMode === 'edit'
-                            && !isAdding
-                            && i === selectedIndex
-                        ) ?
-                            <InputField
-                                key={p}
-                                label='Edit'
-                                value={editValue}
-                                onChange={handleInputChange}
-                                onSubmit={handleEditSubmit}
-                                error={error}
-                            />
-                        :   <Text key={p}>
-                                {(
-                                    displayMode === 'browse'
-                                    && i === selectedIndex
-                                ) ?
-                                    <Text
-                                        bold
-                                        color='cyan'
-                                    >
-                                        {'▸ '}
-                                    </Text>
-                                :   <Text>{'  '}</Text>}
-                                <Text
-                                    bold={
-                                        displayMode === 'browse'
-                                        && i === selectedIndex
-                                    }
-                                >
-                                    {p}
-                                </Text>
-                            </Text>,
+                    {renderPatternList(pairPatterns, 0, true)}
+                    {addingSection === 'pair' && (
+                        <InputField
+                            label='Add'
+                            value={editValue}
+                            onChange={handleInputChange}
+                            onSubmit={handleEditSubmit}
+                            error={error}
+                        />
                     )}
-                    {isAdding && (
+                </Box>
+                <Box flexDirection='column'>
+                    <Text dimColor bold>
+                        Global:
+                    </Text>
+                    {globalPatterns.length === 0
+                        && addingSection !== 'global'
+                        && displayMode === 'browse' && (
+                            <Text dimColor>{'  '}No patterns defined</Text>
+                        )}
+                    {renderPatternList(
+                        globalPatterns,
+                        pairPatterns.length,
+                        true,
+                    )}
+                    {addingSection === 'global' && (
                         <InputField
                             label='Add'
                             value={editValue}

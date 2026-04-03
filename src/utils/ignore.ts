@@ -108,6 +108,14 @@ export async function savePairIgnorePatterns(
     )
 }
 
+export async function saveGlobalIgnorePatterns(
+    patterns: string[],
+): Promise<void> {
+    const globalPath = getGlobalIgnoreFilePath()
+    await fs.promises.mkdir(path.dirname(globalPath), { recursive: true })
+    await fs.promises.writeFile(globalPath, patterns.join('\n') + '\n')
+}
+
 export function compileIgnoreMatcher(
     patterns: string[],
 ): (relativePath: string) => boolean {
