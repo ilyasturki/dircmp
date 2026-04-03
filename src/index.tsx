@@ -53,6 +53,23 @@ for (const dir of [leftDir, rightDir]) {
 }
 
 const config = loadConfig()
+
+const ENTER_ALT_SCREEN = '\x1b[?1049h'
+const EXIT_ALT_SCREEN = '\x1b[?1049l'
+
+let inAlternateScreen = false
+
+const exitAlternateScreen = () => {
+    if (inAlternateScreen) {
+        inAlternateScreen = false
+        process.stdout.write(EXIT_ALT_SCREEN)
+    }
+}
+
+process.stdout.write(ENTER_ALT_SCREEN)
+inAlternateScreen = true
+process.on('exit', exitAlternateScreen)
+
 const { waitUntilExit } = render(
     <App
         leftDir={leftDir}
@@ -60,4 +77,9 @@ const { waitUntilExit } = render(
         initialConfig={config}
     />,
 )
-await waitUntilExit()
+
+try {
+    await waitUntilExit()
+} finally {
+    exitAlternateScreen()
+}
