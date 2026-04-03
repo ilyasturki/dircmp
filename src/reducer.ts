@@ -12,14 +12,11 @@ export function createInitialState(config: AppConfig): AppState {
         rightScan: null,
         error: null,
         entries: [],
-        showPreferences: false,
-        showDeleteConfirm: false,
-        showContextMenu: false,
+        dialog: null,
         config,
         swapped: false,
         filterMode: 'all',
         ignoreEnabled: true,
-        showIgnoreDialog: false,
         globalIgnorePatterns: [],
         pairIgnorePatterns: [],
     }
@@ -355,14 +352,14 @@ export function reducer(state: AppState, action: Action): AppState {
             const side = state.focusedPanel
             const file = side === 'left' ? entry.left : entry.right
             if (!file) return state
-            return { ...state, showDeleteConfirm: true }
+            return { ...state, dialog: 'deleteConfirm' }
         }
         case 'CANCEL_DELETE':
-            return { ...state, showDeleteConfirm: false }
+            return { ...state, dialog: null }
         case 'DELETE_COMPLETE':
             return {
                 ...state,
-                showDeleteConfirm: false,
+                dialog: null,
                 leftScan: null,
                 rightScan: null,
                 entries: [],
@@ -370,10 +367,10 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'SHOW_CONTEXT_MENU': {
             const entry = state.entries[state.cursorIndex]
             if (!entry) return state
-            return { ...state, showContextMenu: true }
+            return { ...state, dialog: 'contextMenu' }
         }
         case 'HIDE_CONTEXT_MENU':
-            return { ...state, showContextMenu: false }
+            return { ...state, dialog: null }
         case 'TOGGLE_IGNORE': {
             return {
                 ...state,
@@ -386,9 +383,9 @@ export function reducer(state: AppState, action: Action): AppState {
             }
         }
         case 'SHOW_IGNORE_DIALOG':
-            return { ...state, showIgnoreDialog: true }
+            return { ...state, dialog: 'ignoreDialog' }
         case 'HIDE_IGNORE_DIALOG':
-            return { ...state, showIgnoreDialog: false }
+            return { ...state, dialog: null }
         case 'SET_IGNORE_PATTERNS':
             return {
                 ...state,
@@ -478,7 +475,10 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'REDRAW':
             return { ...state }
         case 'TOGGLE_PREFERENCES':
-            return { ...state, showPreferences: !state.showPreferences }
+            return {
+                ...state,
+                dialog: state.dialog === 'preferences' ? null : 'preferences',
+            }
         case 'UPDATE_CONFIG':
             return { ...state, config: action.config }
         default:

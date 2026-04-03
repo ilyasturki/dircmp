@@ -57,10 +57,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        !state.showPreferences
-            && !state.showDeleteConfirm
-            && !state.showContextMenu
-            && !state.showIgnoreDialog,
+        state.dialog === null,
         refresh,
         contentHeight,
     )
@@ -118,6 +115,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                         entries={state.entries}
                         cursorIndex={state.cursorIndex}
                         focusedPanel={state.focusedPanel}
+                        dialogOpen={state.dialog !== null}
                         visibleHeight={contentHeight}
                         scrollOffset={scrollOffset}
                     />
@@ -136,7 +134,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 toastMessage={toastMessage}
                 showHints={state.config.showHints}
             />
-            {state.showPreferences && (
+            {state.dialog === 'preferences' && (
                 <PreferencesDialog
                     config={state.config}
                     dispatch={dispatch}
@@ -144,19 +142,20 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                     rows={rows}
                 />
             )}
-            {state.showDeleteConfirm && state.entries[state.cursorIndex] && (
-                <ConfirmDeleteDialog
-                    entry={state.entries[state.cursorIndex]!}
-                    side={state.focusedPanel}
-                    leftDir={effectiveLeftDir}
-                    rightDir={effectiveRightDir}
-                    dispatch={dispatch}
-                    refresh={refresh}
-                    columns={columns}
-                    rows={rows}
-                />
-            )}
-            {state.showIgnoreDialog && (
+            {state.dialog === 'deleteConfirm'
+                && state.entries[state.cursorIndex] && (
+                    <ConfirmDeleteDialog
+                        entry={state.entries[state.cursorIndex]!}
+                        side={state.focusedPanel}
+                        leftDir={effectiveLeftDir}
+                        rightDir={effectiveRightDir}
+                        dispatch={dispatch}
+                        refresh={refresh}
+                        columns={columns}
+                        rows={rows}
+                    />
+                )}
+            {state.dialog === 'ignoreDialog' && (
                 <IgnoreDialog
                     globalPatterns={state.globalIgnorePatterns}
                     pairPatterns={state.pairIgnorePatterns}
@@ -168,16 +167,17 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                     rows={rows}
                 />
             )}
-            {state.showContextMenu && state.entries[state.cursorIndex] && (
-                <ContextMenu
-                    entry={state.entries[state.cursorIndex]!}
-                    side={state.focusedPanel}
-                    dispatch={dispatch}
-                    onExecuteAction={onExecuteAction}
-                    columns={columns}
-                    rows={rows}
-                />
-            )}
+            {state.dialog === 'contextMenu'
+                && state.entries[state.cursorIndex] && (
+                    <ContextMenu
+                        entry={state.entries[state.cursorIndex]!}
+                        side={state.focusedPanel}
+                        dispatch={dispatch}
+                        onExecuteAction={onExecuteAction}
+                        columns={columns}
+                        rows={rows}
+                    />
+                )}
         </Box>
     )
 }

@@ -25,6 +25,12 @@ export type ScanResult = Map<string, FileEntry>
 
 export type PanelSide = 'left' | 'right'
 
+export type DialogType =
+    | 'preferences'
+    | 'deleteConfirm'
+    | 'contextMenu'
+    | 'ignoreDialog'
+
 export type FilterMode = 'all' | 'diff-only'
 
 export type Action =
@@ -82,14 +88,11 @@ export interface AppState {
     rightScan: ScanResult | null
     error: string | null
     entries: CompareEntry[]
-    showPreferences: boolean
-    showDeleteConfirm: boolean
-    showContextMenu: boolean
+    dialog: DialogType | null
     config: import('~/utils/config').AppConfig
     swapped: boolean
     filterMode: FilterMode
     ignoreEnabled: boolean
-    showIgnoreDialog: boolean
     globalIgnorePatterns: string[]
     pairIgnorePatterns: string[]
 }

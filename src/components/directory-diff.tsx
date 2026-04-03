@@ -12,6 +12,7 @@ interface DirectoryDiffProps {
     entries: CompareEntry[]
     cursorIndex: number
     focusedPanel: PanelSide
+    dialogOpen: boolean
     visibleHeight: number
     scrollOffset: number
 }
@@ -22,6 +23,7 @@ export function DirectoryDiff({
     entries,
     cursorIndex,
     focusedPanel,
+    dialogOpen,
     visibleHeight,
     scrollOffset,
 }: DirectoryDiffProps) {
@@ -31,7 +33,7 @@ export function DirectoryDiff({
                 rootPath={leftDir.replace(homeDir, '~')}
                 entries={entries}
                 cursorIndex={cursorIndex}
-                isFocused={focusedPanel === 'left'}
+                isFocused={!dialogOpen && focusedPanel === 'left'}
                 side='left'
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
@@ -40,7 +42,7 @@ export function DirectoryDiff({
                 rootPath={rightDir.replace(homeDir, '~')}
                 entries={entries}
                 cursorIndex={cursorIndex}
-                isFocused={focusedPanel === 'right'}
+                isFocused={!dialogOpen && focusedPanel === 'right'}
                 side='right'
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
