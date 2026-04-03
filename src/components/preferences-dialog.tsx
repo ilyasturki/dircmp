@@ -1,5 +1,5 @@
 import type { Dispatch } from 'react'
-import { Text, useInput } from 'ink'
+import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { AppConfig } from '~/utils/config'
@@ -15,17 +15,21 @@ interface PreferencesDialogProps {
     rows: number
 }
 
+type Field = 'dateLocale' | 'showHints'
+const fields: Field[] = ['dateLocale', 'showHints']
+
 export function PreferencesDialog({
     config,
     dispatch,
     columns,
     rows,
 }: PreferencesDialogProps) {
+    const [focusedField, setFocusedField] = useState<Field>('dateLocale')
     const [editing, setEditing] = useState(false)
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
 
-    const handleSubmit = (value: string) => {
+    const handleSubmitLocale = (value: string) => {
         const trimmed = value.trim()
         const newLocale = trimmed === '' ? undefined : trimmed
 
@@ -45,6 +49,12 @@ export function PreferencesDialog({
         setError('')
     }
 
+    const toggleShowHints = () => {
+        const newConfig = { ...config, showHints: !config.showHints }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+    }
+
     useInput((input, key) => {
         if (editing) {
             if (key.escape) {
@@ -58,14 +68,30 @@ export function PreferencesDialog({
             dispatch({ type: 'TOGGLE_PREFERENCES' })
             return
         }
-        if (key.return) {
-            setEditing(true)
-            setEditValue(config.dateLocale ?? '')
-            setError('')
+
+        if (key.upArrow || input === 'k') {
+            const idx = fields.indexOf(focusedField)
+            if (idx > 0) setFocusedField(fields[idx - 1])
+            return
+        }
+        if (key.downArrow || input === 'j') {
+            const idx = fields.indexOf(focusedField)
+            if (idx < fields.length - 1) setFocusedField(fields[idx + 1])
+            return
+        }
+
+        if (key.return || (input === ' ' && focusedField === 'showHints')) {
+            if (focusedField === 'dateLocale' && key.return) {
+                setEditing(true)
+                setEditValue(config.dateLocale ?? '')
+                setError('')
+            } else if (focusedField === 'showHints') {
+                toggleShowHints()
+            }
         }
     })
 
-    const displayValue = config.dateLocale ?? '(system default)'
+    const localeDisplayValue = config.dateLocale ?? '(system default)'
 
     return (
         <Dialog
@@ -76,17 +102,30 @@ export function PreferencesDialog({
         >
             <InputField
                 label='Date locale'
-                editing={editing}
+                editing={editing && focusedField === 'dateLocale'}
+                highlighted={focusedField === 'dateLocale'}
                 value={editValue}
                 onChange={(value) => {
                     setEditValue(value)
                     setError('')
                 }}
-                onSubmit={handleSubmit}
-                focus={editing}
+                onSubmit={handleSubmitLocale}
+                focus={editing && focusedField === 'dateLocale'}
                 error={error}
-                displayValue={displayValue}
+                displayValue={localeDisplayValue}
             />
+            <Box>
+                <Text>
+                    <Text
+                        bold={focusedField === 'showHints'}
+                        inverse={focusedField === 'showHints'}
+                    >
+                        {' '}
+                        Show help hints{' '}
+                    </Text>
+                    <Text> {config.showHints ? 'yes' : 'no'}</Text>
+                </Text>
+            </Box>
         </Dialog>
     )
 }

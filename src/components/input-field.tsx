@@ -8,6 +8,7 @@ interface InputFieldProps {
     onSubmit: (value: string) => void
     editing?: boolean
     focus?: boolean
+    highlighted?: boolean
     error?: string
     displayValue?: string
 }
@@ -19,6 +20,7 @@ export function InputField({
     onSubmit,
     editing = true,
     focus = true,
+    highlighted = true,
     error,
     displayValue,
 }: InputFieldProps) {
@@ -27,8 +29,8 @@ export function InputField({
             <Box flexDirection='column'>
                 <Text>
                     <Text
-                        bold
-                        inverse
+                        bold={highlighted}
+                        inverse={highlighted}
                     >
                         {' '}
                         {label}{' '}

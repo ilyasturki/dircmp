@@ -20,6 +20,7 @@ interface StatusBarProps {
     leftScan: ScanResult | null
     rightScan: ScanResult | null
     toastMessage: string | null
+    showHints: boolean
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -141,6 +142,7 @@ export function StatusBar({
     leftScan,
     rightScan,
     toastMessage,
+    showHints,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
 
@@ -176,9 +178,11 @@ export function StatusBar({
                 </Box>
                 {toastMessage && <Text dimColor>{toastMessage}</Text>}
             </Box>
-            <Box>
-                <KeyboardHints items={helpItems} />
-            </Box>
+            {showHints && (
+                <Box>
+                    <KeyboardHints items={helpItems} />
+                </Box>
+            )}
         </Box>
     )
 }

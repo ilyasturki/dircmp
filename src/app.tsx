@@ -47,8 +47,8 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
     const effectiveRightDir = state.swapped ? leftDir : rightDir
 
-    // Reserve rows: 2 for status bar, 3 for borders (top/bottom + status border)
-    const contentHeight = Math.max(1, rows - 5)
+    // Reserve rows: status bar (2 with hints, 1 without) + 3 for borders
+    const contentHeight = Math.max(1, rows - (state.config.showHints ? 5 : 4))
 
     const { exit } = useApp()
 
@@ -134,6 +134,7 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                 leftScan={state.leftScan}
                 rightScan={state.rightScan}
                 toastMessage={toastMessage}
+                showHints={state.config.showHints}
             />
             {state.showPreferences && (
                 <PreferencesDialog

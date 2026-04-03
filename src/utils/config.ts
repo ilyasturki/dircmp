@@ -4,9 +4,13 @@ import path from 'node:path'
 
 export interface AppConfig {
     dateLocale: string | undefined
+    showHints: boolean
 }
 
-export const defaultConfig: AppConfig = { dateLocale: undefined }
+export const defaultConfig: AppConfig = {
+    dateLocale: undefined,
+    showHints: true,
+}
 
 function getConfigPath(): string {
     return path.join(os.homedir(), '.config', 'dircmp', 'config.json')
@@ -21,6 +25,8 @@ export function loadConfig(): AppConfig {
                 typeof parsed.dateLocale === 'string' ?
                     parsed.dateLocale
                 :   undefined,
+            showHints:
+                typeof parsed.showHints === 'boolean' ? parsed.showHints : true,
         }
     } catch {
         return { ...defaultConfig }
