@@ -148,6 +148,9 @@ if (subcommand === 'diff') {
 
     const config = loadConfig()
 
+    const { terminal } = await import('os-theme')
+    const terminalTheme = (await terminal.current()) ?? 'dark'
+
     const ENTER_ALT_SCREEN = '\x1b[?1049h'
     const EXIT_ALT_SCREEN = '\x1b[?1049l'
 
@@ -170,6 +173,7 @@ if (subcommand === 'diff') {
             rightDir={rightDir}
             initialConfig={config}
             ignoreOptions={ignoreOptions}
+            terminalTheme={terminalTheme}
         />,
     )
 

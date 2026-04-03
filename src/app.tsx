@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { Box, Text, useApp, useStdout } from 'ink'
-import { useCallback, useMemo, useReducer } from 'react'
+import { terminal } from 'os-theme'
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
@@ -16,6 +17,7 @@ import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
+import { TerminalThemeProvider } from '~/context/terminal-theme'
 import { executeAction } from '~/execute-action'
 import {
     useDirectoryScan,
@@ -32,9 +34,19 @@ interface AppProps {
     rightDir: string
     initialConfig: AppConfig
     ignoreOptions?: CliIgnoreOptions
+    terminalTheme: 'dark' | 'light'
 }
 
-export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProps) {
+export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalTheme }: AppProps) {
+    const [theme, setTheme] = useState(terminalTheme)
+
+    useEffect(() => {
+        terminal.on('change', setTheme)
+        return () => {
+            terminal.off('change', setTheme)
+        }
+    }, [])
+
     const [state, dispatch] = useReducer(
         reducer,
         { config: initialConfig, ignoreEnabled: !ignoreOptions?.noIgnore },
@@ -138,18 +150,20 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                 >
                     <Text color='yellow'>Scanning directories...</Text>
                 </Box>
-            :   <DateLocaleProvider value={state.config.dateLocale}>
-                    <DirectoryDiff
-                        leftDir={effectiveLeftDir}
-                        rightDir={effectiveRightDir}
-                        entries={state.entries}
-                        cursorIndex={state.cursorIndex}
-                        focusedPanel={state.focusedPanel}
-                        dialogOpen={state.dialog !== null}
-                        visibleHeight={contentHeight}
-                        scrollOffset={scrollOffset}
-                    />
-                </DateLocaleProvider>
+            :   <TerminalThemeProvider value={theme}>
+                    <DateLocaleProvider value={state.config.dateLocale}>
+                        <DirectoryDiff
+                            leftDir={effectiveLeftDir}
+                            rightDir={effectiveRightDir}
+                            entries={state.entries}
+                            cursorIndex={state.cursorIndex}
+                            focusedPanel={state.focusedPanel}
+                            dialogOpen={state.dialog !== null}
+                            visibleHeight={contentHeight}
+                            scrollOffset={scrollOffset}
+                        />
+                    </DateLocaleProvider>
+                </TerminalThemeProvider>
             }
             <StatusBar
                 isLoading={isLoading}

@@ -2,6 +2,7 @@ import { Box, Text, useStdout } from 'ink'
 
 import type { CompareEntry, FileEntry } from '~/utils/types'
 import { useDateFormatter } from '~/context/date-locale'
+import { useTerminalTheme } from '~/context/terminal-theme'
 import { getFileIcon } from '~/utils/file-icons'
 import { formatSize } from '~/utils/format-size'
 
@@ -21,6 +22,8 @@ export function MissingEntryRow({
     isDimSelected: boolean
 }) {
     const panelWidth = usePanelWidth()
+    const theme = useTerminalTheme()
+    const dimSelectedBg = theme === 'light' ? '#d4d4d4' : 'gray'
     const content = ''
 
     return (
@@ -28,7 +31,7 @@ export function MissingEntryRow({
             <Text
                 color='red'
                 inverse={isSelected}
-                backgroundColor={isDimSelected ? 'gray' : undefined}
+                backgroundColor={isDimSelected ? dimSelectedBg : undefined}
             >
                 {content.padEnd(panelWidth)}
             </Text>
@@ -63,6 +66,8 @@ export function EntryRow({
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const panelWidth = usePanelWidth()
+    const theme = useTerminalTheme()
+    const dimSelectedBg = theme === 'light' ? '#d4d4d4' : 'gray'
     const colorIconOnly = entry.isDirectory && color
 
     const left = `${indent}${icon} ${name}`
@@ -78,7 +83,7 @@ export function EntryRow({
                 dimColor={dimColor}
                 color={colorIconOnly ? undefined : color}
                 inverse={isSelected}
-                backgroundColor={isDimSelected ? 'gray' : undefined}
+                backgroundColor={isDimSelected ? dimSelectedBg : undefined}
             >
                 {colorIconOnly ?
                     <>
