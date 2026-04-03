@@ -11,6 +11,7 @@ interface InputFieldProps {
     highlighted?: boolean
     error?: string
     displayValue?: string
+    hint?: string
 }
 
 export function InputField({
@@ -23,6 +24,7 @@ export function InputField({
     highlighted = true,
     error,
     displayValue,
+    hint,
 }: InputFieldProps) {
     if (!editing) {
         return (
@@ -37,6 +39,7 @@ export function InputField({
                     </Text>
                     <Text> {displayValue}</Text>
                 </Text>
+                {hint && <Text dimColor>  {hint}</Text>}
             </Box>
         )
     }
@@ -53,6 +56,7 @@ export function InputField({
                 />
             </Text>
             {error && <Text color='red'>{error}</Text>}
+            {hint && !error && <Text dimColor>  {hint}</Text>}
         </Box>
     )
 }

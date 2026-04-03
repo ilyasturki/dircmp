@@ -18,6 +18,11 @@ interface PreferencesDialogProps {
 type Field = 'dateLocale' | 'showHints' | 'compareDates' | 'diffCommand'
 const fields: Field[] = ['dateLocale', 'showHints', 'compareDates', 'diffCommand']
 
+const fieldHints: Partial<Record<Field, string>> = {
+    dateLocale: 'e.g. en-US, de-DE, ja-JP',
+    diffCommand: 'e.g. nvim -d, vimdiff, delta',
+}
+
 export function PreferencesDialog({
     config,
     dispatch,
@@ -140,6 +145,7 @@ export function PreferencesDialog({
                 focus={editing && focusedField === 'dateLocale'}
                 error={error}
                 displayValue={localeDisplayValue}
+                hint={fieldHints.dateLocale}
             />
             <Box>
                 <Text>
@@ -178,6 +184,7 @@ export function PreferencesDialog({
                 focus={editing && focusedField === 'diffCommand'}
                 error={error}
                 displayValue={config.diffCommand ?? '(built-in)'}
+                hint={fieldHints.diffCommand}
             />
         </Dialog>
     )
