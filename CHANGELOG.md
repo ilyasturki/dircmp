@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0]
+
+### Added
+
+- Filter entries by name with `/` key and live highlighted results
+- `compareDates` config option to toggle date-based file comparison
+- Hint text in preference input fields
+- Modified marker and `d`-to-reset shortcut in preferences dialog
+
+### Changed
+
+- Adapt unfocused selection background to terminal color scheme
+
 ## [0.2.0]
 
 ### Added
