@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0]
+
+### Added
+
+- `diff` and `check` CLI subcommands with ignore flags
+- Built-in unified diff viewer with line-level added/removed counts
+- Configurable external diff command via `diffCommand` config option
+- User-customizable keybindings via `~/.config/dircmp/keybindings.json`
+- In-app keybindings editor dialog with edit and reset
+- Quick-ignore dialog on `i` key
+
+### Fixed
+
+- Consistent editable format and input validation in keybindings
+
 ## [0.1.1]
 
 ### Changed
