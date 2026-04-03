@@ -21,6 +21,7 @@ interface StatusBarProps {
     rightScan: ScanResult | null
     toastMessage: string | null
     showHints: boolean
+    compareDates: boolean
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -103,6 +104,7 @@ function getEntryInfo(
     leftScan: ScanResult | null,
     rightScan: ScanResult | null,
     lineDiffCount: number | null,
+    compareDates: boolean,
 ): string {
     if (!entry) return ''
 
@@ -120,6 +122,7 @@ function getEntryInfo(
                     leftScan,
                     rightScan,
                     entry.relativePath,
+                    { compareDates },
                 )
                 return `${count} different file${count !== 1 ? 's' : ''}`
             }
@@ -143,6 +146,7 @@ export function StatusBar({
     rightScan,
     toastMessage,
     showHints,
+    compareDates,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
 
@@ -166,6 +170,7 @@ export function StatusBar({
         leftScan,
         rightScan,
         lineDiffCount,
+        compareDates,
     )
 
     return (

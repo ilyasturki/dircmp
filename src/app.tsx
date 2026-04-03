@@ -163,6 +163,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                 rightScan={state.rightScan}
                 toastMessage={toastMessage}
                 showHints={state.config.showHints}
+                compareDates={state.config.compareDates}
             />
             {state.dialog === 'preferences' && (
                 <PreferencesDialog

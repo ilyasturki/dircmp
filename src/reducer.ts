@@ -34,6 +34,7 @@ function recomputeEntries(state: AppState): CompareEntry[] {
         state.rightScan,
         state.expandedDirs,
         state.filterMode,
+        { compareDates: state.config.compareDates },
     )
 }
 
@@ -292,6 +293,7 @@ export function reducer(state: AppState, action: Action): AppState {
                 state.rightScan,
                 allDirs,
                 state.filterMode,
+                { compareDates: state.config.compareDates },
             )
 
             // Find current entry in full tree
@@ -503,8 +505,17 @@ export function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 dialog: state.dialog === 'preferences' ? null : 'preferences',
             }
-        case 'UPDATE_CONFIG':
-            return { ...state, config: action.config }
+        case 'UPDATE_CONFIG': {
+            const newState = { ...state, config: action.config }
+            if (action.config.compareDates !== state.config.compareDates) {
+                newState.entries = recomputeEntries(newState)
+                newState.cursorIndex = Math.min(
+                    state.cursorIndex,
+                    Math.max(0, newState.entries.length - 1),
+                )
+            }
+            return newState
+        }
         case 'SHOW_KEYBINDINGS_EDITOR':
             return { ...state, dialog: 'keybindingsEditor' }
         case 'HIDE_KEYBINDINGS_EDITOR':

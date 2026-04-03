@@ -8,10 +8,15 @@ import type {
 } from '~/utils/types'
 import { getEntriesAtPath } from '~/utils/scanner'
 
+export interface CompareOptions {
+    compareDates: boolean
+}
+
 function hasDescendantDiff(
     leftScan: ScanResult,
     rightScan: ScanResult,
     dirPath: string,
+    options: CompareOptions,
 ): boolean {
     const prefix = dirPath === '' ? '' : dirPath + path.sep
 
@@ -33,9 +38,10 @@ function hasDescendantDiff(
         const rightEntry = rightScan.get(p)
         if (!rightEntry) return true
         const leftEntry = leftScan.get(p)!
+        if (leftEntry.size !== rightEntry.size) return true
         if (
-            leftEntry.size !== rightEntry.size
-            || leftEntry.modifiedTime.getTime()
+            options.compareDates
+            && leftEntry.modifiedTime.getTime()
                 !== rightEntry.modifiedTime.getTime()
         )
             return true
@@ -52,6 +58,7 @@ export function countDescendantDiffs(
     leftScan: ScanResult,
     rightScan: ScanResult,
     dirPath: string,
+    options: CompareOptions,
 ): number {
     const prefix = dirPath === '' ? '' : dirPath + path.sep
     let count = 0
@@ -79,8 +86,9 @@ export function countDescendantDiffs(
         const leftEntry = leftScan.get(p)!
         if (
             leftEntry.size !== rightEntry.size
-            || leftEntry.modifiedTime.getTime()
-                !== rightEntry.modifiedTime.getTime()
+            || (options.compareDates
+                && leftEntry.modifiedTime.getTime()
+                    !== rightEntry.modifiedTime.getTime())
         ) {
             count++
         }
@@ -97,6 +105,7 @@ export function compareAtPath(
     leftScan: ScanResult,
     rightScan: ScanResult,
     dirPath: string,
+    options: CompareOptions,
 ): CompareEntry[] {
     const leftEntries = getEntriesAtPath(leftScan, dirPath)
     const rightEntries = getEntriesAtPath(rightScan, dirPath)
@@ -149,18 +158,15 @@ export function compareAtPath(
             status = 'only-left'
         } else if (isDir) {
             status =
-                hasDescendantDiff(leftScan, rightScan, relativePath) ?
+                hasDescendantDiff(leftScan, rightScan, relativePath, options) ?
                     'modified'
                 :   'identical'
         } else {
-            status =
-                (
-                    left.size === right.size
-                    && left.modifiedTime.getTime()
-                        === right.modifiedTime.getTime()
-                ) ?
-                    'identical'
-                :   'modified'
+            const sizeMatch = left.size === right.size
+            const dateMatch =
+                !options.compareDates
+                || left.modifiedTime.getTime() === right.modifiedTime.getTime()
+            status = sizeMatch && dateMatch ? 'identical' : 'modified'
         }
 
         entries.push({
@@ -188,11 +194,12 @@ export function buildVisibleTree(
     rightScan: ScanResult,
     expandedDirs: Set<string>,
     filterMode: FilterMode = 'all',
+    options: CompareOptions = { compareDates: true },
 ): CompareEntry[] {
     const result: CompareEntry[] = []
 
     function walk(dirPath: string, depth: number) {
-        const entries = compareAtPath(leftScan, rightScan, dirPath)
+        const entries = compareAtPath(leftScan, rightScan, dirPath, options)
         for (const entry of entries) {
             if (filterMode === 'diff-only' && entry.status === 'identical') {
                 continue

@@ -15,8 +15,8 @@ interface PreferencesDialogProps {
     rows: number
 }
 
-type Field = 'dateLocale' | 'showHints' | 'diffCommand'
-const fields: Field[] = ['dateLocale', 'showHints', 'diffCommand']
+type Field = 'dateLocale' | 'showHints' | 'compareDates' | 'diffCommand'
+const fields: Field[] = ['dateLocale', 'showHints', 'compareDates', 'diffCommand']
 
 export function PreferencesDialog({
     config,
@@ -65,6 +65,12 @@ export function PreferencesDialog({
         saveConfig(newConfig)
     }
 
+    const toggleCompareDates = () => {
+        const newConfig = { ...config, compareDates: !config.compareDates }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+    }
+
     useInput((input, key) => {
         if (editing) {
             if (key.escape) {
@@ -90,13 +96,20 @@ export function PreferencesDialog({
             return
         }
 
-        if (key.return || (input === ' ' && focusedField === 'showHints')) {
+        if (
+            key.return
+            || (input === ' '
+                && (focusedField === 'showHints'
+                    || focusedField === 'compareDates'))
+        ) {
             if (focusedField === 'dateLocale' && key.return) {
                 setEditing(true)
                 setEditValue(config.dateLocale ?? '')
                 setError('')
             } else if (focusedField === 'showHints') {
                 toggleShowHints()
+            } else if (focusedField === 'compareDates') {
+                toggleCompareDates()
             } else if (focusedField === 'diffCommand' && key.return) {
                 setEditing(true)
                 setEditValue(config.diffCommand ?? '')
@@ -138,6 +151,18 @@ export function PreferencesDialog({
                         Show help hints{' '}
                     </Text>
                     <Text> {config.showHints ? 'yes' : 'no'}</Text>
+                </Text>
+            </Box>
+            <Box>
+                <Text>
+                    <Text
+                        bold={focusedField === 'compareDates'}
+                        inverse={focusedField === 'compareDates'}
+                    >
+                        {' '}
+                        Compare dates{' '}
+                    </Text>
+                    <Text> {config.compareDates ? 'yes' : 'no'}</Text>
                 </Text>
             </Box>
             <InputField

@@ -23,7 +23,9 @@ function collectAllEntries(
     depth: number,
     filter: DiffFilter,
 ): CompareEntry[] {
-    const entries = compareAtPath(leftScan, rightScan, dirPath)
+    const entries = compareAtPath(leftScan, rightScan, dirPath, {
+        compareDates: true,
+    })
     const result: CompareEntry[] = []
 
     for (const entry of entries) {
