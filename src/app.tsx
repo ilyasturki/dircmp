@@ -6,6 +6,7 @@ import type { Action } from '~/utils/types'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
 import { ContextMenu } from '~/components/context-menu'
 import { DirectoryDiff } from '~/components/directory-diff'
+import { HelpDialog } from '~/components/help-dialog'
 import { IgnoreDialog } from '~/components/ignore-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
@@ -178,6 +179,15 @@ export function App({ leftDir, rightDir, initialConfig }: AppProps) {
                         rows={rows}
                     />
                 )}
+            {state.dialog === 'help' && (
+                <HelpDialog
+                    dispatch={dispatch}
+                    onExecuteAction={onExecuteAction}
+                    onExit={exit}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
         </Box>
     )
 }

@@ -474,6 +474,10 @@ export function reducer(state: AppState, action: Action): AppState {
         }
         case 'REDRAW':
             return { ...state }
+        case 'SHOW_HELP':
+            return { ...state, dialog: 'help' }
+        case 'HIDE_HELP':
+            return { ...state, dialog: null }
         case 'TOGGLE_PREFERENCES':
             return {
                 ...state,

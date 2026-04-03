@@ -30,6 +30,7 @@ export type DialogType =
     | 'deleteConfirm'
     | 'contextMenu'
     | 'ignoreDialog'
+    | 'help'
 
 export type FilterMode = 'all' | 'diff-only'
 
@@ -78,6 +79,8 @@ export type Action =
           newPattern: string
       }
     | { type: 'SET_IGNORE_PATTERNS'; global: string[]; pair: string[] }
+    | { type: 'SHOW_HELP' }
+    | { type: 'HIDE_HELP' }
 
 export interface AppState {
     focusedPanel: PanelSide
