@@ -8,7 +8,7 @@
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "typecheck": "tsc --noEmit",
-        "version": "./scripts/update-nix-hash.sh && git add flake.nix"
+        "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md"
     },
     "dependencies": {
         "diff": "^8.0.3",

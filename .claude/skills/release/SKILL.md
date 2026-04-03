@@ -42,8 +42,4 @@ Current CHANGELOG.md:
     - Combine related commits into a single entry when appropriate
     - Place the new section at the top, below the `# Changelog` heading
 
-4. **Review**: Show the CHANGELOG.md diff and wait for user confirmation before proceeding.
-
-5. **Commit**: Stage and commit CHANGELOG.md with message `docs: update changelog for $NEW_VERSION`.
-
-6. **Bump version**: Run `npm version $ARGUMENTS`. This triggers the version hook which updates the Nix flake hash and stages flake.nix automatically.
+4. **Bump version**: Run `npm version $ARGUMENTS --force`. This triggers the version hook which updates the Nix flake hash and stages flake.nix and CHANGELOG.md automatically.
