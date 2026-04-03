@@ -8,8 +8,8 @@ import {
     type KeybindingOverrides,
     formatKeyDef,
     loadKeybindings,
-    parseKeyDef,
     saveKeybindings,
+    validateKeyDef,
 } from '~/utils/keybindings'
 import { Dialog } from './dialog'
 import { InputField } from './input-field'
@@ -24,12 +24,12 @@ interface KeybindingsDialogProps {
     rows: number
 }
 
-function getCurrentLabel(
+function getEditableLabel(
     shortcut: Shortcut,
     overrides: KeybindingOverrides,
 ): string {
     const override = overrides[shortcut.id]
-    if (override === undefined) return shortcut.helpKey ?? ''
+    if (override === undefined) return formatKeyDef(shortcut.keyDef)
     return formatKeyDef(override)
 }
 
@@ -79,6 +79,12 @@ export function KeybindingsDialog({
         const parts = trimmed.split(',').map((s) => s.trim()).filter(Boolean)
         const keyDef = parts.length > 1 ? parts : trimmed
 
+        const validationError = validateKeyDef(keyDef)
+        if (validationError) {
+            setError(validationError)
+            return
+        }
+
         const shortcut = defaults[selectedIndex]
         if (!shortcut) return
 
@@ -125,7 +131,7 @@ export function KeybindingsDialog({
             if (key.return) {
                 const shortcut = defaults[selectedIndex]
                 if (!shortcut) return
-                setEditValue(getCurrentLabel(shortcut, overrides))
+                setEditValue(getEditableLabel(shortcut, overrides))
                 setError('')
                 setDisplayMode('edit')
                 return
@@ -163,7 +169,7 @@ export function KeybindingsDialog({
                     const absoluteIndex = scrollOffset + i
                     const isSelected = absoluteIndex === selectedIndex
                     const isCustomized = shortcut.id in overrides
-                    const currentKey = getCurrentLabel(shortcut, overrides)
+                    const currentKey = getEditableLabel(shortcut, overrides)
 
                     if (displayMode === 'edit' && isSelected) {
                         return (

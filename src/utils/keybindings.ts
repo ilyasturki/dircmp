@@ -87,6 +87,53 @@ export function parseKeyDef(def: string | string[]): ParsedKey {
     }
 }
 
+const VALID_MODIFIERS = new Set(['ctrl'])
+
+function validateKeyString(keyStr: string): string | null {
+    if (keyStr.length === 0) return 'Empty key'
+
+    // Modifier prefix
+    const plusIndex = keyStr.indexOf('+')
+    if (plusIndex !== -1) {
+        const modifier = keyStr.slice(0, plusIndex).toLowerCase()
+        const keyPart = keyStr.slice(plusIndex + 1)
+        if (!VALID_MODIFIERS.has(modifier))
+            return `Unknown modifier "${modifier}"`
+        if (keyPart.length !== 1)
+            return `Modifier key must be a single character, got "${keyPart}"`
+        return null
+    }
+
+    // Special key name
+    if (keyStr.toLowerCase() in SPECIAL_KEYS) return null
+
+    // Single character
+    if (keyStr.length === 1) return null
+
+    // Sequence — only printable characters allowed
+    if (/^[\x20-\x7e]+$/.test(keyStr)) return null
+
+    return `Invalid key "${keyStr}"`
+}
+
+export function validateKeyDef(def: string | string[]): string | null {
+    if (typeof def === 'string') return validateKeyString(def)
+    if (def.length === 0) return 'No keys specified'
+    for (const key of def) {
+        // Arrays can't contain sequences
+        if (
+            key.length > 1
+            && key.indexOf('+') === -1
+            && !(key.toLowerCase() in SPECIAL_KEYS)
+        ) {
+            return `Sequences like "${key}" cannot be combined with other keys`
+        }
+        const err = validateKeyString(key)
+        if (err) return err
+    }
+    return null
+}
+
 function getKeybindingsPath(): string {
     return path.join(os.homedir(), '.config', 'dircmp', 'keybindings.json')
 }
@@ -133,6 +180,7 @@ export function resolveKeymap(
             return {
                 ...shortcut,
                 match: parsed.match,
+                keyDef: override,
                 keyLabel: shortcut.keyLabel !== '' ? parsed.label : '',
                 helpKey: parsed.label,
                 sequence: parsed.sequence,
