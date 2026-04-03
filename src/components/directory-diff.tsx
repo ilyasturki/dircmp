@@ -1,6 +1,9 @@
+import os from 'node:os'
 import { Box } from 'ink'
 
 import type { CompareEntry, PanelSide } from '~/utils/types'
+
+const homeDir = os.homedir()
 import { DirectoryPanel } from '~/components/directory-panel'
 
 interface DirectoryDiffProps {
@@ -25,7 +28,7 @@ export function DirectoryDiff({
     return (
         <Box flexGrow={1}>
             <DirectoryPanel
-                rootPath={leftDir}
+                rootPath={leftDir.replace(homeDir, '~')}
                 entries={entries}
                 cursorIndex={cursorIndex}
                 isFocused={focusedPanel === 'left'}
@@ -34,7 +37,7 @@ export function DirectoryDiff({
                 scrollOffset={scrollOffset}
             />
             <DirectoryPanel
-                rootPath={rightDir}
+                rootPath={rightDir.replace(homeDir, '~')}
                 entries={entries}
                 cursorIndex={cursorIndex}
                 isFocused={focusedPanel === 'right'}
