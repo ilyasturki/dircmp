@@ -1,6 +1,6 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { Action } from '~/utils/types'
@@ -114,12 +114,27 @@ export function KeybindingsDialog({
         dispatch({ type: 'KEYBINDINGS_UPDATED' })
     }
 
+    const pendingGRef = useRef(false)
+
     useInput((input, key) => {
         if (displayMode === 'browse') {
             if (key.escape || input === 'q') {
                 dispatch({ type: 'HIDE_KEYBINDINGS_EDITOR' })
                 return
             }
+
+            // gg — go to top
+            if (input === 'g') {
+                if (pendingGRef.current) {
+                    pendingGRef.current = false
+                    scrollTo(0)
+                } else {
+                    pendingGRef.current = true
+                }
+                return
+            }
+            pendingGRef.current = false
+
             if (input === 'j' || key.downArrow) {
                 scrollTo(Math.min(defaults.length - 1, selectedIndex + 1))
                 return
@@ -132,6 +147,29 @@ export function KeybindingsDialog({
                 scrollTo(defaults.length - 1)
                 return
             }
+
+            // Half-page motions
+            if (key.ctrl && input === 'd') {
+                const jump = Math.floor(maxVisibleItems / 2)
+                scrollTo(Math.min(defaults.length - 1, selectedIndex + jump))
+                return
+            }
+            if (key.ctrl && input === 'u') {
+                const jump = Math.floor(maxVisibleItems / 2)
+                scrollTo(Math.max(0, selectedIndex - jump))
+                return
+            }
+
+            // Full-page motions
+            if (key.ctrl && input === 'f') {
+                scrollTo(Math.min(defaults.length - 1, selectedIndex + maxVisibleItems))
+                return
+            }
+            if (key.ctrl && input === 'b') {
+                scrollTo(Math.max(0, selectedIndex - maxVisibleItems))
+                return
+            }
+
             if (key.return) {
                 const shortcut = defaults[selectedIndex]
                 if (!shortcut) return
