@@ -1,4 +1,6 @@
+import fsp from 'node:fs/promises'
 import path from 'node:path'
+import { diffLines } from 'diff'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { CompareEntry, DiffStatus, ScanResult } from '~/utils/types'
@@ -71,14 +73,71 @@ function statusColor(status: DiffStatus): string {
     }
 }
 
+interface LineDiff {
+    added: number
+    removed: number
+}
+
+async function computeLineDiffs(
+    entries: CompareEntry[],
+    leftDir: string,
+    rightDir: string,
+): Promise<Map<string, LineDiff>> {
+    const result = new Map<string, LineDiff>()
+    const modified = entries.filter(
+        (e) => !e.isDirectory && e.status === 'modified',
+    )
+
+    await Promise.all(
+        modified.map(async (entry) => {
+            try {
+                const [leftContent, rightContent] = await Promise.all([
+                    fsp.readFile(
+                        path.join(leftDir, entry.relativePath),
+                        'utf-8',
+                    ),
+                    fsp.readFile(
+                        path.join(rightDir, entry.relativePath),
+                        'utf-8',
+                    ),
+                ])
+                const changes = diffLines(leftContent, rightContent)
+                let added = 0
+                let removed = 0
+                for (const change of changes) {
+                    const lineCount = change.count ?? 0
+                    if (change.added) added += lineCount
+                    else if (change.removed) removed += lineCount
+                }
+                result.set(entry.relativePath, { added, removed })
+            } catch {
+                // Binary file or read error — skip line diff
+            }
+        }),
+    )
+
+    return result
+}
+
 const RESET = '\x1b[0m'
 const DIM = '\x1b[2m'
 const BOLD = '\x1b[1m'
+const GREEN = '\x1b[32m'
+const RED = '\x1b[31m'
+
+function formatLineDiff(ld: LineDiff | undefined): string {
+    if (!ld) return ''
+    const parts: string[] = []
+    if (ld.added > 0) parts.push(`${GREEN}+${ld.added}${RESET}`)
+    if (ld.removed > 0) parts.push(`${RED}-${ld.removed}${RESET}`)
+    return parts.length > 0 ? parts.join(' ') : ''
+}
 
 function formatTree(
     entries: CompareEntry[],
     leftDir: string,
     rightDir: string,
+    lineDiffs: Map<string, LineDiff>,
 ): string {
     const lines: string[] = []
 
@@ -94,33 +153,51 @@ function formatTree(
         const suffix = entry.isDirectory ? '/' : ''
         const name = entry.name + suffix
 
-        let detail = ''
+        const detailParts: string[] = []
         if (!entry.isDirectory) {
             if (entry.status === 'modified' && entry.left && entry.right) {
-                detail = `${DIM}(${formatSize(entry.left.size).trim()} → ${formatSize(entry.right.size).trim()})${RESET}`
+                detailParts.push(
+                    `${DIM}${formatSize(entry.left.size).trim()} → ${formatSize(entry.right.size).trim()}${RESET}`,
+                )
+                const ld = formatLineDiff(lineDiffs.get(entry.relativePath))
+                if (ld) detailParts.push(ld)
             } else if (entry.status === 'only-left' && entry.left) {
-                detail = `${DIM}(${formatSize(entry.left.size).trim()})${RESET}`
+                detailParts.push(
+                    `${DIM}${formatSize(entry.left.size).trim()}${RESET}`,
+                )
             } else if (entry.status === 'only-right' && entry.right) {
-                detail = `${DIM}(${formatSize(entry.right.size).trim()})${RESET}`
+                detailParts.push(
+                    `${DIM}${formatSize(entry.right.size).trim()}${RESET}`,
+                )
             }
         }
 
+        const detail =
+            detailParts.length > 0 ?
+                `  ${DIM}(${RESET}${detailParts.join(`${DIM}, ${RESET}`)}${DIM})${RESET}`
+            :   ''
         lines.push(
-            `  ${color}${sym}${RESET} ${indent}${color}${name}${RESET}${detail ? '  ' + detail : ''}`,
+            `  ${color}${sym}${RESET} ${indent}${color}${name}${RESET}${detail}`,
         )
     }
 
     return lines.join('\n')
 }
 
-function formatFlat(entries: CompareEntry[]): string {
+function formatFlat(
+    entries: CompareEntry[],
+    lineDiffs: Map<string, LineDiff>,
+): string {
     const lines: string[] = []
 
     for (const entry of entries) {
         const sym = statusSymbol(entry.status)
         const color = statusColor(entry.status)
         const suffix = entry.isDirectory ? '/' : ''
-        lines.push(`${color}${sym} ${entry.relativePath}${suffix}${RESET}`)
+        let line = `${color}${sym} ${entry.relativePath}${suffix}${RESET}`
+        const ld = formatLineDiff(lineDiffs.get(entry.relativePath))
+        if (ld) line += `  ${ld}`
+        lines.push(line)
     }
 
     return lines.join('\n')
@@ -132,9 +209,14 @@ interface JsonEntry {
     isDirectory: boolean
     leftSize?: number
     rightSize?: number
+    linesAdded?: number
+    linesRemoved?: number
 }
 
-function formatJson(entries: CompareEntry[]): string {
+function formatJson(
+    entries: CompareEntry[],
+    lineDiffs: Map<string, LineDiff>,
+): string {
     const data: JsonEntry[] = entries
         .filter((e) => !e.isDirectory)
         .map((e) => {
@@ -145,6 +227,11 @@ function formatJson(entries: CompareEntry[]): string {
             }
             if (e.left) obj.leftSize = e.left.size
             if (e.right) obj.rightSize = e.right.size
+            const ld = lineDiffs.get(e.relativePath)
+            if (ld) {
+                obj.linesAdded = ld.added
+                obj.linesRemoved = ld.removed
+            }
             return obj
         })
 
@@ -193,16 +280,18 @@ export async function runDiff(
         return
     }
 
+    const lineDiffs = await computeLineDiffs(entries, leftDir, rightDir)
+
     let output: string
     switch (options.format) {
         case 'tree':
-            output = formatTree(entries, leftDir, rightDir)
+            output = formatTree(entries, leftDir, rightDir, lineDiffs)
             break
         case 'flat':
-            output = formatFlat(entries)
+            output = formatFlat(entries, lineDiffs)
             break
         case 'json':
-            output = formatJson(entries)
+            output = formatJson(entries, lineDiffs)
             break
     }
 
