@@ -13,6 +13,7 @@ import { InputField } from './input-field'
 import { KeyboardHints } from './keyboard-hints'
 
 type DisplayMode = 'browse' | 'edit'
+type Section = 'pair' | 'global'
 
 interface IgnoreDialogProps {
     globalPatterns: string[]
@@ -35,18 +36,33 @@ export function IgnoreDialog({
     columns,
     rows,
 }: IgnoreDialogProps) {
+    const [section, setSection] = useState<Section>('pair')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [displayMode, setDisplayMode] = useState<DisplayMode>('browse')
-    const [addingSection, setAddingSection] = useState<
-        'pair' | 'global' | null
-    >(null)
+    const [addingSection, setAddingSection] = useState<Section | null>(null)
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
 
-    const totalLength = pairPatterns.length + globalPatterns.length
-    const inGlobalSection = selectedIndex >= pairPatterns.length
-    const globalIndex = selectedIndex - pairPatterns.length
+    const patterns = section === 'pair' ? pairPatterns : globalPatterns
     const allPatterns = [...pairPatterns, ...globalPatterns]
+
+    const navigate = (direction: 'up' | 'down') => {
+        if (direction === 'down') {
+            if (selectedIndex < patterns.length - 1) {
+                setSelectedIndex((i) => i + 1)
+            } else if (section === 'pair') {
+                setSection('global')
+                setSelectedIndex(0)
+            }
+        } else {
+            if (selectedIndex > 0) {
+                setSelectedIndex((i) => i - 1)
+            } else if (section === 'global') {
+                setSection('pair')
+                setSelectedIndex(Math.max(0, pairPatterns.length - 1))
+            }
+        }
+    }
 
     const handleEditSubmit = async (input: string) => {
         const newPattern = input.trim()
@@ -64,6 +80,7 @@ export function IgnoreDialog({
             setError('')
             setAddingSection(null)
             setDisplayMode('browse')
+            setSection('pair')
             setSelectedIndex(pairPatterns.length)
             return
         }
@@ -83,23 +100,24 @@ export function IgnoreDialog({
             setError('')
             setAddingSection(null)
             setDisplayMode('browse')
-            setSelectedIndex(pairPatterns.length + globalPatterns.length)
+            setSection('global')
+            setSelectedIndex(globalPatterns.length)
             return
         }
 
         // Editing existing pattern
-        if (inGlobalSection) {
-            const oldPattern = globalPatterns[globalIndex]
-            if (!oldPattern) return
-            if (newPattern === oldPattern) {
-                setDisplayMode('browse')
-                setError('')
-                return
-            }
-            if (allPatterns.includes(newPattern)) {
-                setError(`Pattern "${newPattern}" already exists`)
-                return
-            }
+        const oldPattern = patterns[selectedIndex]
+        if (!oldPattern) return
+        if (newPattern === oldPattern) {
+            setDisplayMode('browse')
+            setError('')
+            return
+        }
+        if (allPatterns.includes(newPattern)) {
+            setError(`Pattern "${newPattern}" already exists`)
+            return
+        }
+        if (section === 'global') {
             const updated = globalPatterns.map((p) =>
                 p === oldPattern ? newPattern : p,
             )
@@ -109,19 +127,7 @@ export function IgnoreDialog({
                 oldPattern,
                 newPattern,
             })
-            refresh()
         } else {
-            const oldPattern = pairPatterns[selectedIndex]
-            if (!oldPattern) return
-            if (newPattern === oldPattern) {
-                setDisplayMode('browse')
-                setError('')
-                return
-            }
-            if (allPatterns.includes(newPattern)) {
-                setError(`Pattern "${newPattern}" already exists`)
-                return
-            }
             const updated = pairPatterns.map((p) =>
                 p === oldPattern ? newPattern : p,
             )
@@ -131,43 +137,42 @@ export function IgnoreDialog({
                 oldPattern,
                 newPattern,
             })
-            refresh()
         }
+        refresh()
         setEditValue('')
         setError('')
         setDisplayMode('browse')
     }
 
     const handleDelete = async () => {
-        if (inGlobalSection) {
-            const pattern = globalPatterns[globalIndex]
-            if (!pattern) return
+        const pattern = patterns[selectedIndex]
+        if (!pattern) return
+        if (section === 'global') {
             const remaining = globalPatterns.filter((p) => p !== pattern)
             await saveGlobalIgnorePatterns(remaining)
             dispatch({ type: 'REMOVE_GLOBAL_IGNORE_PATTERN', pattern })
             refresh()
-            setSelectedIndex(
-                Math.min(
-                    selectedIndex,
-                    Math.max(
-                        0,
-                        pairPatterns.length + remaining.length - 1,
-                    ),
-                ),
-            )
+            if (remaining.length === 0) {
+                setSection('pair')
+                setSelectedIndex(Math.max(0, pairPatterns.length - 1))
+            } else {
+                setSelectedIndex(
+                    Math.min(selectedIndex, remaining.length - 1),
+                )
+            }
         } else {
-            const pattern = pairPatterns[selectedIndex]
-            if (!pattern) return
             const remaining = pairPatterns.filter((p) => p !== pattern)
             await savePairIgnorePatterns(remaining, leftDir, rightDir)
             dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
             refresh()
-            setSelectedIndex(
-                Math.min(
-                    selectedIndex,
-                    Math.max(0, remaining.length + globalPatterns.length - 1),
-                ),
-            )
+            if (remaining.length === 0 && globalPatterns.length > 0) {
+                setSection('global')
+                setSelectedIndex(0)
+            } else {
+                setSelectedIndex(
+                    Math.min(selectedIndex, Math.max(0, remaining.length - 1)),
+                )
+            }
         }
     }
 
@@ -182,38 +187,27 @@ export function IgnoreDialog({
                 dispatch({ type: 'HIDE_IGNORE_DIALOG' })
                 return
             }
-            if (totalLength > 0) {
-                if (input === 'j' || key.downArrow) {
-                    setSelectedIndex((i) =>
-                        Math.min(totalLength - 1, i + 1),
-                    )
-                    return
-                }
-                if (input === 'k' || key.upArrow) {
-                    setSelectedIndex((i) => Math.max(0, i - 1))
-                    return
-                }
+            if (input === 'j' || key.downArrow) {
+                navigate('down')
+                return
+            }
+            if (input === 'k' || key.upArrow) {
+                navigate('up')
+                return
+            }
+            if (patterns.length > 0) {
                 if (input === 'd') {
                     handleDelete()
                     return
                 }
                 if (key.return) {
-                    const pattern = inGlobalSection
-                        ? globalPatterns[globalIndex]
-                        : pairPatterns[selectedIndex]
-                    setEditValue(pattern ?? '')
+                    setEditValue(patterns[selectedIndex] ?? '')
                     setError('')
                     setDisplayMode('edit')
                     return
                 }
             }
             if (input === 'a') {
-                const section = inGlobalSection ? 'global' : 'pair'
-                const insertIndex =
-                    section === 'global'
-                        ? pairPatterns.length + globalPatterns.length
-                        : pairPatterns.length
-                setSelectedIndex(insertIndex)
                 setEditValue('')
                 setError('')
                 setAddingSection(section)
@@ -233,17 +227,13 @@ export function IgnoreDialog({
     })
 
     const renderPatternList = (
-        patterns: string[],
-        indexOffset: number,
-        isEditing: boolean,
+        listPatterns: string[],
+        listSection: Section,
     ) =>
-        patterns.map((p, i) => {
-            const flatIndex = indexOffset + i
-            if (
-                displayMode === 'edit'
-                && !addingSection
-                && flatIndex === selectedIndex
-            ) {
+        listPatterns.map((p, i) => {
+            const isSelected =
+                section === listSection && i === selectedIndex
+            if (displayMode === 'edit' && !addingSection && isSelected) {
                 return (
                     <InputField
                         key={p}
@@ -257,17 +247,12 @@ export function IgnoreDialog({
             }
             return (
                 <Text key={p}>
-                    {displayMode === 'browse' && flatIndex === selectedIndex ?
+                    {displayMode === 'browse' && isSelected ?
                         <Text bold color='cyan'>
                             {'▸ '}
                         </Text>
                     :   <Text>{'  '}</Text>}
-                    <Text
-                        bold={
-                            displayMode === 'browse'
-                            && flatIndex === selectedIndex
-                        }
-                    >
+                    <Text bold={displayMode === 'browse' && isSelected}>
                         {p}
                     </Text>
                 </Text>
@@ -291,7 +276,7 @@ export function IgnoreDialog({
                         && displayMode === 'browse' && (
                             <Text dimColor>{'  '}No patterns defined</Text>
                         )}
-                    {renderPatternList(pairPatterns, 0, true)}
+                    {renderPatternList(pairPatterns, 'pair')}
                     {addingSection === 'pair' && (
                         <InputField
                             label='Add'
@@ -311,11 +296,7 @@ export function IgnoreDialog({
                         && displayMode === 'browse' && (
                             <Text dimColor>{'  '}No patterns defined</Text>
                         )}
-                    {renderPatternList(
-                        globalPatterns,
-                        pairPatterns.length,
-                        true,
-                    )}
+                    {renderPatternList(globalPatterns, 'global')}
                     {addingSection === 'global' && (
                         <InputField
                             label='Add'
