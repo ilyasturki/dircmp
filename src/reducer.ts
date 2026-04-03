@@ -24,18 +24,85 @@ export function createInitialState(init: {
         pairIgnorePatterns: [],
         diffViewEntryIndex: null,
         keybindingVersion: 0,
+        searchQuery: '',
+        searchInputActive: false,
     }
+}
+
+function filterBySearch(
+    entries: CompareEntry[],
+    query: string,
+): CompareEntry[] {
+    if (!query) return entries
+    const lowerQuery = query.toLowerCase()
+
+    // Find entries whose name directly matches
+    const directMatches = new Set<string>()
+    for (const entry of entries) {
+        if (entry.name.toLowerCase().includes(lowerQuery)) {
+            directMatches.add(entry.relativePath)
+        }
+    }
+
+    // Collect prefixes of matching directories (to keep descendants)
+    const matchingDirPrefixes: string[] = []
+    for (const entry of entries) {
+        if (entry.isDirectory && directMatches.has(entry.relativePath)) {
+            matchingDirPrefixes.push(entry.relativePath + '/')
+        }
+    }
+
+    // Build set of all paths to keep
+    const keepPaths = new Set<string>()
+    for (const entry of entries) {
+        if (directMatches.has(entry.relativePath)) {
+            keepPaths.add(entry.relativePath)
+        } else {
+            for (const prefix of matchingDirPrefixes) {
+                if (entry.relativePath.startsWith(prefix)) {
+                    keepPaths.add(entry.relativePath)
+                    break
+                }
+            }
+        }
+    }
+
+    // Add ancestor directories for all kept entries
+    for (const relPath of [...keepPaths]) {
+        const parts = relPath.split('/')
+        let ancestor = ''
+        for (let i = 0; i < parts.length - 1; i++) {
+            ancestor = i === 0 ? parts[i]! : ancestor + '/' + parts[i]
+            keepPaths.add(ancestor)
+        }
+    }
+
+    return entries.filter((e) => keepPaths.has(e.relativePath))
 }
 
 function recomputeEntries(state: AppState): CompareEntry[] {
     if (!state.leftScan || !state.rightScan) return []
-    return buildVisibleTree(
+
+    // When searching, expand all directories so the full tree is searchable
+    let expandedDirs = state.expandedDirs
+    if (state.searchQuery) {
+        expandedDirs = new Set<string>()
+        for (const [, entry] of state.leftScan) {
+            if (entry.isDirectory) expandedDirs.add(entry.relativePath)
+        }
+        for (const [, entry] of state.rightScan) {
+            if (entry.isDirectory) expandedDirs.add(entry.relativePath)
+        }
+    }
+
+    const tree = buildVisibleTree(
         state.leftScan,
         state.rightScan,
-        state.expandedDirs,
+        expandedDirs,
         state.filterMode,
         { compareDates: state.config.compareDates },
     )
+    return filterBySearch(tree, state.searchQuery)
 }
 
 function removeDescendants(
@@ -525,6 +592,32 @@ export function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 keybindingVersion: state.keybindingVersion + 1,
             }
+        case 'OPEN_SEARCH':
+            return { ...state, searchInputActive: true }
+        case 'SET_SEARCH_QUERY': {
+            const newState = { ...state, searchQuery: action.query }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'CLOSE_SEARCH':
+            return { ...state, searchInputActive: false }
+        case 'CANCEL_SEARCH': {
+            const newState = {
+                ...state,
+                searchInputActive: false,
+                searchQuery: '',
+            }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
         default:
             return state
     }

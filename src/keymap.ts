@@ -329,6 +329,17 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'TOGGLE_PREFERENCES' } },
     },
     {
+        id: 'search',
+        mode: 'browser',
+        keyLabel: '/',
+        description: 'filter',
+        helpDescription: 'Filter entries by name',
+        keyDef: '/',
+        helpKey: '/',
+        match: (input) => input === '/',
+        effect: { type: 'dispatch', action: { type: 'OPEN_SEARCH' } },
+    },
+    {
         id: 'toggleFilter',
         mode: 'browser',
         keyLabel: 'f',

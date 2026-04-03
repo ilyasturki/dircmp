@@ -1,13 +1,15 @@
 import fsp from 'node:fs/promises'
 import path from 'node:path'
+import type { Dispatch } from 'react'
 import { diffLines } from 'diff'
 import { Box, Text } from 'ink'
 import { useEffect, useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
-import type { CompareEntry, FilterMode, ScanResult } from '~/utils/types'
+import type { Action, CompareEntry, FilterMode, ScanResult } from '~/utils/types'
 import { countDescendantDiffs } from '~/utils/compare'
 import { KeyboardHints } from './keyboard-hints'
+import { SearchInput } from './search-input'
 
 interface StatusBarProps {
     isLoading: boolean
@@ -22,6 +24,10 @@ interface StatusBarProps {
     toastMessage: string | null
     showHints: boolean
     compareDates: boolean
+    searchInputActive: boolean
+    searchQuery: string
+    entryCount: number
+    dispatch: Dispatch<Action>
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -147,6 +153,10 @@ export function StatusBar({
     toastMessage,
     showHints,
     compareDates,
+    searchInputActive,
+    searchQuery,
+    entryCount,
+    dispatch,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
 
@@ -175,14 +185,24 @@ export function StatusBar({
 
     return (
         <Box flexDirection='column'>
-            <Box justifyContent='space-between'>
-                <Box>
-                    <Text color='cyan'>{filterLabel} </Text>
-                    {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
-                    {entryInfo !== '' && <Text dimColor>{entryInfo}</Text>}
+            {searchInputActive ?
+                <SearchInput
+                    initialQuery={searchQuery}
+                    matchCount={entryCount}
+                    dispatch={dispatch}
+                />
+            :   <Box justifyContent='space-between'>
+                    <Box>
+                        <Text color='cyan'>{filterLabel} </Text>
+                        {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
+                        {searchQuery !== '' && (
+                            <Text color='cyan'>[filter: {searchQuery}] </Text>
+                        )}
+                        {entryInfo !== '' && <Text dimColor>{entryInfo}</Text>}
+                    </Box>
+                    {toastMessage && <Text dimColor>{toastMessage}</Text>}
                 </Box>
-                {toastMessage && <Text dimColor>{toastMessage}</Text>}
-            </Box>
+            }
             {showHints && (
                 <Box>
                     <KeyboardHints items={helpItems} />

@@ -91,6 +91,10 @@ export type Action =
     | { type: 'SHOW_KEYBINDINGS_EDITOR' }
     | { type: 'HIDE_KEYBINDINGS_EDITOR' }
     | { type: 'KEYBINDINGS_UPDATED' }
+    | { type: 'OPEN_SEARCH' }
+    | { type: 'SET_SEARCH_QUERY'; query: string }
+    | { type: 'CLOSE_SEARCH' }
+    | { type: 'CANCEL_SEARCH' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -110,4 +114,6 @@ export interface AppState {
     pairIgnorePatterns: string[]
     diffViewEntryIndex: number | null
     keybindingVersion: number
+    searchQuery: string
+    searchInputActive: boolean
 }

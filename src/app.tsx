@@ -97,7 +97,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        state.dialog === null,
+        state.dialog === null && !state.searchInputActive,
         refresh,
         contentHeight,
         handleShellOut,
@@ -158,7 +158,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
                             entries={state.entries}
                             cursorIndex={state.cursorIndex}
                             focusedPanel={state.focusedPanel}
-                            dialogOpen={state.dialog !== null}
+                            dialogOpen={state.dialog !== null || state.searchInputActive}
                             visibleHeight={contentHeight}
                             scrollOffset={scrollOffset}
                         />
@@ -178,6 +178,10 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
                 toastMessage={toastMessage}
                 showHints={state.config.showHints}
                 compareDates={state.config.compareDates}
+                searchInputActive={state.searchInputActive}
+                searchQuery={state.searchQuery}
+                entryCount={state.entries.length}
+                dispatch={dispatch}
             />
             {state.dialog === 'preferences' && (
                 <PreferencesDialog
