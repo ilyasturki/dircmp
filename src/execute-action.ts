@@ -83,25 +83,14 @@ export function executeAction(
         return
     }
 
-    // Intercept OPEN_DIFF for files: open nvim diff instead of dispatching
+    // Intercept OPEN_DIFF for files: show in-app diff view
     if (action.type === 'OPEN_DIFF') {
         const entry = state.entries[state.cursorIndex]
         if (entry && !entry.isDirectory && entry.status !== 'identical') {
-            const leftPath = path.join(leftDir, entry.relativePath)
-            const rightPath = path.join(rightDir, entry.relativePath)
-
-            let args: string[]
-            if (entry.status === 'only-left') {
-                args = ['-d', leftPath, '/dev/null']
-            } else if (entry.status === 'only-right') {
-                args = ['-d', '/dev/null', rightPath]
-            } else {
-                args = ['-d', leftPath, rightPath]
-            }
-
-            spawnSync('nvim', args, { stdio: 'inherit' })
-            process.stdout.write('\x1b[2J\x1b[H')
-            dispatch({ type: 'REDRAW' })
+            dispatch({
+                type: 'SHOW_DIFF_VIEW',
+                entryIndex: state.cursorIndex,
+            })
             return
         }
     }

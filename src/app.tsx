@@ -6,6 +6,7 @@ import type { AppConfig } from '~/utils/config'
 import type { Action } from '~/utils/types'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
 import { ContextMenu } from '~/components/context-menu'
+import { DiffView } from '~/components/diff-view'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { HelpDialog } from '~/components/help-dialog'
 import { IgnoreDialog } from '~/components/ignore-dialog'
@@ -191,6 +192,18 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                     rows={rows}
                 />
             )}
+            {state.dialog === 'diffView'
+                && state.diffViewEntryIndex !== null
+                && state.entries[state.diffViewEntryIndex] && (
+                    <DiffView
+                        entry={state.entries[state.diffViewEntryIndex]!}
+                        leftDir={effectiveLeftDir}
+                        rightDir={effectiveRightDir}
+                        dispatch={dispatch}
+                        columns={columns}
+                        rows={rows}
+                    />
+                )}
         </Box>
     )
 }

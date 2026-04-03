@@ -31,6 +31,7 @@ export type DialogType =
     | 'contextMenu'
     | 'ignoreDialog'
     | 'help'
+    | 'diffView'
 
 export type FilterMode = 'all' | 'diff-only'
 
@@ -81,6 +82,8 @@ export type Action =
     | { type: 'SET_IGNORE_PATTERNS'; global: string[]; pair: string[] }
     | { type: 'SHOW_HELP' }
     | { type: 'HIDE_HELP' }
+    | { type: 'SHOW_DIFF_VIEW'; entryIndex: number }
+    | { type: 'HIDE_DIFF_VIEW' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -98,4 +101,5 @@ export interface AppState {
     ignoreEnabled: boolean
     globalIgnorePatterns: string[]
     pairIgnorePatterns: string[]
+    diffViewEntryIndex: number | null
 }

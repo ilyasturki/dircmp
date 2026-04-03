@@ -22,6 +22,7 @@ export function createInitialState(init: {
         ignoreEnabled: init.ignoreEnabled,
         globalIgnorePatterns: [],
         pairIgnorePatterns: [],
+        diffViewEntryIndex: null,
     }
 }
 
@@ -481,6 +482,14 @@ export function reducer(state: AppState, action: Action): AppState {
             return { ...state, dialog: 'help' }
         case 'HIDE_HELP':
             return { ...state, dialog: null }
+        case 'SHOW_DIFF_VIEW':
+            return {
+                ...state,
+                dialog: 'diffView',
+                diffViewEntryIndex: action.entryIndex,
+            }
+        case 'HIDE_DIFF_VIEW':
+            return { ...state, dialog: null, diffViewEntryIndex: null }
         case 'TOGGLE_PREFERENCES':
             return {
                 ...state,
