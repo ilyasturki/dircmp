@@ -161,6 +161,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
                             dialogOpen={state.dialog !== null || state.searchInputActive}
                             visibleHeight={contentHeight}
                             scrollOffset={scrollOffset}
+                            searchQuery={state.searchQuery}
                         />
                     </DateLocaleProvider>
                 </TerminalThemeProvider>

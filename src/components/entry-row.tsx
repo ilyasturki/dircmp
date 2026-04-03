@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Box, Text, useStdout } from 'ink'
 
 import type { CompareEntry, FileEntry } from '~/utils/types'
@@ -5,6 +6,31 @@ import { useDateFormatter } from '~/context/date-locale'
 import { useTerminalTheme } from '~/context/terminal-theme'
 import { getFileIcon } from '~/utils/file-icons'
 import { formatSize } from '~/utils/format-size'
+
+function highlightMatches(text: string, query: string): ReactNode {
+    if (!query) return text
+    const lowerText = text.toLowerCase()
+    const lowerQuery = query.toLowerCase()
+    const parts: ReactNode[] = []
+    let lastIndex = 0
+    let idx = lowerText.indexOf(lowerQuery)
+    while (idx !== -1) {
+        if (idx > lastIndex) {
+            parts.push(text.slice(lastIndex, idx))
+        }
+        parts.push(
+            <Text key={idx} underline>
+                {text.slice(idx, idx + query.length)}
+            </Text>,
+        )
+        lastIndex = idx + query.length
+        idx = lowerText.indexOf(lowerQuery, lastIndex)
+    }
+    if (lastIndex < text.length) {
+        parts.push(text.slice(lastIndex))
+    }
+    return parts.length > 0 ? <>{parts}</> : text
+}
 
 /** Available width inside one panel (half terminal minus border chrome) */
 function usePanelWidth() {
@@ -44,11 +70,13 @@ export function EntryRow({
     fileEntry,
     isSelected,
     isDimSelected,
+    searchQuery = '',
 }: {
     entry: CompareEntry
     fileEntry: FileEntry | undefined
     isSelected: boolean
     isDimSelected: boolean
+    searchQuery?: string
 }) {
     const dateFormatter = useDateFormatter()
     const hasError = fileEntry?.error
@@ -76,6 +104,10 @@ export function EntryRow({
     const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left
     const gap = Math.max(1, panelWidth - truncLeft.length - right.length)
 
+    const prefix = `${indent}${icon} `
+    const visibleName = truncLeft.slice(prefix.length)
+    const highlightedName = highlightMatches(visibleName, searchQuery)
+
     return (
         <Box width='100%'>
             <Text
@@ -89,11 +121,17 @@ export function EntryRow({
                     <>
                         {indent}
                         <Text color={color}>{icon} </Text>
-                        {truncLeft.slice(indent.length + icon.length + 1)}
+                        {highlightedName}
                         {' '.repeat(gap)}
                         {right}
                     </>
-                :   `${truncLeft}${' '.repeat(gap)}${right}`}
+                :   <>
+                        {prefix}
+                        {highlightedName}
+                        {' '.repeat(gap)}
+                        {right}
+                    </>
+                }
             </Text>
         </Box>
     )

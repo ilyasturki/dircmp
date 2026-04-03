@@ -12,6 +12,7 @@ interface DirectoryPanelProps {
     side: PanelSide
     visibleHeight: number
     scrollOffset: number
+    searchQuery: string
 }
 
 function EmptyPanel() {
@@ -30,6 +31,7 @@ export function DirectoryPanel({
     side,
     visibleHeight,
     scrollOffset,
+    searchQuery,
 }: DirectoryPanelProps) {
     const visibleEntries = entries.slice(
         scrollOffset,
@@ -72,6 +74,7 @@ export function DirectoryPanel({
                             fileEntry={fileEntry}
                             isSelected={isSelected}
                             isDimSelected={isDimSelected}
+                            searchQuery={searchQuery}
                         />
                     )
                 })

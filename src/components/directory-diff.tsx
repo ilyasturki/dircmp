@@ -15,6 +15,7 @@ interface DirectoryDiffProps {
     dialogOpen: boolean
     visibleHeight: number
     scrollOffset: number
+    searchQuery: string
 }
 
 export function DirectoryDiff({
@@ -26,6 +27,7 @@ export function DirectoryDiff({
     dialogOpen,
     visibleHeight,
     scrollOffset,
+    searchQuery,
 }: DirectoryDiffProps) {
     return (
         <Box flexGrow={1}>
@@ -37,6 +39,7 @@ export function DirectoryDiff({
                 side='left'
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
+                searchQuery={searchQuery}
             />
             <DirectoryPanel
                 rootPath={rightDir.replace(homeDir, '~')}
@@ -46,6 +49,7 @@ export function DirectoryDiff({
                 side='right'
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
+                searchQuery={searchQuery}
             />
         </Box>
     )
