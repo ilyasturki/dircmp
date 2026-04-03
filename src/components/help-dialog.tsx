@@ -25,8 +25,8 @@ export function HelpDialog({
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [scrollOffset, setScrollOffset] = useState(0)
 
-    // Reserve rows for dialog chrome: border (2) + paddingY (2) + title (1) + gaps (2) + footer (1) = 8
-    const maxVisibleItems = Math.max(1, rows - 12)
+    // Reserve rows for dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) = 6
+    const maxVisibleItems = Math.max(1, rows - 10)
 
     const visibleItems = items.slice(
         scrollOffset,
@@ -82,41 +82,38 @@ export function HelpDialog({
     })
 
     const maxKeyWidth = Math.max(...items.map((item) => item.key.length))
+    // Dialog chrome: border (2) + paddingX (4) = 6 cols
+    const dialogWidth = Math.min(50, columns - 4)
+    const contentWidth = dialogWidth - 6
 
     return (
         <Dialog
             title='Keybindings'
             columns={columns}
             rows={rows}
+            width={dialogWidth}
         >
             <Box flexDirection='column'>
                 {visibleItems.map((item, i) => {
                     const absoluteIndex = scrollOffset + i
                     const isSelected = absoluteIndex === selectedIndex
+                    const keyPad = maxKeyWidth - item.key.length
+                    const keyPart =
+                        ' '.repeat(keyPad) + item.key + ' '
+                    const descPart = ` ${item.description}`
+                    const usedWidth = maxKeyWidth + 1 + descPart.length
+                    const pad = Math.max(0, contentWidth - usedWidth)
                     return (
                         <Text
                             key={absoluteIndex}
                             inverse={isSelected}
                         >
-                            <Text
-                                bold={isSelected}
-                                color='green'
-                            >
-                                {'  '}
-                                {item.key.padEnd(maxKeyWidth)}
-                            </Text>
-                            <Text bold={isSelected}>
-                                {'  '}
-                                {item.description}
-                            </Text>
+                            <Text color='cyan'>{keyPart}</Text>
+                            {descPart}
+                            {' '.repeat(pad)}
                         </Text>
                     )
                 })}
-            </Box>
-            <Box justifyContent='flex-end'>
-                <Text dimColor>
-                    {selectedIndex + 1} of {items.length}
-                </Text>
             </Box>
         </Dialog>
     )
