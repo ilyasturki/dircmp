@@ -49,7 +49,11 @@ export function KeybindingsDialog({
     )
 
     // Dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + hints (1) + help text (1) = 8
-    const maxVisibleItems = Math.max(1, rows - 12)
+    const maxRows = Math.max(1, rows - 12)
+    const needsScroll = defaults.length > maxRows
+    const maxVisibleItems = needsScroll ? maxRows - 1 : maxRows
+    const hasArrowUp = needsScroll && scrollOffset > 0
+    const hasArrowDown = needsScroll && scrollOffset + maxVisibleItems < defaults.length
 
     const visibleItems = defaults.slice(
         scrollOffset,
@@ -165,6 +169,11 @@ export function KeybindingsDialog({
             width={dialogWidth}
         >
             <Box flexDirection='column'>
+                {hasArrowUp && (
+                    <Text dimColor>
+                        {'▲'.padStart(Math.ceil(contentWidth / 2))}
+                    </Text>
+                )}
                 {visibleItems.map((shortcut, i) => {
                     const absoluteIndex = scrollOffset + i
                     const isSelected = absoluteIndex === selectedIndex
@@ -214,6 +223,11 @@ export function KeybindingsDialog({
                         </Text>
                     )
                 })}
+                {hasArrowDown && (
+                    <Text dimColor>
+                        {'▼'.padStart(Math.ceil(contentWidth / 2))}
+                    </Text>
+                )}
             </Box>
             {displayMode === 'edit' && (
                 <Text dimColor>
