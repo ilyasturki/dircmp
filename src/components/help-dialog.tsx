@@ -103,7 +103,7 @@ export function HelpDialog({
                     const keyPad = maxKeyWidth - item.key.length
                     const keyPart =
                         ' '.repeat(keyPad) + item.key + ' '
-                    const descPart = ` ${item.description}`
+                    const descPart = ` ${item.helpDescription}`
                     const usedWidth = maxKeyWidth + 1 + descPart.length
                     const pad = Math.max(0, contentWidth - usedWidth)
                     return (

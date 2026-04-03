@@ -154,7 +154,7 @@ export function KeybindingsDialog({
     const dialogWidth = Math.min(55, columns - 4)
     const contentWidth = dialogWidth - 6 // border (2) + paddingX (4)
     const maxDescWidth = Math.max(
-        ...defaults.map((s) => s.description.length),
+        ...defaults.map((s) => s.helpDescription.length),
     )
 
     return (
@@ -178,7 +178,7 @@ export function KeybindingsDialog({
                                 flexDirection='column'
                             >
                                 <InputField
-                                    label={shortcut.description}
+                                    label={shortcut.helpDescription}
                                     value={editValue}
                                     onChange={(v) => {
                                         setEditValue(v)
@@ -192,7 +192,7 @@ export function KeybindingsDialog({
                     }
 
                     const marker = isCustomized ? '*' : ' '
-                    const desc = shortcut.description
+                    const desc = shortcut.helpDescription
                     const keyPart = currentKey
                     const gap = Math.max(
                         1,
