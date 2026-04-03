@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.0]
+
+### Added
+
+- Help dialog listing all keybindings on `?` press
+- Use alternate screen buffer to clear UI on exit
+- `showHints` preference to toggle status bar keyboard hints
+
+### Fixed
+
+- Clear timers on unmount to prevent exit hang
+
 ## [0.0.4]
 
 ### Added
