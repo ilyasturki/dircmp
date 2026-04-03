@@ -12,6 +12,7 @@ interface InputFieldProps {
     error?: string
     displayValue?: string
     hint?: string
+    modified?: boolean
 }
 
 export function InputField({
@@ -25,20 +26,25 @@ export function InputField({
     error,
     displayValue,
     hint,
+    modified = false,
 }: InputFieldProps) {
+    const marker = modified ? '*' : ' '
     if (!editing) {
         return (
             <Box flexDirection='column'>
-                <Text>
-                    <Text
-                        bold={highlighted}
-                        inverse={highlighted}
-                    >
-                        {' '}
-                        {label}{' '}
+                <Box justifyContent='space-between'>
+                    <Text>
+                        {marker}
+                        <Text
+                            bold={highlighted}
+                            inverse={highlighted}
+                        >
+                            {' '}
+                            {label}{' '}
+                        </Text>
                     </Text>
-                    <Text> {displayValue}</Text>
-                </Text>
+                    <Text>{displayValue}</Text>
+                </Box>
                 {hint && <Text dimColor>  {hint}</Text>}
             </Box>
         )

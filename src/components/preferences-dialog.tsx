@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import type { AppConfig } from '~/utils/config'
 import type { Action } from '~/utils/types'
-import { saveConfig } from '~/utils/config'
+import { defaultConfig, saveConfig } from '~/utils/config'
 import { Dialog } from './dialog'
 import { InputField } from './input-field'
 
@@ -101,6 +101,11 @@ export function PreferencesDialog({
             return
         }
 
+        if (input === 'd' && isModified(focusedField)) {
+            resetField(focusedField)
+            return
+        }
+
         if (
             key.return
             || (input === ' '
@@ -122,6 +127,18 @@ export function PreferencesDialog({
             }
         }
     })
+
+    const isModified = (field: Field) =>
+        config[field] !== defaultConfig[field]
+
+    const resetField = (field: Field) => {
+        const newConfig = {
+            ...config,
+            [field]: defaultConfig[field],
+        }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+    }
 
     const localeDisplayValue = config.dateLocale ?? '(system default)'
 
@@ -146,9 +163,11 @@ export function PreferencesDialog({
                 error={error}
                 displayValue={localeDisplayValue}
                 hint={fieldHints.dateLocale}
+                modified={isModified('dateLocale')}
             />
-            <Box>
+            <Box justifyContent='space-between'>
                 <Text>
+                    {isModified('showHints') ? '*' : ' '}
                     <Text
                         bold={focusedField === 'showHints'}
                         inverse={focusedField === 'showHints'}
@@ -156,11 +175,12 @@ export function PreferencesDialog({
                         {' '}
                         Show help hints{' '}
                     </Text>
-                    <Text> {config.showHints ? 'yes' : 'no'}</Text>
                 </Text>
+                <Text>{config.showHints ? 'yes' : 'no'}</Text>
             </Box>
-            <Box>
+            <Box justifyContent='space-between'>
                 <Text>
+                    {isModified('compareDates') ? '*' : ' '}
                     <Text
                         bold={focusedField === 'compareDates'}
                         inverse={focusedField === 'compareDates'}
@@ -168,8 +188,8 @@ export function PreferencesDialog({
                         {' '}
                         Compare dates{' '}
                     </Text>
-                    <Text> {config.compareDates ? 'yes' : 'no'}</Text>
                 </Text>
+                <Text>{config.compareDates ? 'yes' : 'no'}</Text>
             </Box>
             <InputField
                 label='Diff command'
@@ -185,6 +205,7 @@ export function PreferencesDialog({
                 error={error}
                 displayValue={config.diffCommand ?? '(built-in)'}
                 hint={fieldHints.diffCommand}
+                modified={isModified('diffCommand')}
             />
         </Dialog>
     )
