@@ -33,6 +33,12 @@ export function useToast() {
     const [toastMessage, setToastMessage] = useState<string | null>(null)
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current)
+        }
+    }, [])
+
     const showToast = useCallback((message: string, durationMs = 4000) => {
         if (timerRef.current) clearTimeout(timerRef.current)
         setToastMessage(message)
@@ -98,6 +104,12 @@ export function useKeymap(
     const { exit } = useApp()
     const pendingKeyRef = useRef('')
     const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    useEffect(() => {
+        return () => {
+            if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
+        }
+    }, [])
 
     useInput(
         (input, key) => {
