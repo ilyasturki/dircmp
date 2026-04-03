@@ -48,7 +48,10 @@ function useLineDiffCount(
         if (prevPathRef.current === entry.relativePath) return
         prevPathRef.current = entry.relativePath
 
-        if (entry.left.size > MAX_DIFF_SIZE || entry.right.size > MAX_DIFF_SIZE) {
+        if (
+            entry.left.size > MAX_DIFF_SIZE
+            || entry.right.size > MAX_DIFF_SIZE
+        ) {
             setCount(null)
             return
         }
@@ -83,7 +86,13 @@ function useLineDiffCount(
         return () => {
             cancelled = true
         }
-    }, [entry?.relativePath, entry?.status, entry?.isDirectory, leftDir, rightDir])
+    }, [
+        entry?.relativePath,
+        entry?.status,
+        entry?.isDirectory,
+        leftDir,
+        rightDir,
+    ])
 
     return count
 }

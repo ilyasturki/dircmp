@@ -156,9 +156,7 @@ export function IgnoreDialog({
                 setSection('pair')
                 setSelectedIndex(Math.max(0, pairPatterns.length - 1))
             } else {
-                setSelectedIndex(
-                    Math.min(selectedIndex, remaining.length - 1),
-                )
+                setSelectedIndex(Math.min(selectedIndex, remaining.length - 1))
             }
         } else {
             const remaining = pairPatterns.filter((p) => p !== pattern)
@@ -226,13 +224,9 @@ export function IgnoreDialog({
         }
     })
 
-    const renderPatternList = (
-        listPatterns: string[],
-        listSection: Section,
-    ) =>
+    const renderPatternList = (listPatterns: string[], listSection: Section) =>
         listPatterns.map((p, i) => {
-            const isSelected =
-                section === listSection && i === selectedIndex
+            const isSelected = section === listSection && i === selectedIndex
             if (displayMode === 'edit' && !addingSection && isSelected) {
                 return (
                     <InputField
@@ -248,7 +242,10 @@ export function IgnoreDialog({
             return (
                 <Text key={p}>
                     {displayMode === 'browse' && isSelected ?
-                        <Text bold color='cyan'>
+                        <Text
+                            bold
+                            color='cyan'
+                        >
                             {'▸ '}
                         </Text>
                     :   <Text>{'  '}</Text>}
@@ -268,7 +265,10 @@ export function IgnoreDialog({
         >
             <Box flexDirection='column'>
                 <Box flexDirection='column'>
-                    <Text dimColor bold>
+                    <Text
+                        dimColor
+                        bold
+                    >
                         This comparison:
                     </Text>
                     {pairPatterns.length === 0
@@ -288,7 +288,10 @@ export function IgnoreDialog({
                     )}
                 </Box>
                 <Box flexDirection='column'>
-                    <Text dimColor bold>
+                    <Text
+                        dimColor
+                        bold
+                    >
                         Global:
                     </Text>
                     {globalPatterns.length === 0
