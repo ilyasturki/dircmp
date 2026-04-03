@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { Box, Text, useApp, useStdout } from 'ink'
 import { useCallback, useMemo, useReducer } from 'react'
 
@@ -64,6 +65,19 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
         return resolveKeymap(defaultKeymap, overrides)
     }, [state.keybindingVersion])
 
+    const handleShellOut = useCallback(
+        (command: string, args: string[]) => {
+            process.stdout.write('\x1b[?1049l')
+            const result = spawnSync(command, args, { stdio: 'inherit' })
+            process.stdout.write('\x1b[?1049h')
+            dispatch({ type: 'REDRAW' })
+            if (result.error) {
+                showToast(`Failed to run: ${command} (${result.error.message})`)
+            }
+        },
+        [dispatch, showToast],
+    )
+
     useKeymap(
         state,
         keymap,
@@ -73,6 +87,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
         state.dialog === null,
         refresh,
         contentHeight,
+        handleShellOut,
     )
 
     const onExecuteAction = useCallback(
@@ -85,9 +100,10 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                 dispatch,
                 exit,
                 refresh,
+                handleShellOut,
             )
         },
-        [state, effectiveLeftDir, effectiveRightDir, dispatch, exit, refresh],
+        [state, effectiveLeftDir, effectiveRightDir, dispatch, exit, refresh, handleShellOut],
     )
 
     const isLoading = !state.leftScan || !state.rightScan

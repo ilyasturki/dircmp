@@ -15,8 +15,8 @@ interface PreferencesDialogProps {
     rows: number
 }
 
-type Field = 'dateLocale' | 'showHints'
-const fields: Field[] = ['dateLocale', 'showHints']
+type Field = 'dateLocale' | 'showHints' | 'diffCommand'
+const fields: Field[] = ['dateLocale', 'showHints', 'diffCommand']
 
 export function PreferencesDialog({
     config,
@@ -43,6 +43,16 @@ export function PreferencesDialog({
         }
 
         const newConfig = { ...config, dateLocale: newLocale }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+        setEditing(false)
+        setError('')
+    }
+
+    const handleSubmitDiffCommand = (value: string) => {
+        const trimmed = value.trim()
+        const newDiffCommand = trimmed === '' ? undefined : trimmed
+        const newConfig = { ...config, diffCommand: newDiffCommand }
         dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
         saveConfig(newConfig)
         setEditing(false)
@@ -87,6 +97,10 @@ export function PreferencesDialog({
                 setError('')
             } else if (focusedField === 'showHints') {
                 toggleShowHints()
+            } else if (focusedField === 'diffCommand' && key.return) {
+                setEditing(true)
+                setEditValue(config.diffCommand ?? '')
+                setError('')
             }
         }
     })
@@ -126,6 +140,20 @@ export function PreferencesDialog({
                     <Text> {config.showHints ? 'yes' : 'no'}</Text>
                 </Text>
             </Box>
+            <InputField
+                label='Diff command'
+                editing={editing && focusedField === 'diffCommand'}
+                highlighted={focusedField === 'diffCommand'}
+                value={editValue}
+                onChange={(value) => {
+                    setEditValue(value)
+                    setError('')
+                }}
+                onSubmit={handleSubmitDiffCommand}
+                focus={editing && focusedField === 'diffCommand'}
+                error={error}
+                displayValue={config.diffCommand ?? '(built-in)'}
+            />
         </Dialog>
     )
 }

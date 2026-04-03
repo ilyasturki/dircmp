@@ -13,6 +13,7 @@ export function executeAction(
     dispatch: Dispatch<Action>,
     exit: () => void,
     onRefresh?: () => void,
+    onShellOut?: (command: string, args: string[]) => void,
 ): void {
     // Intercept REFRESH: dispatch to clear state, then trigger re-scan
     if (action.type === 'REFRESH') {
@@ -83,10 +84,18 @@ export function executeAction(
         return
     }
 
-    // Intercept OPEN_DIFF for files: show in-app diff view
+    // Intercept OPEN_DIFF for files: use external diff command or built-in viewer
     if (action.type === 'OPEN_DIFF') {
         const entry = state.entries[state.cursorIndex]
         if (entry && !entry.isDirectory && entry.status !== 'identical') {
+            const diffCmd = state.config.diffCommand?.trim()
+            if (diffCmd && onShellOut) {
+                const leftPath = path.join(leftDir, entry.relativePath)
+                const rightPath = path.join(rightDir, entry.relativePath)
+                const parts = diffCmd.split(/\s+/)
+                onShellOut(parts[0]!, [...parts.slice(1), leftPath, rightPath])
+                return
+            }
             dispatch({
                 type: 'SHOW_DIFF_VIEW',
                 entryIndex: state.cursorIndex,

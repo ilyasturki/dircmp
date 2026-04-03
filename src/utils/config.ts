@@ -5,11 +5,13 @@ import path from 'node:path'
 export interface AppConfig {
     dateLocale: string | undefined
     showHints: boolean
+    diffCommand: string | undefined
 }
 
 export const defaultConfig: AppConfig = {
     dateLocale: undefined,
     showHints: true,
+    diffCommand: undefined,
 }
 
 function getConfigPath(): string {
@@ -27,6 +29,10 @@ export function loadConfig(): AppConfig {
                 :   undefined,
             showHints:
                 typeof parsed.showHints === 'boolean' ? parsed.showHints : true,
+            diffCommand:
+                typeof parsed.diffCommand === 'string' ?
+                    parsed.diffCommand
+                :   undefined,
         }
     } catch {
         return { ...defaultConfig }

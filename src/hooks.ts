@@ -118,6 +118,7 @@ export function useKeymap(
     isActive: boolean = true,
     onRefresh?: () => void,
     contentHeight: number = 20,
+    onShellOut?: (command: string, args: string[]) => void,
 ) {
     const { exit } = useApp()
     const pendingKeyRef = useRef('')
@@ -198,6 +199,7 @@ export function useKeymap(
                     dispatch,
                     exit,
                     onRefresh,
+                    onShellOut,
                 )
                 return
             }
