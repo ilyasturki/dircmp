@@ -12,6 +12,7 @@ import { DirectoryDiff } from '~/components/directory-diff'
 import { HelpDialog } from '~/components/help-dialog'
 import { KeybindingsDialog } from '~/components/keybindings-dialog'
 import { IgnoreDialog } from '~/components/ignore-dialog'
+import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
@@ -196,6 +197,20 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                     rows={rows}
                 />
             )}
+            {state.dialog === 'quickIgnore'
+                && state.entries[state.cursorIndex] && (
+                    <QuickIgnoreDialog
+                        entry={state.entries[state.cursorIndex]!}
+                        globalPatterns={state.globalIgnorePatterns}
+                        pairPatterns={state.pairIgnorePatterns}
+                        leftDir={leftDir}
+                        rightDir={rightDir}
+                        dispatch={dispatch}
+                        refresh={refresh}
+                        columns={columns}
+                        rows={rows}
+                    />
+                )}
             {state.dialog === 'contextMenu'
                 && state.entries[state.cursorIndex] && (
                     <ContextMenu

@@ -30,6 +30,7 @@ export type DialogType =
     | 'deleteConfirm'
     | 'contextMenu'
     | 'ignoreDialog'
+    | 'quickIgnore'
     | 'help'
     | 'diffView'
     | 'keybindingsEditor'
@@ -68,6 +69,8 @@ export type Action =
     | { type: 'SHOW_CONTEXT_MENU' }
     | { type: 'HIDE_CONTEXT_MENU' }
     | { type: 'TOGGLE_IGNORE' }
+    | { type: 'SHOW_QUICK_IGNORE' }
+    | { type: 'HIDE_QUICK_IGNORE' }
     | { type: 'SHOW_IGNORE_DIALOG' }
     | { type: 'HIDE_IGNORE_DIALOG' }
     | { type: 'ADD_IGNORE_PATTERN'; pattern: string }

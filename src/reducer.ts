@@ -387,6 +387,13 @@ export function reducer(state: AppState, action: Action): AppState {
                 scrollOffset: 0,
             }
         }
+        case 'SHOW_QUICK_IGNORE': {
+            const entry = state.entries[state.cursorIndex]
+            if (!entry) return state
+            return { ...state, dialog: 'quickIgnore' }
+        }
+        case 'HIDE_QUICK_IGNORE':
+            return { ...state, dialog: null }
         case 'SHOW_IGNORE_DIALOG':
             return { ...state, dialog: 'ignoreDialog' }
         case 'HIDE_IGNORE_DIALOG':
