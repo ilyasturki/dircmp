@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1]
+
+### Changed
+
+- Inverse highlight for focused entries in ignore dialog
+- Interactive empty state in ignore dialog
+
 ## [0.1.0]
 
 ### Added
