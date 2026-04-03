@@ -66,7 +66,13 @@ export function IgnoreDialog({
 
     const handleEditSubmit = async (input: string) => {
         const newPattern = input.trim()
-        if (newPattern === '') return
+        if (newPattern === '') {
+            setDisplayMode('browse')
+            setEditValue('')
+            setError('')
+            setAddingSection(null)
+            return
+        }
 
         if (addingSection === 'pair') {
             if (allPatterns.includes(newPattern)) {
@@ -205,7 +211,7 @@ export function IgnoreDialog({
                     return
                 }
             }
-            if (input === 'a') {
+            if (input === 'a' || (key.return && patterns.length === 0)) {
                 setEditValue('')
                 setError('')
                 setAddingSection(section)
@@ -240,18 +246,12 @@ export function IgnoreDialog({
                 )
             }
             return (
-                <Text key={p}>
-                    {displayMode === 'browse' && isSelected ?
-                        <Text
-                            bold
-                            color='cyan'
-                        >
-                            {'▸ '}
-                        </Text>
-                    :   <Text>{'  '}</Text>}
-                    <Text bold={displayMode === 'browse' && isSelected}>
-                        {p}
-                    </Text>
+                <Text
+                    key={p}
+                    bold={displayMode === 'browse' && isSelected}
+                    inverse={displayMode === 'browse' && isSelected}
+                >
+                    {' '}{p}{' '}
                 </Text>
             )
         })
@@ -274,7 +274,12 @@ export function IgnoreDialog({
                     {pairPatterns.length === 0
                         && addingSection !== 'pair'
                         && displayMode === 'browse' && (
-                            <Text dimColor>{'  '}No patterns defined</Text>
+                            <Text
+                                dimColor={section !== 'pair'}
+                                inverse={section === 'pair'}
+                            >
+                                {' '}No patterns defined{' '}
+                            </Text>
                         )}
                     {renderPatternList(pairPatterns, 'pair')}
                     {addingSection === 'pair' && (
@@ -287,6 +292,7 @@ export function IgnoreDialog({
                         />
                     )}
                 </Box>
+                <Text>{' '}</Text>
                 <Box flexDirection='column'>
                     <Text
                         dimColor
@@ -297,7 +303,12 @@ export function IgnoreDialog({
                     {globalPatterns.length === 0
                         && addingSection !== 'global'
                         && displayMode === 'browse' && (
-                            <Text dimColor>{'  '}No patterns defined</Text>
+                            <Text
+                                dimColor={section !== 'global'}
+                                inverse={section === 'global'}
+                            >
+                                {' '}No patterns defined{' '}
+                            </Text>
                         )}
                     {renderPatternList(globalPatterns, 'global')}
                     {addingSection === 'global' && (
