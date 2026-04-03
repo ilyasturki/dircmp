@@ -3,9 +3,9 @@ import type { WriteStream } from 'tty'
 import { useApp, useInput } from 'ink'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import type { Shortcut } from '~/keymap'
 import type { Action, AppState } from '~/utils/types'
 import { executeAction } from '~/execute-action'
-import { keymap } from '~/keymap'
 import { compileIgnoreMatcher, loadAllIgnorePatterns } from '~/utils/ignore'
 import { scanDirectory } from '~/utils/scanner'
 
@@ -99,8 +99,19 @@ export function useDirectoryScan(
     return { refresh }
 }
 
+const SCROLL_CONFIG: Record<
+    string,
+    { direction: 'up' | 'down'; factor: number }
+> = {
+    halfPageDown: { direction: 'down', factor: 0.5 },
+    halfPageUp: { direction: 'up', factor: 0.5 },
+    fullPageDown: { direction: 'down', factor: 1 },
+    fullPageUp: { direction: 'up', factor: 1 },
+}
+
 export function useKeymap(
     state: AppState,
+    keymap: Shortcut[],
     leftDir: string,
     rightDir: string,
     dispatch: Dispatch<Action>,
@@ -120,38 +131,15 @@ export function useKeymap(
 
     useInput(
         (input, key) => {
-            // ctrl+d / ctrl+u: half-page scroll (before sequence/keymap processing)
-            if (key.ctrl && input === 'd') {
+            // Scroll shortcuts need dynamic count based on contentHeight
+            for (const shortcut of keymap) {
+                const scrollCfg = SCROLL_CONFIG[shortcut.id]
+                if (!scrollCfg) continue
+                if (!shortcut.match(input, key)) continue
                 dispatch({
                     type: 'MOVE_CURSOR',
-                    direction: 'down',
-                    count: Math.floor(contentHeight / 2),
-                })
-                return
-            }
-            if (key.ctrl && input === 'u') {
-                dispatch({
-                    type: 'MOVE_CURSOR',
-                    direction: 'up',
-                    count: Math.floor(contentHeight / 2),
-                })
-                return
-            }
-
-            // ctrl+f / ctrl+b: full-page scroll
-            if (key.ctrl && input === 'f') {
-                dispatch({
-                    type: 'MOVE_CURSOR',
-                    direction: 'down',
-                    count: contentHeight,
-                })
-                return
-            }
-            if (key.ctrl && input === 'b') {
-                dispatch({
-                    type: 'MOVE_CURSOR',
-                    direction: 'up',
-                    count: contentHeight,
+                    direction: scrollCfg.direction,
+                    count: Math.floor(contentHeight * scrollCfg.factor),
                 })
                 return
             }
@@ -194,6 +182,7 @@ export function useKeymap(
                 if (shortcut.mode !== 'global' && shortcut.mode !== 'browser')
                     continue
                 if (shortcut.sequence) continue
+                if (SCROLL_CONFIG[shortcut.id]) continue
                 if (!shortcut.match(input, key)) continue
 
                 if (shortcut.effect.type === 'exit') {

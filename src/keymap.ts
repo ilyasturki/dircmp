@@ -7,6 +7,7 @@ type KeyMatcher = (input: string, key: Key) => boolean
 type ShortcutEffect = { type: 'dispatch'; action: Action } | { type: 'exit' }
 
 export interface Shortcut {
+    id: string
     mode: 'browser' | 'global'
     keyLabel: string
     description: string
@@ -22,8 +23,8 @@ export interface HelpItem {
     effect: ShortcutEffect
 }
 
-export function getHelpItems(): HelpItem[] {
-    return keymap
+export function getHelpItems(shortcuts: Shortcut[]): HelpItem[] {
+    return shortcuts
         .filter((s) => s.helpKey !== undefined)
         .map((s) => ({
             key: s.helpKey!,
@@ -32,9 +33,10 @@ export function getHelpItems(): HelpItem[] {
         }))
 }
 
-export const keymap: Shortcut[] = [
+export const defaultKeymap: Shortcut[] = [
     // Global
     {
+        id: 'quit',
         mode: 'global',
         keyLabel: '',
         description: 'quit',
@@ -45,6 +47,7 @@ export const keymap: Shortcut[] = [
 
     // Browser mode
     {
+        id: 'moveUp',
         mode: 'browser',
         keyLabel: '',
         description: 'navigate',
@@ -56,6 +59,7 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'moveDown',
         mode: 'browser',
         keyLabel: '',
         description: 'navigate',
@@ -67,6 +71,7 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'goToBottom',
         mode: 'browser',
         keyLabel: '',
         description: 'go to bottom',
@@ -78,18 +83,20 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'goToTop',
         mode: 'browser',
         keyLabel: '',
         description: 'go to top',
         helpKey: 'gg',
         sequence: 'gg',
-        match: () => false, // handled by sequence logic in useKeymap
+        match: () => false,
         effect: {
             type: 'dispatch',
             action: { type: 'MOVE_CURSOR', direction: 'top' },
         },
     },
     {
+        id: 'focusLeft',
         mode: 'browser',
         keyLabel: '',
         description: 'focus left panel',
@@ -101,6 +108,7 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'focusRight',
         mode: 'browser',
         keyLabel: '',
         description: 'focus right panel',
@@ -112,6 +120,7 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'switchPanel',
         mode: 'browser',
         keyLabel: '',
         description: 'switch panel',
@@ -120,6 +129,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'SWITCH_PANEL' } },
     },
     {
+        id: 'expandOrOpen',
         mode: 'browser',
         keyLabel: '',
         description: 'expand/collapse',
@@ -128,6 +138,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'NAVIGATE_INTO' } },
     },
     {
+        id: 'openDiff',
         mode: 'browser',
         keyLabel: '',
         description: 'open diff',
@@ -136,6 +147,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'OPEN_DIFF' } },
     },
     {
+        id: 'collapse',
         mode: 'browser',
         keyLabel: '',
         description: 'collapse',
@@ -148,6 +160,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'COLLAPSE_PARENT' } },
     },
     {
+        id: 'expandAll',
         mode: 'browser',
         keyLabel: '',
         description: 'expand all',
@@ -157,6 +170,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'EXPAND_ALL' } },
     },
     {
+        id: 'collapseAll',
         mode: 'browser',
         keyLabel: '',
         description: 'collapse all',
@@ -166,28 +180,55 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'COLLAPSE_ALL' } },
     },
     {
+        id: 'halfPageDown',
         mode: 'browser',
         keyLabel: '',
-        description: 'half page scroll',
-        helpKey: 'Ctrl+d/u',
-        match: () => false, // handled directly in useKeymap before keymap matching
+        description: 'half page down',
+        helpKey: 'Ctrl+d',
+        match: (input, key) => key.ctrl && input === 'd',
         effect: {
             type: 'dispatch',
             action: { type: 'MOVE_CURSOR', direction: 'down' },
         },
     },
     {
+        id: 'halfPageUp',
         mode: 'browser',
         keyLabel: '',
-        description: 'full page scroll',
-        helpKey: 'Ctrl+f/b',
-        match: () => false, // handled directly in useKeymap before keymap matching
+        description: 'half page up',
+        helpKey: 'Ctrl+u',
+        match: (input, key) => key.ctrl && input === 'u',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'MOVE_CURSOR', direction: 'up' },
+        },
+    },
+    {
+        id: 'fullPageDown',
+        mode: 'browser',
+        keyLabel: '',
+        description: 'full page down',
+        helpKey: 'Ctrl+f',
+        match: (input, key) => key.ctrl && input === 'f',
         effect: {
             type: 'dispatch',
             action: { type: 'MOVE_CURSOR', direction: 'down' },
         },
     },
     {
+        id: 'fullPageUp',
+        mode: 'browser',
+        keyLabel: '',
+        description: 'full page up',
+        helpKey: 'Ctrl+b',
+        match: (input, key) => key.ctrl && input === 'b',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'MOVE_CURSOR', direction: 'up' },
+        },
+    },
+    {
+        id: 'nextDiff',
         mode: 'browser',
         keyLabel: '',
         description: 'next diff',
@@ -200,6 +241,7 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'prevDiff',
         mode: 'browser',
         keyLabel: '',
         description: 'prev diff',
@@ -212,6 +254,7 @@ export const keymap: Shortcut[] = [
         },
     },
     {
+        id: 'yankPath',
         mode: 'browser',
         keyLabel: '',
         description: 'yank path',
@@ -220,6 +263,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'YANK_PATH' } },
     },
     {
+        id: 'contextMenu',
         mode: 'browser',
         keyLabel: '.',
         description: 'actions',
@@ -228,6 +272,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'SHOW_CONTEXT_MENU' } },
     },
     {
+        id: 'preferences',
         mode: 'browser',
         keyLabel: ',',
         description: 'preferences',
@@ -236,6 +281,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'TOGGLE_PREFERENCES' } },
     },
     {
+        id: 'toggleFilter',
         mode: 'browser',
         keyLabel: 'f',
         description: 'diff only',
@@ -244,6 +290,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'TOGGLE_FILTER' } },
     },
     {
+        id: 'toggleIgnore',
         mode: 'browser',
         keyLabel: 'i',
         description: 'ignore',
@@ -252,6 +299,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'TOGGLE_IGNORE' } },
     },
     {
+        id: 'ignorePatterns',
         mode: 'browser',
         keyLabel: 'I',
         description: 'ignore patterns',
@@ -260,6 +308,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'SHOW_IGNORE_DIALOG' } },
     },
     {
+        id: 'copyToRight',
         mode: 'browser',
         keyLabel: '>/<',
         description: 'copy to right',
@@ -268,6 +317,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'COPY_TO_RIGHT' } },
     },
     {
+        id: 'copyToLeft',
         mode: 'browser',
         keyLabel: '',
         description: 'copy to left',
@@ -276,6 +326,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'COPY_TO_LEFT' } },
     },
     {
+        id: 'delete',
         mode: 'browser',
         keyLabel: 'd',
         description: 'delete',
@@ -284,6 +335,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'CONFIRM_DELETE' } },
     },
     {
+        id: 'refresh',
         mode: 'browser',
         keyLabel: 'r',
         description: 'refresh',
@@ -292,6 +344,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'REFRESH' } },
     },
     {
+        id: 'swapPanels',
         mode: 'browser',
         keyLabel: 'S',
         description: 'swap panels',
@@ -300,6 +353,7 @@ export const keymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'SWAP_PANELS' } },
     },
     {
+        id: 'showHelp',
         mode: 'browser',
         keyLabel: '?',
         description: 'keybindings',

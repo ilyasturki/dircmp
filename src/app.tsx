@@ -1,5 +1,5 @@
 import { Box, Text, useApp, useStdout } from 'ink'
-import { useCallback, useReducer } from 'react'
+import { useCallback, useMemo, useReducer } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
@@ -20,8 +20,9 @@ import {
     useTerminalDimensions,
     useToast,
 } from '~/hooks'
-import { keymap } from '~/keymap'
+import { defaultKeymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
+import { loadKeybindings, resolveKeymap } from '~/utils/keybindings'
 
 interface AppProps {
     leftDir: string
@@ -57,8 +58,14 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
 
     const { exit } = useApp()
 
+    const keymap = useMemo(() => {
+        const overrides = loadKeybindings()
+        return resolveKeymap(defaultKeymap, overrides)
+    }, [])
+
     useKeymap(
         state,
+        keymap,
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
@@ -185,6 +192,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions }: AppProp
                 )}
             {state.dialog === 'help' && (
                 <HelpDialog
+                    keymap={keymap}
                     dispatch={dispatch}
                     onExecuteAction={onExecuteAction}
                     onExit={exit}

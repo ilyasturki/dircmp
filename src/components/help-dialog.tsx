@@ -3,10 +3,12 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
+import type { Shortcut } from '~/keymap'
 import { getHelpItems } from '~/keymap'
 import { Dialog } from './dialog'
 
 interface HelpDialogProps {
+    keymap: Shortcut[]
     dispatch: Dispatch<Action>
     onExecuteAction: (action: Action) => void
     onExit: () => void
@@ -15,13 +17,14 @@ interface HelpDialogProps {
 }
 
 export function HelpDialog({
+    keymap,
     dispatch,
     onExecuteAction,
     onExit,
     columns,
     rows,
 }: HelpDialogProps) {
-    const items = getHelpItems()
+    const items = getHelpItems(keymap)
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [scrollOffset, setScrollOffset] = useState(0)
 
