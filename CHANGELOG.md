@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0]
+
+### Added
+
+- Shell completions subcommand for bash, zsh, and fish
+- Vim-style motions (`gg`, `Ctrl+D/U/F/B`) in keybindings editor
+- Scroll arrows in keybindings editor dialog
+
+### Fixed
+
+- Truncate keyboard hint line to fit terminal width
+
 ## [0.3.0]
 
 ### Added
