@@ -4,12 +4,15 @@ import meow from 'meow'
 import pkg from '../package.json'
 
 import type { CliIgnoreOptions } from '~/cli/types'
+import { parseRemoteUri, checkRcloneInstalled, mountRemote, cleanupMounts } from '~/utils/rclone'
 
 const HELP_TEXT = `
   Usage
     $ dircmp <left-dir> <right-dir>              Interactive TUI (default)
     $ dircmp diff <left-dir> <right-dir>         Print differences
     $ dircmp check <left-dir> <right-dir>        Exit 0 if identical, 1 if different
+
+  Directories can be local paths or remote URIs (requires rclone).
 
   Commands
     (default)       Launch the interactive TUI
@@ -31,8 +34,16 @@ const HELP_TEXT = `
   Options for check
     --stat                  Print summary line before exiting
 
+  Remote Paths (requires rclone — https://rclone.org)
+    sftp://user@host/path   SFTP/SSH remote
+    s3://bucket/prefix      Amazon S3
+    gcs://bucket/prefix     Google Cloud Storage
+    remote:path             Named rclone remote
+
   Examples
     $ dircmp ./project-v1 ./project-v2
+    $ dircmp ./local sftp://server/var/www
+    $ dircmp s3://bucket-a/prefix s3://bucket-b/prefix
     $ dircmp diff --format flat --only modified ./a ./b
     $ dircmp diff --format json ./a ./b
     $ dircmp check ./expected ./actual
@@ -114,18 +125,45 @@ if (positionalArgs.length !== 2) {
     process.exit(1)
 }
 
-const leftDir = path.resolve(positionalArgs[0]!)
-const rightDir = path.resolve(positionalArgs[1]!)
+// Resolve paths — mount remote URIs via rclone if needed
+const resolvedArgs = await Promise.all(
+    [positionalArgs[0]!, positionalArgs[1]!].map(async (arg) => {
+        const remote = parseRemoteUri(arg)
+        if (!remote) {
+            return { dir: path.resolve(arg), label: undefined }
+        }
+        if (!checkRcloneInstalled()) {
+            console.error(
+                'rclone is required for remote paths but was not found.\nInstall it from https://rclone.org/install/',
+            )
+            process.exit(1)
+        }
+        try {
+            const mountPoint = await mountRemote(remote)
+            return { dir: mountPoint, label: remote.label }
+        } catch (err) {
+            console.error(
+                `Failed to mount ${arg}: ${err instanceof Error ? err.message : err}`,
+            )
+            process.exit(1)
+        }
+    }),
+)
 
-for (const dir of [leftDir, rightDir]) {
+const leftDir = resolvedArgs[0]!.dir
+const rightDir = resolvedArgs[1]!.dir
+const leftLabel = resolvedArgs[0]!.label
+const rightLabel = resolvedArgs[1]!.label
+
+for (const { dir, label } of resolvedArgs) {
     try {
         const stat = fs.statSync(dir)
         if (!stat.isDirectory()) {
-            console.error(`Not a directory: ${dir}`)
+            console.error(`Not a directory: ${label ?? dir}`)
             process.exit(1)
         }
     } catch {
-        console.error(`Directory not found: ${dir}`)
+        console.error(`Directory not found: ${label ?? dir}`)
         process.exit(1)
     }
 }
@@ -158,11 +196,13 @@ if (subcommand === 'diff') {
         only: onlyFilter,
         stat: cli.flags.stat,
     })
+    cleanupMounts()
 } else if (subcommand === 'check') {
     const { runCheck } = await import('~/cli/check')
     await runCheck(leftDir, rightDir, ignoreOptions, {
         stat: cli.flags.stat,
     })
+    cleanupMounts()
 } else {
     // Default: interactive TUI
     const { render } = await import('ink')
@@ -194,6 +234,8 @@ if (subcommand === 'diff') {
         <App
             leftDir={leftDir}
             rightDir={rightDir}
+            leftLabel={leftLabel}
+            rightLabel={rightLabel}
             initialConfig={config}
             ignoreOptions={ignoreOptions}
             terminalTheme={terminalTheme}
@@ -204,5 +246,6 @@ if (subcommand === 'diff') {
         await waitUntilExit()
     } finally {
         exitAlternateScreen()
+        cleanupMounts()
     }
 }

@@ -9,6 +9,8 @@ import { DirectoryPanel } from '~/components/directory-panel'
 interface DirectoryDiffProps {
     leftDir: string
     rightDir: string
+    leftLabel?: string
+    rightLabel?: string
     entries: CompareEntry[]
     cursorIndex: number
     focusedPanel: PanelSide
@@ -21,6 +23,8 @@ interface DirectoryDiffProps {
 export function DirectoryDiff({
     leftDir,
     rightDir,
+    leftLabel,
+    rightLabel,
     entries,
     cursorIndex,
     focusedPanel,
@@ -32,7 +36,7 @@ export function DirectoryDiff({
     return (
         <Box flexGrow={1}>
             <DirectoryPanel
-                rootPath={leftDir.replace(homeDir, '~')}
+                rootPath={leftLabel ?? leftDir.replace(homeDir, '~')}
                 entries={entries}
                 cursorIndex={cursorIndex}
                 isFocused={!dialogOpen && focusedPanel === 'left'}
@@ -42,7 +46,7 @@ export function DirectoryDiff({
                 searchQuery={searchQuery}
             />
             <DirectoryPanel
-                rootPath={rightDir.replace(homeDir, '~')}
+                rootPath={rightLabel ?? rightDir.replace(homeDir, '~')}
                 entries={entries}
                 cursorIndex={cursorIndex}
                 isFocused={!dialogOpen && focusedPanel === 'right'}

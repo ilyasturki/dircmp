@@ -32,12 +32,14 @@ import { loadKeybindings, resolveKeymap } from '~/utils/keybindings'
 interface AppProps {
     leftDir: string
     rightDir: string
+    leftLabel?: string
+    rightLabel?: string
     initialConfig: AppConfig
     ignoreOptions?: CliIgnoreOptions
     terminalTheme: 'dark' | 'light'
 }
 
-export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalTheme }: AppProps) {
+export function App({ leftDir, rightDir, leftLabel, rightLabel, initialConfig, ignoreOptions, terminalTheme }: AppProps) {
     const [theme, setTheme] = useState(terminalTheme)
 
     useEffect(() => {
@@ -67,6 +69,8 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
     const effectiveRightDir = state.swapped ? leftDir : rightDir
+    const effectiveLeftLabel = state.swapped ? rightLabel : leftLabel
+    const effectiveRightLabel = state.swapped ? leftLabel : rightLabel
 
     // Reserve rows: status bar (2 with hints, 1 without) + 3 for borders
     const contentHeight = Math.max(1, rows - (state.config.showHints ? 5 : 4))
@@ -155,6 +159,8 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
                         <DirectoryDiff
                             leftDir={effectiveLeftDir}
                             rightDir={effectiveRightDir}
+                            leftLabel={effectiveLeftLabel}
+                            rightLabel={effectiveRightLabel}
                             entries={state.entries}
                             cursorIndex={state.cursorIndex}
                             focusedPanel={state.focusedPanel}
