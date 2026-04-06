@@ -337,6 +337,7 @@ export function IgnoreDialog({
                             { key: 'esc', label: 'cancel' },
                         ]
                 }
+                columns={columns}
             />
         </Dialog>
     )

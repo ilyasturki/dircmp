@@ -286,6 +286,7 @@ export function KeybindingsDialog({
                             { key: 'esc', label: 'cancel' },
                         ]
                 }
+                columns={columns}
             />
         </Dialog>
     )

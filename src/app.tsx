@@ -181,6 +181,7 @@ export function App({ leftDir, rightDir, initialConfig, ignoreOptions, terminalT
                 compareDates={state.config.compareDates}
                 searchInputActive={state.searchInputActive}
                 searchQuery={state.searchQuery}
+                columns={columns}
                 entryCount={state.entries.length}
                 dispatch={dispatch}
             />

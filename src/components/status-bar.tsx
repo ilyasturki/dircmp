@@ -26,6 +26,7 @@ interface StatusBarProps {
     compareDates: boolean
     searchInputActive: boolean
     searchQuery: string
+    columns: number
     entryCount: number
     dispatch: Dispatch<Action>
 }
@@ -155,6 +156,7 @@ export function StatusBar({
     compareDates,
     searchInputActive,
     searchQuery,
+    columns,
     entryCount,
     dispatch,
 }: StatusBarProps) {
@@ -205,7 +207,7 @@ export function StatusBar({
             }
             {showHints && (
                 <Box>
-                    <KeyboardHints items={helpItems} />
+                    <KeyboardHints items={helpItems} columns={columns} />
                 </Box>
             )}
         </Box>
