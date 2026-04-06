@@ -55,8 +55,17 @@
             installPhase = ''
               mkdir -p $out/lib/dircmp $out/bin
               cp dist/index.js $out/lib/dircmp/
+
               makeWrapper ${pkgs.bun}/bin/bun $out/bin/dircmp \
                 --add-flags "$out/lib/dircmp/index.js"
+
+              # Shell completions
+              mkdir -p $out/share/bash-completion/completions
+              mkdir -p $out/share/zsh/site-functions
+              mkdir -p $out/share/fish/vendor_completions.d
+              $out/bin/dircmp completions bash > $out/share/bash-completion/completions/dircmp
+              $out/bin/dircmp completions zsh > $out/share/zsh/site-functions/_dircmp
+              $out/bin/dircmp completions fish > $out/share/fish/vendor_completions.d/dircmp.fish
             '';
           };
         }

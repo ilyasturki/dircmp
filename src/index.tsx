@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import meow from 'meow'
+import pkg from '../package.json'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 
@@ -11,9 +12,10 @@ const HELP_TEXT = `
     $ dircmp check <left-dir> <right-dir>        Exit 0 if identical, 1 if different
 
   Commands
-    (default)   Launch the interactive TUI
-    diff        Print a summary of differences to stdout
-    check       Silent comparison — useful in scripts/CI
+    (default)       Launch the interactive TUI
+    diff            Print a summary of differences to stdout
+    check           Silent comparison — useful in scripts/CI
+    completions     Print shell completion script (bash, zsh, fish)
 
   Global Options
     -h, --help              Show this help message
@@ -34,10 +36,12 @@ const HELP_TEXT = `
     $ dircmp diff --format flat --only modified ./a ./b
     $ dircmp diff --format json ./a ./b
     $ dircmp check ./expected ./actual
+    $ dircmp completions fish > ~/.config/fish/completions/dircmp.fish
 `
 
 const cli = meow(HELP_TEXT, {
     importMeta: import.meta,
+    version: pkg.version,
     flags: {
         version: {
             type: 'boolean',
@@ -65,6 +69,25 @@ const cli = meow(HELP_TEXT, {
         },
     },
 })
+
+// Handle completions subcommand early (before positional arg validation)
+if (cli.input[0] === 'completions') {
+    const { isValidShell, getCompletionScript, getInstallHint } = await import(
+        '~/cli/completions'
+    )
+    const shell = cli.input[1]
+    if (!shell || !isValidShell(shell)) {
+        console.error(
+            `Usage: dircmp completions <shell>\n  Shells: bash, zsh, fish`,
+        )
+        process.exit(1)
+    }
+    console.log(getCompletionScript(shell))
+    if (process.stderr.isTTY) {
+        console.error(`\n# ${getInstallHint(shell)}`)
+    }
+    process.exit(0)
+}
 
 // Determine subcommand
 const SUBCOMMANDS = ['diff', 'check'] as const
