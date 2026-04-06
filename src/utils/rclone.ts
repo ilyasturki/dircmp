@@ -88,15 +88,22 @@ export async function mountRemote(remotePath: RemotePath): Promise<string> {
     const child = spawn(
         'rclone',
         ['mount', remotePath.remote, mountPoint, '--vfs-cache-mode', 'full'],
-        { stdio: 'ignore', detached: false },
+        { stdio: ['ignore', 'ignore', 'pipe'], detached: false },
     )
+
+    let stderrData = ''
+    child.stderr?.on('data', (chunk: Buffer) => {
+        if (stderrData.length < 4096) {
+            stderrData += chunk.toString()
+        }
+    })
 
     const handle: MountHandle = { mountPoint, child, label: remotePath.label }
     activeMounts.push(handle)
     registerCleanup()
 
-    // Wait for mount to become ready by polling for directory content
-    await waitForMount(mountPoint, child)
+    // Wait for mount to become ready by detecting the FUSE device
+    await waitForMount(mountPoint, child, () => stderrData)
 
     return mountPoint
 }
@@ -104,42 +111,62 @@ export async function mountRemote(remotePath: RemotePath): Promise<string> {
 async function waitForMount(
     mountPoint: string,
     child: ChildProcess,
+    getStderr: () => string,
 ): Promise<void> {
     const timeoutMs = 30_000
     const pollMs = 100
     const start = Date.now()
 
+    // Record the device ID of the parent directory (e.g. /tmp).
+    // A FUSE mount over mountPoint will have a different device ID.
+    const parentDev = fs.statSync(path.dirname(mountPoint)).dev
+
     return new Promise((resolve, reject) => {
+        let settled = false
+
         child.on('error', (err) => {
+            if (settled) return
+            settled = true
             reject(new Error(`rclone failed to start: ${err.message}`))
         })
 
         child.on('exit', (code) => {
+            if (settled) return
             if (code !== null && code !== 0) {
+                settled = true
+                const hint = getStderr().trim()
                 reject(
                     new Error(
-                        `rclone exited with code ${code}. Check that the remote path is valid and credentials are configured.`,
+                        `rclone exited with code ${code}.${hint ? `\n${hint}` : ' Check that the remote path is valid and credentials are configured.'}`,
                     ),
                 )
             }
         })
 
         const poll = () => {
+            if (settled) return
+
             if (Date.now() - start > timeoutMs) {
+                settled = true
+                const hint = getStderr().trim()
                 reject(
                     new Error(
-                        `Timed out waiting for rclone mount at ${mountPoint}`,
+                        `Timed out waiting for rclone mount at ${mountPoint}${hint ? `\n${hint}` : ''}`,
                     ),
                 )
                 return
             }
 
             try {
-                // Once we can stat the mount point and it's still a directory,
-                // the FUSE mount is ready
-                fs.readdirSync(mountPoint)
-                resolve()
+                const mountDev = fs.statSync(mountPoint).dev
+                if (mountDev !== parentDev) {
+                    settled = true
+                    resolve() // FUSE filesystem is now mounted
+                } else {
+                    setTimeout(poll, pollMs)
+                }
             } catch {
+                // stat may fail transiently during mount setup
                 setTimeout(poll, pollMs)
             }
         }
