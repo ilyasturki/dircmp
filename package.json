@@ -7,6 +7,7 @@
         "dev:watch": "tsx --watch src/index.tsx",
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
+        "build": "bun build src/index.tsx --compile --outfile dircmp",
         "typecheck": "tsc --noEmit",
         "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md"
     },
@@ -24,6 +25,7 @@
         "@types/node": "^25.3.4",
         "@types/react": "^19.2.14",
         "prettier": "^3.8.1",
+        "react-devtools-core": "^7.0.1",
         "tsx": "^4.21.0",
         "typescript": "^5.9.3"
     }
