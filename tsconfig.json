@@ -5,6 +5,7 @@
         "moduleResolution": "Bundler",
         "target": "ES2022",
         "strict": true,
+        "types": ["node"],
         "outDir": "dist",
         "rootDir": "src",
         "esModuleInterop": true,

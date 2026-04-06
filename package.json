@@ -24,7 +24,7 @@
         "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md"
     },
     "dependencies": {
-        "diff": "^8.0.3",
+        "diff": "^8.0.4",
         "ignore": "^7.0.5",
         "ink": "^6.8.0",
         "ink-text-input": "^6.0.0",
@@ -34,11 +34,11 @@
     },
     "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
-        "@types/node": "^25.3.4",
+        "@types/node": "^25.5.2",
         "@types/react": "^19.2.14",
         "prettier": "^3.8.1",
         "react-devtools-core": "^7.0.1",
         "tsx": "^4.21.0",
-        "typescript": "^5.9.3"
+        "typescript": "^6.0.2"
     }
 }
