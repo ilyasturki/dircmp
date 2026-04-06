@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
-import type { Action } from '~/utils/types'
+import type { Action, ScanResult } from '~/utils/types'
 import { ConfirmDeleteDialog } from '~/components/confirm-delete-dialog'
 import { ContextMenu } from '~/components/context-menu'
 import { DiffView } from '~/components/diff-view'
@@ -34,12 +34,16 @@ interface AppProps {
     rightDir: string
     leftLabel?: string
     rightLabel?: string
+    leftRemote?: string
+    rightRemote?: string
+    leftPreScan?: ScanResult
+    rightPreScan?: ScanResult
     initialConfig: AppConfig
     ignoreOptions?: CliIgnoreOptions
     terminalTheme: 'dark' | 'light'
 }
 
-export function App({ leftDir, rightDir, leftLabel, rightLabel, initialConfig, ignoreOptions, terminalTheme }: AppProps) {
+export function App({ leftDir, rightDir, leftLabel, rightLabel, leftRemote, rightRemote, leftPreScan, rightPreScan, initialConfig, ignoreOptions, terminalTheme }: AppProps) {
     const [theme, setTheme] = useState(terminalTheme)
 
     useEffect(() => {
@@ -65,6 +69,10 @@ export function App({ leftDir, rightDir, leftLabel, rightLabel, initialConfig, i
         state.ignoreEnabled,
         showToast,
         ignoreOptions?.extraIgnorePatterns,
+        leftRemote,
+        rightRemote,
+        leftPreScan,
+        rightPreScan,
     )
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir

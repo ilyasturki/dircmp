@@ -1,8 +1,13 @@
 import type { ChildProcess } from 'node:child_process'
-import { spawn, spawnSync } from 'node:child_process'
+import { execFile, spawn, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { promisify } from 'node:util'
+
+import type { FileEntry, ScanResult } from '~/utils/types'
+
+const execFileAsync = promisify(execFile)
 
 interface RemotePath {
     /** rclone remote spec, e.g. ":sftp,host=server:/path" or "myremote:bucket/prefix" */
@@ -189,6 +194,62 @@ function registerCleanup() {
         cleanupMounts()
         process.exit(143)
     })
+}
+
+interface LsjsonEntry {
+    Path: string
+    Name: string
+    Size: number
+    ModTime: string
+    IsDir: boolean
+}
+
+/**
+ * Scan a remote directory using `rclone lsjson --recursive`.
+ * Much faster than walking a FUSE mount since it's a single network round-trip.
+ */
+export async function scanRemote(
+    rcloneRemote: string,
+    shouldIgnore: ((relativePath: string) => boolean) | null,
+): Promise<ScanResult> {
+    const { stdout } = await execFileAsync(
+        'rclone',
+        ['lsjson', '--recursive', rcloneRemote],
+        { timeout: 60_000, maxBuffer: 50 * 1024 * 1024 },
+    )
+
+    const entries: LsjsonEntry[] = JSON.parse(stdout)
+    const result: ScanResult = new Map()
+
+    for (const entry of entries) {
+        // rclone lsjson adds trailing slash to directory paths
+        const relativePath =
+            entry.IsDir ? entry.Path.replace(/\/$/, '') : entry.Path
+        if (!relativePath) continue
+        if (shouldIgnore && shouldIgnore(relativePath)) continue
+
+        result.set(relativePath, {
+            name: entry.Name,
+            relativePath,
+            isDirectory: entry.IsDir,
+            size: entry.IsDir ? 0 : entry.Size,
+            modifiedTime: new Date(entry.ModTime),
+            contentHash: null,
+        })
+    }
+
+    // Compute directory sizes by summing child file sizes
+    for (const [relPath, fileEntry] of result) {
+        if (fileEntry.isDirectory) continue
+        let dir = path.dirname(relPath)
+        while (dir !== '.') {
+            const dirEntry = result.get(dir)
+            if (dirEntry) dirEntry.size += fileEntry.size
+            dir = path.dirname(dir)
+        }
+    }
+
+    return result
 }
 
 export function cleanupMounts() {

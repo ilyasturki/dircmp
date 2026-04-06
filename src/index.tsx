@@ -4,7 +4,9 @@ import meow from 'meow'
 import pkg from '../package.json'
 
 import type { CliIgnoreOptions } from '~/cli/types'
-import { parseRemoteUri, checkRcloneInstalled, mountRemote, cleanupMounts } from '~/utils/rclone'
+import type { ScanResult } from '~/utils/types'
+import { loadGlobalIgnorePatterns, compileIgnoreMatcher } from '~/utils/ignore'
+import { parseRemoteUri, checkRcloneInstalled, mountRemote, scanRemote, cleanupMounts } from '~/utils/rclone'
 
 const HELP_TEXT = `
   Usage
@@ -125,12 +127,28 @@ if (positionalArgs.length !== 2) {
     process.exit(1)
 }
 
+// Build ignore matcher for pre-scanning remote dirs (pair patterns require
+// mount paths which aren't available yet, but they're always empty for remotes
+// since the temp mount path changes each session).
+const preScanIgnore =
+    cli.flags.noIgnore ? null : (
+        compileIgnoreMatcher([
+            ...loadGlobalIgnorePatterns(),
+            ...cli.flags.ignore,
+        ])
+    )
+
 // Resolve paths — mount remote URIs via rclone if needed
 const resolvedArgs = await Promise.all(
-    [positionalArgs[0]!, positionalArgs[1]!].map(async (arg) => {
+    [positionalArgs[0]!, positionalArgs[1]!].map(async (arg): Promise<{
+        dir: string
+        label: string | undefined
+        remote: string | undefined
+        preScan: ScanResult | undefined
+    }> => {
         const remote = parseRemoteUri(arg)
         if (!remote) {
-            return { dir: path.resolve(arg), label: undefined }
+            return { dir: path.resolve(arg), label: undefined, remote: undefined, preScan: undefined }
         }
         if (!checkRcloneInstalled()) {
             console.error(
@@ -139,8 +157,14 @@ const resolvedArgs = await Promise.all(
             process.exit(1)
         }
         try {
-            const mountPoint = await mountRemote(remote)
-            return { dir: mountPoint, label: remote.label }
+            process.stderr.write(`Mounting ${remote.label}...\n`)
+            // Start mount and scan concurrently — the scan runs via rclone lsjson
+            // while FUSE is still initializing, so they overlap.
+            const [mountPoint, preScan] = await Promise.all([
+                mountRemote(remote),
+                scanRemote(remote.remote, preScanIgnore),
+            ])
+            return { dir: mountPoint, label: remote.label, remote: remote.remote, preScan }
         } catch (err) {
             console.error(
                 `Failed to mount ${arg}: ${err instanceof Error ? err.message : err}`,
@@ -154,6 +178,10 @@ const leftDir = resolvedArgs[0]!.dir
 const rightDir = resolvedArgs[1]!.dir
 const leftLabel = resolvedArgs[0]!.label
 const rightLabel = resolvedArgs[1]!.label
+const leftRemote = resolvedArgs[0]!.remote
+const rightRemote = resolvedArgs[1]!.remote
+const leftPreScan = resolvedArgs[0]!.preScan
+const rightPreScan = resolvedArgs[1]!.preScan
 
 for (const { dir, label } of resolvedArgs) {
     try {
@@ -236,6 +264,10 @@ if (subcommand === 'diff') {
             rightDir={rightDir}
             leftLabel={leftLabel}
             rightLabel={rightLabel}
+            leftRemote={leftRemote}
+            rightRemote={rightRemote}
+            leftPreScan={leftPreScan}
+            rightPreScan={rightPreScan}
             initialConfig={config}
             ignoreOptions={ignoreOptions}
             terminalTheme={terminalTheme}

@@ -4,9 +4,10 @@ import { useApp, useInput } from 'ink'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
-import type { Action, AppState } from '~/utils/types'
+import type { Action, AppState, ScanResult } from '~/utils/types'
 import { executeAction } from '~/execute-action'
 import { compileIgnoreMatcher, loadAllIgnorePatterns } from '~/utils/ignore'
+import { scanRemote } from '~/utils/rclone'
 import { scanDirectory } from '~/utils/scanner'
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
@@ -63,12 +64,51 @@ export function useDirectoryScan(
     ignoreEnabled: boolean,
     showToast: (message: string) => void,
     extraIgnorePatterns: string[] = [],
+    leftRemote?: string,
+    rightRemote?: string,
+    leftPreScan?: ScanResult,
+    rightPreScan?: ScanResult,
 ) {
     const [refreshCounter, setRefreshCounter] = useState(0)
+    const preScanUsed = useRef(false)
 
     useEffect(() => {
         const { global, pair } = loadAllIgnorePatterns(leftDir, rightDir)
         dispatch({ type: 'SET_IGNORE_PATTERNS', global, pair })
+
+        // Use pre-scanned results on first render (from concurrent lsjson during mount)
+        if (!preScanUsed.current && (leftPreScan || rightPreScan)) {
+            preScanUsed.current = true
+            const shouldIgnore =
+                ignoreEnabled ?
+                    compileIgnoreMatcher([
+                        ...global,
+                        ...pair,
+                        ...extraIgnorePatterns,
+                    ])
+                :   null
+            const start = performance.now()
+            // Only scan sides that don't have pre-scanned results
+            const leftPromise =
+                leftPreScan ?
+                    Promise.resolve(leftPreScan)
+                :   scanDirectory(leftDir, shouldIgnore)
+            const rightPromise =
+                rightPreScan ?
+                    Promise.resolve(rightPreScan)
+                :   scanDirectory(rightDir, shouldIgnore)
+            Promise.all([leftPromise, rightPromise])
+                .then(([leftScan, rightScan]) => {
+                    const elapsed = performance.now() - start
+                    dispatch({ type: 'SCAN_COMPLETE', leftScan, rightScan })
+                    showToast(`Scanned in ${formatDuration(elapsed)}`)
+                })
+                .catch((err) => {
+                    dispatch({ type: 'SCAN_ERROR', error: String(err) })
+                })
+            return
+        }
+
         const shouldIgnore =
             ignoreEnabled ?
                 compileIgnoreMatcher([
@@ -79,8 +119,12 @@ export function useDirectoryScan(
             :   null
         const start = performance.now()
         Promise.all([
-            scanDirectory(leftDir, shouldIgnore),
-            scanDirectory(rightDir, shouldIgnore),
+            leftRemote ?
+                scanRemote(leftRemote, shouldIgnore)
+            :   scanDirectory(leftDir, shouldIgnore),
+            rightRemote ?
+                scanRemote(rightRemote, shouldIgnore)
+            :   scanDirectory(rightDir, shouldIgnore),
         ])
             .then(([leftScan, rightScan]) => {
                 const elapsed = performance.now() - start
