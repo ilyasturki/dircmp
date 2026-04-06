@@ -45,6 +45,8 @@
             version = packageJson.version;
             src = ./.;
             nativeBuildInputs = [ pkgs.bun ];
+            dontStrip = true;
+            dontPatchELF = true;
             buildPhase = ''
               cp -r ${node_modules} node_modules
               chmod -R u+w node_modules
