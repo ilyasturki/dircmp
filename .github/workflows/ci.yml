@@ -1,22 +1,54 @@
 name: CI
 on:
-  push:
-    branches: [main]
-  pull_request:
+    push:
+        branches: [main]
+    pull_request:
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun run format:check
-      - run: bun run build
-  nix-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix build
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v2
+            - run: bun install --frozen-lockfile
+            - run: bun run typecheck
+            - run: bun run format:check
+            - run: bun run build
+            - name: Smoke test
+              run: |
+                  ./dircmp --help
+                  ./dircmp --version
+
+                  mkdir -p /tmp/dircmp-a /tmp/dircmp-b
+                  echo "hello" > /tmp/dircmp-a/file.txt
+                  echo "hello" > /tmp/dircmp-b/file.txt
+
+                  ./dircmp check /tmp/dircmp-a /tmp/dircmp-b
+
+                  echo "world" > /tmp/dircmp-b/file.txt
+                  ./dircmp check /tmp/dircmp-a /tmp/dircmp-b && exit 1 || true
+
+                  ./dircmp diff --format json /tmp/dircmp-a /tmp/dircmp-b
+                  ./dircmp diff --stat /tmp/dircmp-a /tmp/dircmp-b
+    nix-build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: DeterminateSystems/nix-installer-action@main
+            - uses: DeterminateSystems/magic-nix-cache-action@main
+            - run: nix build
+            - name: Smoke test
+              run: |
+                  ./result/bin/dircmp --help
+                  ./result/bin/dircmp --version
+
+                  mkdir -p /tmp/dircmp-a /tmp/dircmp-b
+                  echo "hello" > /tmp/dircmp-a/file.txt
+                  echo "hello" > /tmp/dircmp-b/file.txt
+
+                  ./result/bin/dircmp check /tmp/dircmp-a /tmp/dircmp-b
+
+                  echo "world" > /tmp/dircmp-b/file.txt
+                  ./result/bin/dircmp check /tmp/dircmp-a /tmp/dircmp-b && exit 1 || true
+
+                  ./result/bin/dircmp diff --format json /tmp/dircmp-a /tmp/dircmp-b
+                  ./result/bin/dircmp diff --stat /tmp/dircmp-a /tmp/dircmp-b
