@@ -44,20 +44,15 @@
             pname = "dircmp";
             version = packageJson.version;
             src = ./.;
-            nativeBuildInputs = [
-              pkgs.bun
-              pkgs.makeWrapper
-            ];
+            nativeBuildInputs = [ pkgs.bun ];
             buildPhase = ''
               cp -r ${node_modules} node_modules
-              bun build src/index.tsx --outfile dist/index.js --target=bun --external react-devtools-core
+              chmod -R u+w node_modules
+              bun build src/index.tsx --compile --outfile dircmp
             '';
             installPhase = ''
-              mkdir -p $out/lib/dircmp $out/bin
-              cp dist/index.js $out/lib/dircmp/
-
-              makeWrapper ${pkgs.bun}/bin/bun $out/bin/dircmp \
-                --add-flags "$out/lib/dircmp/index.js"
+              mkdir -p $out/bin
+              cp dircmp $out/bin/
 
               # Shell completions
               mkdir -p $out/share/bash-completion/completions
