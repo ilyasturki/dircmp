@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1]
+
+### Changed
+
+- Nix package now builds a standalone binary instead of using a bun wrapper
+
 ## [0.4.0]
 
 ### Added
