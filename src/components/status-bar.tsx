@@ -3,7 +3,7 @@ import path from 'node:path'
 import type { Dispatch } from 'react'
 import { diffLines } from 'diff'
 import { Box, Text } from 'ink'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { Action, CompareEntry, FilterMode, ScanResult } from '~/utils/types'
@@ -112,6 +112,7 @@ function getEntryInfo(
     rightScan: ScanResult | null,
     lineDiffCount: number | null,
     compareDates: boolean,
+    dateFormatter: Intl.DateTimeFormat,
 ): string {
     if (!entry) return ''
 
@@ -134,7 +135,11 @@ function getEntryInfo(
                 return `${count} different file${count !== 1 ? 's' : ''}`
             }
             if (lineDiffCount === null) return '...'
-            if (lineDiffCount === 0) return 'date modified'
+            if (lineDiffCount === 0) {
+                const leftDate = entry.left ? dateFormatter.format(entry.left.modifiedTime) : ''
+                const rightDate = entry.right ? dateFormatter.format(entry.right.modifiedTime) : ''
+                return `${leftDate} → ${rightDate}`
+            }
             return `${lineDiffCount} different line${lineDiffCount !== 1 ? 's' : ''}`
         default:
             return ''
@@ -161,6 +166,20 @@ export function StatusBar({
     dispatch,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
+    const dateFormatter = useMemo(
+        () =>
+            new Intl.DateTimeFormat(undefined, {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                fractionalSecondDigits: 3,
+                hour12: false,
+            }),
+        [],
+    )
 
     if (isLoading) {
         return (
@@ -183,6 +202,7 @@ export function StatusBar({
         rightScan,
         lineDiffCount,
         compareDates,
+        dateFormatter,
     )
 
     return (
