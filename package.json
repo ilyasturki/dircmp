@@ -1,13 +1,25 @@
 {
-    "name": "dircmp",
+    "name": "@ilyasturki/dircmp",
     "version": "0.4.1",
     "type": "module",
+    "bin": {
+        "dircmp": "bin/dircmp.js"
+    },
+    "files": [
+        "bin",
+        "dist"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
     "scripts": {
         "dev": "tsx src/index.tsx",
         "dev:watch": "tsx --watch src/index.tsx",
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "build": "bun build src/index.tsx --compile --outfile dircmp",
+        "build:npm": "bun build src/index.tsx --outfile dist/index.js --target=node --external os-theme --define process.env.DEV='\"false\"'",
+        "prepublishOnly": "bun run build:npm",
         "typecheck": "tsc --noEmit",
         "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md"
     },
