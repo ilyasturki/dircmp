@@ -11,7 +11,41 @@ permissions:
     id-token: write # Publish with provenance
 
 jobs:
-    release:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Build standalone binaries
+              run: |
+                  bun build src/index.tsx --compile --target=bun-linux-x64 --outfile dircmp-linux-x64
+                  bun build src/index.tsx --compile --target=bun-linux-arm64 --outfile dircmp-linux-arm64
+                  bun build src/index.tsx --compile --target=bun-darwin-x64 --outfile dircmp-darwin-x64
+                  bun build src/index.tsx --compile --target=bun-darwin-arm64 --outfile dircmp-darwin-arm64
+                  bun build src/index.tsx --compile --target=bun-windows-x64 --outfile dircmp-windows-x64.exe
+
+            - name: Upload binaries
+              uses: actions/upload-artifact@v7
+              with:
+                  name: binaries
+                  path: |
+                      dircmp-linux-x64
+                      dircmp-linux-arm64
+                      dircmp-darwin-x64
+                      dircmp-darwin-arm64
+                      dircmp-windows-x64.exe
+
+    npm:
+        needs: build
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -31,16 +65,20 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
-            - name: Build standalone binaries
-              run: |
-                  bun build src/index.tsx --compile --target=bun-linux-x64 --outfile dircmp-linux-x64
-                  bun build src/index.tsx --compile --target=bun-linux-arm64 --outfile dircmp-linux-arm64
-                  bun build src/index.tsx --compile --target=bun-darwin-x64 --outfile dircmp-darwin-x64
-                  bun build src/index.tsx --compile --target=bun-darwin-arm64 --outfile dircmp-darwin-arm64
-                  bun build src/index.tsx --compile --target=bun-windows-x64 --outfile dircmp-windows-x64.exe
-
             - name: Publish to npm
               run: npx npm@latest publish --provenance --access public
+
+    github-release:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Download binaries
+              uses: actions/download-artifact@v8
+              with:
+                  name: binaries
 
             - name: Extract changelog
               id: changelog
@@ -63,6 +101,15 @@ jobs:
                       dircmp-darwin-x64
                       dircmp-darwin-arm64
                       dircmp-windows-x64.exe
+
+    homebrew:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download binaries
+              uses: actions/download-artifact@v8
+              with:
+                  name: binaries
 
             - name: Update Homebrew tap
               env:
