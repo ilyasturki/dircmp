@@ -77,10 +77,7 @@ function parseChangelog(raw: string, width: number): ChangelogLine[] {
     return lines
 }
 
-function filterLines(
-    lines: ChangelogLine[],
-    query: string,
-): ChangelogLine[] {
+function filterLines(lines: ChangelogLine[], query: string): ChangelogLine[] {
     if (!query) return lines
     const q = query.toLowerCase()
     const matchingIndices = new Set<number>()
@@ -206,9 +203,7 @@ export function ReleaseNotesDialog({
             return
         }
         if (key.ctrl && input === 'b') {
-            setScrollOffset((prev) =>
-                Math.max(0, prev - maxVisibleLines),
-            )
+            setScrollOffset((prev) => Math.max(0, prev - maxVisibleLines))
             return
         }
     })
@@ -224,7 +219,8 @@ export function ReleaseNotesDialog({
                 <Box flexDirection='column'>
                     <Text dimColor>Release notes not available.</Text>
                     <Text dimColor>
-                        Visit github.com/ilyasturki/dircmp/blob/main/CHANGELOG.md
+                        Visit
+                        github.com/ilyasturki/dircmp/blob/main/CHANGELOG.md
                     </Text>
                 </Box>
             </Dialog>
@@ -257,7 +253,8 @@ export function ReleaseNotesDialog({
                     </Box>
                 : searchQuery ?
                     <Text dimColor>
-                        /{searchQuery} ({filteredLines.length}/{allLines.length})
+                        /{searchQuery} ({filteredLines.length}/{allLines.length}
+                        )
                     </Text>
                 :   <Text dimColor>
                         {filteredLines.length} lines | /: search | q: close
