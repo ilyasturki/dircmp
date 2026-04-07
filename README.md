@@ -20,6 +20,12 @@ Terminal TUI for comparing two directories side by side.
 
 ## Installation
 
+### npx (no install)
+
+```sh
+npx @ilyasturki/dircmp <left-dir> <right-dir>
+```
+
 ### npm
 
 ```sh
@@ -32,12 +38,20 @@ npm install -g @ilyasturki/dircmp
 nix run github:ilyasturki/dircmp -- <left-dir> <right-dir>
 ```
 
-Or add to your flake inputs:
+Or add to your flake inputs and install the package:
 
 ```nix
 {
   inputs.dircmp.url = "github:ilyasturki/dircmp";
 }
+```
+
+Then add it to your installed packages:
+
+```nix
+environment.systemPackages = [
+  inputs.dircmp.packages.${pkgs.system}.default
+];
 ```
 
 ### Build from source

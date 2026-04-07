@@ -22,6 +22,12 @@ Current CHANGELOG.md:
 
 !`cat CHANGELOG.md 2>/dev/null || echo "(empty)"`
 
+## CI gate
+
+Run CI locally before proceeding. If it fails, stop and report the error.
+
+!`act push -W .github/workflows/ci.yml 2>&1 | tail -20`
+
 ## Instructions
 
 1. **Validate argument**: `$ARGUMENTS` must be one of `patch`, `minor`, `major`. If missing or invalid, ask the user.
