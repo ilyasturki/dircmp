@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2]
+
+### Added
+
+- MIT license file
+- AUR packages (`dircmp` and `dircmp-bin`)
+- Cross-compiled release binaries for linux-arm64, darwin, and windows
+
 ## [1.0.1]
 
 ### Added
