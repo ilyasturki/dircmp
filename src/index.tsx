@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import meow from 'meow'
 
 import type { CliIgnoreOptions } from '~/cli/types'
@@ -13,6 +14,15 @@ import {
     scanRemote,
 } from '~/utils/rclone'
 import pkg from '../package.json'
+
+let changelogText = ''
+try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
+    changelogText = fs.readFileSync(
+        path.join(__dirname, '..', 'CHANGELOG.md'),
+        'utf-8',
+    )
+} catch {}
 
 const HELP_TEXT = `
   Usage
@@ -290,6 +300,7 @@ if (subcommand === 'diff') {
             initialConfig={config}
             ignoreOptions={ignoreOptions}
             terminalTheme={terminalTheme}
+            changelog={changelogText}
         />,
     )
 

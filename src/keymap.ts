@@ -464,4 +464,18 @@ export const defaultKeymap: Shortcut[] = [
             action: { type: 'SHOW_KEYBINDINGS_EDITOR' },
         },
     },
+    {
+        id: 'releaseNotes',
+        mode: 'browser',
+        keyLabel: 'n',
+        description: 'release notes',
+        helpDescription: 'Show release notes',
+        keyDef: 'n',
+        helpKey: 'n',
+        match: (input) => input === 'n',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'SHOW_RELEASE_NOTES' },
+        },
+    },
 ]

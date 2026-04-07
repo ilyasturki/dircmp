@@ -26,7 +26,8 @@
     },
     "files": [
         "bin",
-        "dist"
+        "dist",
+        "CHANGELOG.md"
     ],
     "engines": {
         "node": ">=18"

@@ -15,6 +15,7 @@ import { IgnoreDialog } from '~/components/ignore-dialog'
 import { KeybindingsDialog } from '~/components/keybindings-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
+import { ReleaseNotesDialog } from '~/components/release-notes-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
 import { TerminalThemeProvider } from '~/context/terminal-theme'
@@ -41,6 +42,7 @@ interface AppProps {
     initialConfig: AppConfig
     ignoreOptions?: CliIgnoreOptions
     terminalTheme: 'dark' | 'light'
+    changelog: string
 }
 
 export function App({
@@ -55,6 +57,7 @@ export function App({
     initialConfig,
     ignoreOptions,
     terminalTheme,
+    changelog,
 }: AppProps) {
     const [theme, setTheme] = useState(terminalTheme)
 
@@ -292,6 +295,14 @@ export function App({
             {state.dialog === 'keybindingsEditor' && (
                 <KeybindingsDialog
                     defaults={defaultKeymap}
+                    dispatch={dispatch}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.dialog === 'releaseNotes' && (
+                <ReleaseNotesDialog
+                    changelog={changelog}
                     dispatch={dispatch}
                     columns={columns}
                     rows={rows}

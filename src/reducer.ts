@@ -587,6 +587,10 @@ export function reducer(state: AppState, action: Action): AppState {
             return { ...state, dialog: 'keybindingsEditor' }
         case 'HIDE_KEYBINDINGS_EDITOR':
             return { ...state, dialog: null }
+        case 'SHOW_RELEASE_NOTES':
+            return { ...state, dialog: 'releaseNotes' }
+        case 'HIDE_RELEASE_NOTES':
+            return { ...state, dialog: null }
         case 'KEYBINDINGS_UPDATED':
             return {
                 ...state,

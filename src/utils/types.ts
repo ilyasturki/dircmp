@@ -34,6 +34,7 @@ export type DialogType =
     | 'help'
     | 'diffView'
     | 'keybindingsEditor'
+    | 'releaseNotes'
 
 export type FilterMode = 'all' | 'diff-only'
 
@@ -91,6 +92,8 @@ export type Action =
     | { type: 'SHOW_KEYBINDINGS_EDITOR' }
     | { type: 'HIDE_KEYBINDINGS_EDITOR' }
     | { type: 'KEYBINDINGS_UPDATED' }
+    | { type: 'SHOW_RELEASE_NOTES' }
+    | { type: 'HIDE_RELEASE_NOTES' }
     | { type: 'OPEN_SEARCH' }
     | { type: 'SET_SEARCH_QUERY'; query: string }
     | { type: 'CLOSE_SEARCH' }
