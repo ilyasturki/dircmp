@@ -1,6 +1,6 @@
 {
     "name": "@ilyasturki/dircmp",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "type": "module",
     "description": "Terminal TUI for comparing two directories side by side",
     "author": "Ilyas Turki",
