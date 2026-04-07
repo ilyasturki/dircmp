@@ -26,6 +26,12 @@ Terminal TUI for comparing two directories side by side.
 npx @ilyasturki/dircmp <left-dir> <right-dir>
 ```
 
+### Homebrew
+
+```sh
+brew install ilyasturki/dircmp/dircmp
+```
+
 ### npm
 
 ```sh

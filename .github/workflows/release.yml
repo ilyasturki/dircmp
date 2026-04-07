@@ -63,3 +63,64 @@ jobs:
                       dircmp-darwin-x64
                       dircmp-darwin-arm64
                       dircmp-windows-x64.exe
+
+            - name: Update Homebrew tap
+              env:
+                  HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+              run: |
+                  version="${GITHUB_REF_NAME#v}"
+
+                  darwin_arm64_sha=$(sha256sum dircmp-darwin-arm64 | cut -d ' ' -f 1)
+                  darwin_x64_sha=$(sha256sum dircmp-darwin-x64 | cut -d ' ' -f 1)
+                  linux_arm64_sha=$(sha256sum dircmp-linux-arm64 | cut -d ' ' -f 1)
+                  linux_x64_sha=$(sha256sum dircmp-linux-x64 | cut -d ' ' -f 1)
+
+                  git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/ilyasturki/homebrew-dircmp.git" tap
+                  mkdir -p tap/Formula
+
+                  cat > tap/Formula/dircmp.rb << RUBY
+                  class Dircmp < Formula
+                    desc "Terminal TUI for comparing two directories side by side"
+                    homepage "https://github.com/ilyasturki/dircmp"
+                    version "${version}"
+                    license "MIT"
+
+                    on_macos do
+                      on_arm do
+                        url "https://github.com/ilyasturki/dircmp/releases/download/v#{version}/dircmp-darwin-arm64"
+                        sha256 "${darwin_arm64_sha}"
+                      end
+                      on_intel do
+                        url "https://github.com/ilyasturki/dircmp/releases/download/v#{version}/dircmp-darwin-x64"
+                        sha256 "${darwin_x64_sha}"
+                      end
+                    end
+
+                    on_linux do
+                      on_arm do
+                        url "https://github.com/ilyasturki/dircmp/releases/download/v#{version}/dircmp-linux-arm64"
+                        sha256 "${linux_arm64_sha}"
+                      end
+                      on_intel do
+                        url "https://github.com/ilyasturki/dircmp/releases/download/v#{version}/dircmp-linux-x64"
+                        sha256 "${linux_x64_sha}"
+                      end
+                    end
+
+                    def install
+                      bin.install Dir.glob("*").first => "dircmp"
+                      generate_completions_from_executable(bin/"dircmp", "completions")
+                    end
+
+                    test do
+                      assert_match version.to_s, shell_output("#{bin}/dircmp --version")
+                    end
+                  end
+                  RUBY
+
+                  cd tap
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add Formula/dircmp.rb
+                  git commit -m "dircmp ${version}"
+                  git push -u origin HEAD

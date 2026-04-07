@@ -34,6 +34,10 @@ jobs:
 
                   ./dircmp diff --format json /tmp/dircmp-a /tmp/dircmp-b
                   ./dircmp diff --stat /tmp/dircmp-a /tmp/dircmp-b
+
+                  ./dircmp completions bash | grep -q 'dircmp'
+                  ./dircmp completions zsh | grep -q 'dircmp'
+                  ./dircmp completions fish | grep -q 'dircmp'
             - name: Smoke test (npm bundle)
               run: |
                   node dist/index.js --help
@@ -69,3 +73,7 @@ jobs:
 
                   ./result/bin/dircmp diff --format json /tmp/dircmp-a /tmp/dircmp-b
                   ./result/bin/dircmp diff --stat /tmp/dircmp-a /tmp/dircmp-b
+
+                  ./result/bin/dircmp completions bash | grep -q 'dircmp'
+                  ./result/bin/dircmp completions zsh | grep -q 'dircmp'
+                  ./result/bin/dircmp completions fish | grep -q 'dircmp'
