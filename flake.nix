@@ -64,6 +64,7 @@
               $out/bin/dircmp completions zsh > $out/share/zsh/site-functions/_dircmp
               $out/bin/dircmp completions fish > $out/share/fish/vendor_completions.d/dircmp.fish
             '';
+            meta.license = pkgs.lib.licenses.mit;
           };
         }
       );
