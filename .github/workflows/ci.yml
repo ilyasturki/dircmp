@@ -13,7 +13,8 @@ jobs:
             - run: bun run typecheck
             - run: bun run format:check
             - run: bun run build
-            - name: Smoke test
+            - run: bun run build:npm
+            - name: Smoke test (compiled binary)
               run: |
                   ./dircmp --help
                   ./dircmp --version
@@ -29,6 +30,16 @@ jobs:
 
                   ./dircmp diff --format json /tmp/dircmp-a /tmp/dircmp-b
                   ./dircmp diff --stat /tmp/dircmp-a /tmp/dircmp-b
+            - name: Smoke test (npm bundle)
+              run: |
+                  node dist/index.js --help
+                  node dist/index.js --version
+
+                  node dist/index.js check /tmp/dircmp-a /tmp/dircmp-a
+                  node dist/index.js check /tmp/dircmp-a /tmp/dircmp-b && exit 1 || true
+
+                  node dist/index.js diff --format json /tmp/dircmp-a /tmp/dircmp-b
+                  node dist/index.js diff --stat /tmp/dircmp-a /tmp/dircmp-b
     nix-build:
         runs-on: ubuntu-latest
         steps:
