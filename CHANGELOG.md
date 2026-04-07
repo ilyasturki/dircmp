@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0]
+
+### Added
+
+- Remote directory comparison via rclone-based FUSE mounting
+- Show modification dates for date-only differences in status bar
+- `/` shortcut to search and filter keybindings in help dialog
+- npm publishing support with scoped package name and provenance
+
+### Fixed
+
+- Preserve bun compiled binary in Nix builds by disabling strip and patchelf
+- Detect FUSE mount via device ID instead of directory listing
+
+### Performance
+
+- Pre-scan remote directories via rclone lsjson concurrently with FUSE mount
+
 ## [0.4.1]
 
 ### Changed
