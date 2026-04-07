@@ -1,12 +1,17 @@
+import type { Dispatch } from 'react'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
-import type { Dispatch } from 'react'
 import { diffLines } from 'diff'
 import { Box, Text } from 'ink'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
-import type { Action, CompareEntry, FilterMode, ScanResult } from '~/utils/types'
+import type {
+    Action,
+    CompareEntry,
+    FilterMode,
+    ScanResult,
+} from '~/utils/types'
 import { countDescendantDiffs } from '~/utils/compare'
 import { KeyboardHints } from './keyboard-hints'
 import { SearchInput } from './search-input'
@@ -136,8 +141,14 @@ function getEntryInfo(
             }
             if (lineDiffCount === null) return '...'
             if (lineDiffCount === 0) {
-                const leftDate = entry.left ? dateFormatter.format(entry.left.modifiedTime) : ''
-                const rightDate = entry.right ? dateFormatter.format(entry.right.modifiedTime) : ''
+                const leftDate =
+                    entry.left ?
+                        dateFormatter.format(entry.left.modifiedTime)
+                    :   ''
+                const rightDate =
+                    entry.right ?
+                        dateFormatter.format(entry.right.modifiedTime)
+                    :   ''
                 return `${leftDate} → ${rightDate}`
             }
             return `${lineDiffCount} different line${lineDiffCount !== 1 ? 's' : ''}`
@@ -227,7 +238,10 @@ export function StatusBar({
             }
             {showHints && (
                 <Box>
-                    <KeyboardHints items={helpItems} columns={columns} />
+                    <KeyboardHints
+                        items={helpItems}
+                        columns={columns}
+                    />
                 </Box>
             )}
         </Box>

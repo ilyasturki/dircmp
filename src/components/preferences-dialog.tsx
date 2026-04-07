@@ -16,7 +16,12 @@ interface PreferencesDialogProps {
 }
 
 type Field = 'dateLocale' | 'showHints' | 'compareDates' | 'diffCommand'
-const fields: Field[] = ['dateLocale', 'showHints', 'compareDates', 'diffCommand']
+const fields: Field[] = [
+    'dateLocale',
+    'showHints',
+    'compareDates',
+    'diffCommand',
+]
 
 const fieldHints: Partial<Record<Field, string>> = {
     dateLocale: 'e.g. en-US, de-DE, ja-JP',
@@ -128,8 +133,7 @@ export function PreferencesDialog({
         }
     })
 
-    const isModified = (field: Field) =>
-        config[field] !== defaultConfig[field]
+    const isModified = (field: Field) => config[field] !== defaultConfig[field]
 
     const resetField = (field: Field) => {
         const newConfig = {

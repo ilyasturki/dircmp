@@ -118,11 +118,13 @@ export function DiffView({
                 if (entry.status !== 'only-right') {
                     const buf = await fsp.readFile(leftPath)
                     if (buf.length > MAX_DIFF_SIZE) {
-                        if (!cancelled) setError('File too large to diff inline')
+                        if (!cancelled)
+                            setError('File too large to diff inline')
                         return
                     }
                     if (isBinary(buf)) {
-                        if (!cancelled) setError('Binary file — cannot display diff')
+                        if (!cancelled)
+                            setError('Binary file — cannot display diff')
                         return
                     }
                     leftContent = buf.toString('utf-8')
@@ -131,11 +133,13 @@ export function DiffView({
                 if (entry.status !== 'only-left') {
                     const buf = await fsp.readFile(rightPath)
                     if (buf.length > MAX_DIFF_SIZE) {
-                        if (!cancelled) setError('File too large to diff inline')
+                        if (!cancelled)
+                            setError('File too large to diff inline')
                         return
                     }
                     if (isBinary(buf)) {
-                        if (!cancelled) setError('Binary file — cannot display diff')
+                        if (!cancelled)
+                            setError('Binary file — cannot display diff')
                         return
                     }
                     rightContent = buf.toString('utf-8')
@@ -222,14 +226,13 @@ export function DiffView({
     )
 
     // Compute gutter width from max line number
-    const gutterWidth = lines
-        ? Math.max(
-              ...lines.map((l) => l.leftLineNum ?? 0),
-              ...lines.map((l) => l.rightLineNum ?? 0),
-          )
-              .toString()
-              .length
-        : 3
+    const gutterWidth =
+        lines ?
+            Math.max(
+                ...lines.map((l) => l.leftLineNum ?? 0),
+                ...lines.map((l) => l.rightLineNum ?? 0),
+            ).toString().length
+        :   3
     // left gutter + separator + right gutter + separator + prefix + space
     const gutterTotal = gutterWidth + 1 + gutterWidth + 1 + 1 + 1
 
@@ -279,21 +282,20 @@ export function DiffView({
                 >
                     <Text color='yellow'>Loading...</Text>
                 </Box>
-            :   <Box flexDirection='column' flexGrow={1}>
+            :   <Box
+                    flexDirection='column'
+                    flexGrow={1}
+                >
                     {visibleLines!.map((line, i) => {
                         const idx = scrollOffset + i
                         const leftGutter =
-                            line.leftLineNum !== null
-                                ? String(line.leftLineNum).padStart(
-                                      gutterWidth,
-                                  )
-                                : ' '.repeat(gutterWidth)
+                            line.leftLineNum !== null ?
+                                String(line.leftLineNum).padStart(gutterWidth)
+                            :   ' '.repeat(gutterWidth)
                         const rightGutter =
-                            line.rightLineNum !== null
-                                ? String(line.rightLineNum).padStart(
-                                      gutterWidth,
-                                  )
-                                : ' '.repeat(gutterWidth)
+                            line.rightLineNum !== null ?
+                                String(line.rightLineNum).padStart(gutterWidth)
+                            :   ' '.repeat(gutterWidth)
 
                         let prefix: string
                         let color: string | undefined
@@ -330,11 +332,8 @@ export function DiffView({
                                     {leftGutter}
                                     {'\u2502'}
                                     {rightGutter}
-                                </Text>
-                                {' '}
-                                {prefix}
-                                {' '}
-                                {displayContent}
+                                </Text>{' '}
+                                {prefix} {displayContent}
                             </Text>
                         )
                     })}
@@ -344,9 +343,9 @@ export function DiffView({
             {/* Footer */}
             <Box>
                 <Text dimColor>
-                    {lines
-                        ? ` ${scrollOffset + 1}-${Math.min(scrollOffset + contentHeight, lines.length)} of ${lines.length} lines`
-                        : ''}
+                    {lines ?
+                        ` ${scrollOffset + 1}-${Math.min(scrollOffset + contentHeight, lines.length)} of ${lines.length} lines`
+                    :   ''}
                 </Text>
             </Box>
         </Box>

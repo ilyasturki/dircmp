@@ -3,9 +3,9 @@ import { Box, Text, useInput } from 'ink'
 import { useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
+import type { KeybindingOverrides } from '~/utils/keybindings'
 import type { Action } from '~/utils/types'
 import {
-    type KeybindingOverrides,
     formatKeyDef,
     loadKeybindings,
     saveKeybindings,
@@ -44,16 +44,16 @@ export function KeybindingsDialog({
     const [displayMode, setDisplayMode] = useState<DisplayMode>('browse')
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
-    const [overrides, setOverrides] = useState<KeybindingOverrides>(
-        loadKeybindings,
-    )
+    const [overrides, setOverrides] =
+        useState<KeybindingOverrides>(loadKeybindings)
 
     // Dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + hints (1) + help text (1) = 8
     const maxRows = Math.max(1, rows - 12)
     const needsScroll = defaults.length > maxRows
     const maxVisibleItems = needsScroll ? maxRows - 1 : maxRows
     const hasArrowUp = needsScroll && scrollOffset > 0
-    const hasArrowDown = needsScroll && scrollOffset + maxVisibleItems < defaults.length
+    const hasArrowDown =
+        needsScroll && scrollOffset + maxVisibleItems < defaults.length
 
     const visibleItems = defaults.slice(
         scrollOffset,
@@ -80,7 +80,10 @@ export function KeybindingsDialog({
         }
 
         // Parse comma-separated values into array or single string
-        const parts = trimmed.split(',').map((s) => s.trim()).filter(Boolean)
+        const parts = trimmed
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         const keyDef = parts.length > 1 ? parts : trimmed
 
         const validationError = validateKeyDef(keyDef)
@@ -162,7 +165,12 @@ export function KeybindingsDialog({
 
             // Full-page motions
             if (key.ctrl && input === 'f') {
-                scrollTo(Math.min(defaults.length - 1, selectedIndex + maxVisibleItems))
+                scrollTo(
+                    Math.min(
+                        defaults.length - 1,
+                        selectedIndex + maxVisibleItems,
+                    ),
+                )
                 return
             }
             if (key.ctrl && input === 'b') {
@@ -253,11 +261,8 @@ export function KeybindingsDialog({
                         >
                             {marker}
                             {desc}
-                            {' '.repeat(
-                                gap + (maxDescWidth - desc.length),
-                            )}
-                            <Text color='cyan'>{keyPart}</Text>
-                            {' '}
+                            {' '.repeat(gap + (maxDescWidth - desc.length))}
+                            <Text color='cyan'>{keyPart}</Text>{' '}
                         </Text>
                     )
                 })}
@@ -269,8 +274,8 @@ export function KeybindingsDialog({
             </Box>
             {displayMode === 'edit' && (
                 <Text dimColor>
-                    Format: key, ctrl+key, sequence (gg), or comma-separated
-                    (k, up)
+                    Format: key, ctrl+key, sequence (gg), or comma-separated (k,
+                    up)
                 </Text>
             )}
             <KeyboardHints

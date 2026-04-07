@@ -251,7 +251,8 @@ export function IgnoreDialog({
                     bold={displayMode === 'browse' && isSelected}
                     inverse={displayMode === 'browse' && isSelected}
                 >
-                    {' '}{p}{' '}
+                    {' '}
+                    {p}{' '}
                 </Text>
             )
         })
@@ -278,7 +279,8 @@ export function IgnoreDialog({
                                 dimColor={section !== 'pair'}
                                 inverse={section === 'pair'}
                             >
-                                {' '}No patterns defined{' '}
+                                {' '}
+                                No patterns defined{' '}
                             </Text>
                         )}
                     {renderPatternList(pairPatterns, 'pair')}
@@ -292,7 +294,7 @@ export function IgnoreDialog({
                         />
                     )}
                 </Box>
-                <Text>{' '}</Text>
+                <Text> </Text>
                 <Box flexDirection='column'>
                     <Text
                         dimColor
@@ -307,7 +309,8 @@ export function IgnoreDialog({
                                 dimColor={section !== 'global'}
                                 inverse={section === 'global'}
                             >
-                                {' '}No patterns defined{' '}
+                                {' '}
+                                No patterns defined{' '}
                             </Text>
                         )}
                     {renderPatternList(globalPatterns, 'global')}

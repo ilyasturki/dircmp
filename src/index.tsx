@@ -1,12 +1,18 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import meow from 'meow'
-import pkg from '../package.json'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { ScanResult } from '~/utils/types'
-import { loadGlobalIgnorePatterns, compileIgnoreMatcher } from '~/utils/ignore'
-import { parseRemoteUri, checkRcloneInstalled, mountRemote, scanRemote, cleanupMounts } from '~/utils/rclone'
+import { compileIgnoreMatcher, loadGlobalIgnorePatterns } from '~/utils/ignore'
+import {
+    checkRcloneInstalled,
+    cleanupMounts,
+    mountRemote,
+    parseRemoteUri,
+    scanRemote,
+} from '~/utils/rclone'
+import pkg from '../package.json'
 
 const HELP_TEXT = `
   Usage
@@ -85,9 +91,8 @@ const cli = meow(HELP_TEXT, {
 
 // Handle completions subcommand early (before positional arg validation)
 if (cli.input[0] === 'completions') {
-    const { isValidShell, getCompletionScript, getInstallHint } = await import(
-        '~/cli/completions'
-    )
+    const { isValidShell, getCompletionScript, getInstallHint } =
+        await import('~/cli/completions')
     const shell = cli.input[1]
     if (!shell || !isValidShell(shell)) {
         console.error(
@@ -110,8 +115,8 @@ let subcommand: Subcommand | null = null
 let positionalArgs = cli.input
 
 if (
-    positionalArgs.length > 0 &&
-    SUBCOMMANDS.includes(positionalArgs[0] as Subcommand)
+    positionalArgs.length > 0
+    && SUBCOMMANDS.includes(positionalArgs[0] as Subcommand)
 ) {
     subcommand = positionalArgs[0] as Subcommand
     positionalArgs = positionalArgs.slice(1)
@@ -131,47 +136,61 @@ if (positionalArgs.length !== 2) {
 // mount paths which aren't available yet, but they're always empty for remotes
 // since the temp mount path changes each session).
 const preScanIgnore =
-    cli.flags.noIgnore ? null : (
-        compileIgnoreMatcher([
+    cli.flags.noIgnore ?
+        null
+    :   compileIgnoreMatcher([
             ...loadGlobalIgnorePatterns(),
             ...cli.flags.ignore,
         ])
-    )
 
 // Resolve paths — mount remote URIs via rclone if needed
 const resolvedArgs = await Promise.all(
-    [positionalArgs[0]!, positionalArgs[1]!].map(async (arg): Promise<{
-        dir: string
-        label: string | undefined
-        remote: string | undefined
-        preScan: ScanResult | undefined
-    }> => {
-        const remote = parseRemoteUri(arg)
-        if (!remote) {
-            return { dir: path.resolve(arg), label: undefined, remote: undefined, preScan: undefined }
-        }
-        if (!checkRcloneInstalled()) {
-            console.error(
-                'rclone is required for remote paths but was not found.\nInstall it from https://rclone.org/install/',
-            )
-            process.exit(1)
-        }
-        try {
-            process.stderr.write(`Mounting ${remote.label}...\n`)
-            // Start mount and scan concurrently — the scan runs via rclone lsjson
-            // while FUSE is still initializing, so they overlap.
-            const [mountPoint, preScan] = await Promise.all([
-                mountRemote(remote),
-                scanRemote(remote.remote, preScanIgnore),
-            ])
-            return { dir: mountPoint, label: remote.label, remote: remote.remote, preScan }
-        } catch (err) {
-            console.error(
-                `Failed to mount ${arg}: ${err instanceof Error ? err.message : err}`,
-            )
-            process.exit(1)
-        }
-    }),
+    [positionalArgs[0]!, positionalArgs[1]!].map(
+        async (
+            arg,
+        ): Promise<{
+            dir: string
+            label: string | undefined
+            remote: string | undefined
+            preScan: ScanResult | undefined
+        }> => {
+            const remote = parseRemoteUri(arg)
+            if (!remote) {
+                return {
+                    dir: path.resolve(arg),
+                    label: undefined,
+                    remote: undefined,
+                    preScan: undefined,
+                }
+            }
+            if (!checkRcloneInstalled()) {
+                console.error(
+                    'rclone is required for remote paths but was not found.\nInstall it from https://rclone.org/install/',
+                )
+                process.exit(1)
+            }
+            try {
+                process.stderr.write(`Mounting ${remote.label}...\n`)
+                // Start mount and scan concurrently — the scan runs via rclone lsjson
+                // while FUSE is still initializing, so they overlap.
+                const [mountPoint, preScan] = await Promise.all([
+                    mountRemote(remote),
+                    scanRemote(remote.remote, preScanIgnore),
+                ])
+                return {
+                    dir: mountPoint,
+                    label: remote.label,
+                    remote: remote.remote,
+                    preScan,
+                }
+            } catch (err) {
+                console.error(
+                    `Failed to mount ${arg}: ${err instanceof Error ? err.message : err}`,
+                )
+                process.exit(1)
+            }
+        },
+    ),
 )
 
 const leftDir = resolvedArgs[0]!.dir
@@ -203,7 +222,7 @@ const ignoreOptions: CliIgnoreOptions = {
 
 if (subcommand === 'diff') {
     const onlyMap: Record<string, 'modified' | 'only-left' | 'only-right'> = {
-        'modified': 'modified',
+        modified: 'modified',
         'left-only': 'only-left',
         'right-only': 'only-right',
         'only-left': 'only-left',

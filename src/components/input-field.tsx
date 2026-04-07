@@ -45,7 +45,7 @@ export function InputField({
                     </Text>
                     <Text>{displayValue}</Text>
                 </Box>
-                {hint && <Text dimColor>  {hint}</Text>}
+                {hint && <Text dimColor> {hint}</Text>}
             </Box>
         )
     }
@@ -62,7 +62,7 @@ export function InputField({
                 />
             </Text>
             {error && <Text color='red'>{error}</Text>}
-            {hint && !error && <Text dimColor>  {hint}</Text>}
+            {hint && !error && <Text dimColor> {hint}</Text>}
         </Box>
     )
 }

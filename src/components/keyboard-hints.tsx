@@ -17,7 +17,8 @@ export function KeyboardHints({ items, columns }: KeyboardHintsProps) {
 
     for (const item of items) {
         const part = `${item.key}: ${item.label}`
-        const added = length === 0 ? part.length : separator.length + part.length
+        const added =
+            length === 0 ? part.length : separator.length + part.length
         if (length + added > columns) break
         parts.push(part)
         length += added

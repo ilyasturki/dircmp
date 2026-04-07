@@ -3,8 +3,8 @@ import { Box, Text, useInput } from 'ink'
 import TextInput from 'ink-text-input'
 import { useState } from 'react'
 
-import type { Action } from '~/utils/types'
 import type { Shortcut } from '~/keymap'
+import type { Action } from '~/utils/types'
 import { getHelpItems } from '~/keymap'
 import { Dialog } from './dialog'
 
@@ -31,15 +31,16 @@ export function HelpDialog({
     const [searchActive, setSearchActive] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
 
-    const filteredItems = searchQuery
-        ? items.filter((item) => {
-              const q = searchQuery.toLowerCase()
-              return (
-                  item.key.toLowerCase().includes(q) ||
-                  item.helpDescription.toLowerCase().includes(q)
-              )
-          })
-        : items
+    const filteredItems =
+        searchQuery ?
+            items.filter((item) => {
+                const q = searchQuery.toLowerCase()
+                return (
+                    item.key.toLowerCase().includes(q)
+                    || item.helpDescription.toLowerCase().includes(q)
+                )
+            })
+        :   items
 
     // Reserve rows for dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + search (1) = 7
     const maxVisibleItems = Math.min(items.length, Math.max(1, rows - 11))
@@ -104,9 +105,7 @@ export function HelpDialog({
         }
         if (input === 'G') {
             setSelectedIndex(filteredItems.length - 1)
-            setScrollOffset(
-                Math.max(0, filteredItems.length - maxVisibleItems),
-            )
+            setScrollOffset(Math.max(0, filteredItems.length - maxVisibleItems))
             return
         }
 
@@ -136,7 +135,7 @@ export function HelpDialog({
             width={dialogWidth}
         >
             <Box flexDirection='column'>
-                {searchActive ? (
+                {searchActive ?
                     <Box>
                         <Text>
                             <Text color='cyan'>/</Text>
@@ -152,30 +151,21 @@ export function HelpDialog({
                             {filteredItems.length}/{items.length}
                         </Text>
                     </Box>
-                ) : searchQuery ? (
+                : searchQuery ?
                     <Text dimColor>
-                        /{searchQuery} ({filteredItems.length}/
-                        {items.length})
+                        /{searchQuery} ({filteredItems.length}/{items.length})
                     </Text>
-                ) : (
-                    <Text> </Text>
-                )}
-                {filteredItems.length === 0 && searchQuery ? (
+                :   <Text> </Text>}
+                {filteredItems.length === 0 && searchQuery ?
                     <Text dimColor>No matches</Text>
-                ) : (
-                    visibleItems.map((item, i) => {
+                :   visibleItems.map((item, i) => {
                         const absoluteIndex = scrollOffset + i
                         const isSelected = absoluteIndex === selectedIndex
                         const keyPad = maxKeyWidth - item.key.length
-                        const keyPart =
-                            ' '.repeat(keyPad) + item.key + ' '
+                        const keyPart = ' '.repeat(keyPad) + item.key + ' '
                         const descPart = ` ${item.helpDescription}`
-                        const usedWidth =
-                            maxKeyWidth + 1 + descPart.length
-                        const pad = Math.max(
-                            0,
-                            contentWidth - usedWidth,
-                        )
+                        const usedWidth = maxKeyWidth + 1 + descPart.length
+                        const pad = Math.max(0, contentWidth - usedWidth)
                         return (
                             <Text
                                 key={absoluteIndex}
@@ -187,7 +177,7 @@ export function HelpDialog({
                             </Text>
                         )
                     })
-                )}
+                }
                 {Array.from(
                     { length: maxVisibleItems - visibleItems.length },
                     (_, i) => (

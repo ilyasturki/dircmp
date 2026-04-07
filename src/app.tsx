@@ -11,10 +11,10 @@ import { ContextMenu } from '~/components/context-menu'
 import { DiffView } from '~/components/diff-view'
 import { DirectoryDiff } from '~/components/directory-diff'
 import { HelpDialog } from '~/components/help-dialog'
-import { KeybindingsDialog } from '~/components/keybindings-dialog'
 import { IgnoreDialog } from '~/components/ignore-dialog'
-import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
+import { KeybindingsDialog } from '~/components/keybindings-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
+import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
 import { TerminalThemeProvider } from '~/context/terminal-theme'
@@ -43,7 +43,19 @@ interface AppProps {
     terminalTheme: 'dark' | 'light'
 }
 
-export function App({ leftDir, rightDir, leftLabel, rightLabel, leftRemote, rightRemote, leftPreScan, rightPreScan, initialConfig, ignoreOptions, terminalTheme }: AppProps) {
+export function App({
+    leftDir,
+    rightDir,
+    leftLabel,
+    rightLabel,
+    leftRemote,
+    rightRemote,
+    leftPreScan,
+    rightPreScan,
+    initialConfig,
+    ignoreOptions,
+    terminalTheme,
+}: AppProps) {
     const [theme, setTheme] = useState(terminalTheme)
 
     useEffect(() => {
@@ -128,7 +140,15 @@ export function App({ leftDir, rightDir, leftLabel, rightLabel, leftRemote, righ
                 handleShellOut,
             )
         },
-        [state, effectiveLeftDir, effectiveRightDir, dispatch, exit, refresh, handleShellOut],
+        [
+            state,
+            effectiveLeftDir,
+            effectiveRightDir,
+            dispatch,
+            exit,
+            refresh,
+            handleShellOut,
+        ],
     )
 
     const isLoading = !state.leftScan || !state.rightScan
@@ -172,7 +192,9 @@ export function App({ leftDir, rightDir, leftLabel, rightLabel, leftRemote, righ
                             entries={state.entries}
                             cursorIndex={state.cursorIndex}
                             focusedPanel={state.focusedPanel}
-                            dialogOpen={state.dialog !== null || state.searchInputActive}
+                            dialogOpen={
+                                state.dialog !== null || state.searchInputActive
+                            }
                             visibleHeight={contentHeight}
                             scrollOffset={scrollOffset}
                             searchQuery={state.searchQuery}

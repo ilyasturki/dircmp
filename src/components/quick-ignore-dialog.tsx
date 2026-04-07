@@ -3,10 +3,7 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { Action, CompareEntry } from '~/utils/types'
-import {
-    saveGlobalIgnorePatterns,
-    savePairIgnorePattern,
-} from '~/utils/ignore'
+import { saveGlobalIgnorePatterns, savePairIgnorePattern } from '~/utils/ignore'
 import { Dialog } from './dialog'
 
 type Scope = 'pair' | 'global'
@@ -174,7 +171,7 @@ export function QuickIgnoreDialog({
                     </Text>
                 ))}
             </Box>
-            <Text dimColor>j/k navigate  Enter select  Esc close</Text>
+            <Text dimColor>j/k navigate Enter select Esc close</Text>
         </Dialog>
     )
 }

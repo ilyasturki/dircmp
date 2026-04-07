@@ -19,7 +19,11 @@ function highlightMatches(text: string, query: string): ReactNode {
             parts.push(text.slice(lastIndex, idx))
         }
         parts.push(
-            <Text key={idx} backgroundColor="cyan" color="black">
+            <Text
+                key={idx}
+                backgroundColor='cyan'
+                color='black'
+            >
                 {text.slice(idx, idx + query.length)}
             </Text>,
         )
