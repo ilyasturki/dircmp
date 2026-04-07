@@ -155,7 +155,9 @@ jobs:
                     end
 
                     def install
-                      bin.install Dir.glob("*").first => "dircmp"
+                      binary = Dir.glob("*").first
+                      chmod 0755, binary
+                      bin.install binary => "dircmp"
                       generate_completions_from_executable(bin/"dircmp", "completions")
                     end
 
