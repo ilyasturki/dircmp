@@ -7,9 +7,9 @@ jobs:
     check:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             # For prettier.config.ts
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: '22'
             - uses: oven-sh/setup-bun@v2
@@ -47,9 +47,11 @@ jobs:
     nix-build:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             - uses: DeterminateSystems/nix-installer-action@main
             - uses: DeterminateSystems/magic-nix-cache-action@main
+              with:
+                  use-flakehub: false
             - run: nix build
             - name: Smoke test
               run: |
