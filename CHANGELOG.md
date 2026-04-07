@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1]
+
+### Added
+
+- In-app release notes dialog with scrollable changelog viewer
+
 ## [1.0.0]
 
 ### Added
