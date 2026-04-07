@@ -2,6 +2,25 @@
     "name": "@ilyasturki/dircmp",
     "version": "0.4.1",
     "type": "module",
+    "description": "Terminal TUI for comparing two directories side by side",
+    "author": "Ilyas Turki",
+    "license": "MIT",
+    "homepage": "https://github.com/ilyasturki/dircmp#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ilyasturki/dircmp.git"
+    },
+    "bugs": "https://github.com/ilyasturki/dircmp/issues",
+    "keywords": [
+        "cli",
+        "tui",
+        "terminal",
+        "diff",
+        "directory",
+        "compare",
+        "file-manager",
+        "ink"
+    ],
     "bin": {
         "dircmp": "bin/dircmp.js"
     },
