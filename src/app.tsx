@@ -62,6 +62,7 @@ export function App({
     const [theme, setTheme] = useState(terminalTheme)
 
     useEffect(() => {
+        if (process.env['DIRCMP_RECORDING']) return
         terminal.on('change', setTheme)
         return () => {
             terminal.off('change', setTheme)
