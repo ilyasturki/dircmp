@@ -4,6 +4,12 @@ Terminal TUI for comparing two directories side by side.
 
 ![dircmp screenshot](assets/screenshot.png)
 
+[![npm version](https://img.shields.io/npm/v/@ilyasturki/dircmp)](https://www.npmjs.com/package/@ilyasturki/dircmp)
+[![CI](https://github.com/ilyasturki/dircmp/actions/workflows/ci.yml/badge.svg)](https://github.com/ilyasturki/dircmp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/ilyasturki/dircmp)](LICENSE)
+[![AUR version](https://img.shields.io/aur/version/dircmp)](https://aur.archlinux.org/packages/dircmp)
+[![platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)](https://github.com/ilyasturki/dircmp/releases)
+
 ## Features
 
 - **Side-by-side tree view** with color-coded diff status
@@ -26,16 +32,22 @@ Terminal TUI for comparing two directories side by side.
 npx @ilyasturki/dircmp <left-dir> <right-dir>
 ```
 
+### npm
+
+```sh
+npm install -g @ilyasturki/dircmp
+```
+
 ### Homebrew
 
 ```sh
 brew install ilyasturki/dircmp/dircmp
 ```
 
-### npm
+### Arch Linux (AUR)
 
 ```sh
-npm install -g @ilyasturki/dircmp
+yay -S dircmp
 ```
 
 ### Nix
