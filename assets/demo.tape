@@ -1,76 +1,122 @@
 # dircmp — README hero demo
-# Usage: vhs demo.tape
+# Usage: vhs assets/demo.tape
 
 Output assets/demo.gif
-Set FontSize 16
+Set FontSize 28
 Set FontFamily "IosevkaTerm Nerd Font Mono"
-Set Width 1200
-Set Height 700
-Set Padding 20
-Set Framerate 50
-Set Theme "Catppuccin Mocha"
-Set TypingSpeed 40ms
+Set Width 2400
+Set Height 1400
+Set Padding 40
+Set Framerate 30
+Set Theme "GitHub Dark"
+Set TypingSpeed 50ms
 Set Shell bash
 
-Type "DIRCMP_RECORDING=1 ./dircmp ./data/left ./data/right"
+Hide
+Type "export DIRCMP_RECORDING=1"
 Enter
-Sleep 3s
+Type "alias dircmp=./dircmp"
+Enter
+Type "rsync -a --delete ./data/left/ /tmp/demo-left/ && rsync -a --delete ./data/right/ /tmp/demo-right/"
+Enter
+Type "clear"
+Enter
+Show
 
-# Navigate down through the tree (vim keys for TUI compatibility)
-Type "j"
-Sleep 300ms
-Type "j"
-Sleep 300ms
-Type "j"
-Sleep 300ms
-
-# Expand a directory
-Type "l"
-Sleep 500ms
-
-# Navigate into children
-Type "j"
-Sleep 300ms
-Type "j"
-Sleep 300ms
-Type "j"
-Sleep 300ms
-
-# Open diff view on a modified file
+Type "dircmp /tmp/demo-left /tmp/demo-right"
 Enter
 Sleep 2s
 
-# Scroll down in diff view
+# Browse the tree
 Type "j"
-Sleep 300ms
+Sleep 200ms
 Type "j"
-Sleep 300ms
+Sleep 200ms
 Type "j"
-Sleep 300ms
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 400ms
+
+# Expand src/
+Type "l"
+Sleep 400ms
+
+# Navigate into src children
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 400ms
+
+# Expand src/components/
+Type "l"
+Sleep 400ms
+
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 400ms
+
+# Open diff view on a modified file
+Enter
+Sleep 1.5s
+
+# Scroll through the diff
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 800ms
 
 # Exit diff view
 Escape
-Sleep 500ms
+Sleep 400ms
+
+# Collapse back up
+Type "h"
+Sleep 300ms
+Type "h"
+Sleep 400ms
 
 # Switch to right panel
 Tab
-Sleep 500ms
+Sleep 400ms
 
-# Navigate a bit on the right panel
+# Navigate on right panel
 Type "j"
-Sleep 300ms
+Sleep 200ms
 Type "j"
-Sleep 300ms
-Type "k"
-Sleep 300ms
+Sleep 200ms
+Type "j"
+Sleep 400ms
 
-# Toggle diff-only filter
-Type "f"
-Sleep 1.5s
-
-# Toggle it back
-Type "f"
+# Swap panels
+Shift+S
 Sleep 1s
+
+# Swap back
+Shift+S
+Sleep 800ms
+
+# Show help
+Type "?"
+Sleep 2s
+
+# Close help
+Escape
+Sleep 500ms
 
 # Quit
 Type "q"
