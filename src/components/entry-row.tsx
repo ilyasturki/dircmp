@@ -100,7 +100,7 @@ export function EntryRow({
     const panelWidth = usePanelWidth()
     const theme = useTerminalTheme()
     const dimSelectedBg = theme === 'light' ? '#d4d4d4' : 'gray'
-    const colorIconOnly = entry.isDirectory && color
+    const colorIconOnly = entry.isDirectory && color && !isSelected
 
     const left = `${indent}${icon} ${name}`
     const right = `${size}  ${date}${hasError ? ' !' : ''}`
