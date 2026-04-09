@@ -268,17 +268,6 @@ if (subcommand === 'diff') {
 
     const config = loadConfig()
 
-    const recording = !!process.env['DIRCMP_RECORDING']
-    let terminalTheme: 'dark' | 'light' = 'dark'
-    if (!recording) {
-        try {
-            const { appearance } = await import('os-theme')
-            terminalTheme = (await appearance.current()) ?? 'dark'
-        } catch {
-            // Native library unavailable (e.g. bun compiled binary)
-        }
-    }
-
     const ENTER_ALT_SCREEN = '\x1b[?1049h'
     const EXIT_ALT_SCREEN = '\x1b[?1049l'
 
@@ -307,7 +296,6 @@ if (subcommand === 'diff') {
             rightPreScan={rightPreScan}
             initialConfig={config}
             ignoreOptions={ignoreOptions}
-            terminalTheme={terminalTheme}
             changelog={changelogText}
         />,
     )

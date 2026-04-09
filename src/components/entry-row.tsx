@@ -3,7 +3,6 @@ import { Box, Text, useStdout } from 'ink'
 
 import type { CompareEntry, FileEntry } from '~/utils/types'
 import { useDateFormatter } from '~/context/date-locale'
-import { useTerminalTheme } from '~/context/terminal-theme'
 import { getFileIcon } from '~/utils/file-icons'
 import { formatSize } from '~/utils/format-size'
 
@@ -52,8 +51,7 @@ export function MissingEntryRow({
     isDimSelected: boolean
 }) {
     const panelWidth = usePanelWidth()
-    const theme = useTerminalTheme()
-    const dimSelectedBg = theme === 'light' ? '#d4d4d4' : 'gray'
+    const dimSelectedBg = 'gray'
     const content = ''
 
     return (
@@ -98,8 +96,7 @@ export function EntryRow({
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const panelWidth = usePanelWidth()
-    const theme = useTerminalTheme()
-    const dimSelectedBg = theme === 'light' ? '#d4d4d4' : 'gray'
+    const dimSelectedBg = 'gray'
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
     const errorSuffix = hasError ? ' \uf127' : ''

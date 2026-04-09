@@ -38,7 +38,7 @@
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "build": "bun build src/index.tsx --compile --outfile dircmp",
-        "build:npm": "bun build src/index.tsx --outfile dist/index.js --target=node --external os-theme --define process.env.DEV='\"false\"'",
+        "build:npm": "bun build src/index.tsx --outfile dist/index.js --target=node --define process.env.DEV='\"false\"'",
         "prepublishOnly": "bun run build:npm",
         "typecheck": "tsc --noEmit",
         "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md"
@@ -49,7 +49,6 @@
         "ink": "^6.8.0",
         "ink-text-input": "^6.0.0",
         "meow": "^14.1.0",
-        "os-theme": "^0.0.8",
         "react": "^19.2.4"
     },
     "devDependencies": {

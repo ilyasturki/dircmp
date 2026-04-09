@@ -1,7 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { Box, Text, useApp, useStdout } from 'ink'
-import { appearance } from 'os-theme'
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import { useCallback, useMemo, useReducer, useState } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
@@ -18,7 +17,6 @@ import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
 import { ReleaseNotesDialog } from '~/components/release-notes-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
-import { TerminalThemeProvider } from '~/context/terminal-theme'
 import { executeAction } from '~/execute-action'
 import {
     useDirectoryScan,
@@ -41,7 +39,6 @@ interface AppProps {
     rightPreScan?: ScanResult
     initialConfig: AppConfig
     ignoreOptions?: CliIgnoreOptions
-    terminalTheme: 'dark' | 'light'
     changelog: string
 }
 
@@ -56,19 +53,8 @@ export function App({
     rightPreScan,
     initialConfig,
     ignoreOptions,
-    terminalTheme,
     changelog,
 }: AppProps) {
-    const [theme, setTheme] = useState(terminalTheme)
-
-    useEffect(() => {
-        if (process.env['DIRCMP_RECORDING']) return
-        appearance.on('change', setTheme).catch(() => {})
-        return () => {
-            appearance.off('change', setTheme).catch(() => {})
-        }
-    }, [])
-
     const [state, dispatch] = useReducer(
         reducer,
         { config: initialConfig, ignoreEnabled: !ignoreOptions?.noIgnore },
@@ -187,25 +173,23 @@ export function App({
                 >
                     <Text color='yellow'>Scanning directories...</Text>
                 </Box>
-            :   <TerminalThemeProvider value={theme}>
-                    <DateLocaleProvider value={state.config.dateLocale}>
-                        <DirectoryDiff
-                            leftDir={effectiveLeftDir}
-                            rightDir={effectiveRightDir}
-                            leftLabel={effectiveLeftLabel}
-                            rightLabel={effectiveRightLabel}
-                            entries={state.entries}
-                            cursorIndex={state.cursorIndex}
-                            focusedPanel={state.focusedPanel}
-                            dialogOpen={
-                                state.dialog !== null || state.searchInputActive
-                            }
-                            visibleHeight={contentHeight}
-                            scrollOffset={scrollOffset}
-                            searchQuery={state.searchQuery}
-                        />
-                    </DateLocaleProvider>
-                </TerminalThemeProvider>
+            :   <DateLocaleProvider value={state.config.dateLocale}>
+                    <DirectoryDiff
+                        leftDir={effectiveLeftDir}
+                        rightDir={effectiveRightDir}
+                        leftLabel={effectiveLeftLabel}
+                        rightLabel={effectiveRightLabel}
+                        entries={state.entries}
+                        cursorIndex={state.cursorIndex}
+                        focusedPanel={state.focusedPanel}
+                        dialogOpen={
+                            state.dialog !== null || state.searchInputActive
+                        }
+                        visibleHeight={contentHeight}
+                        scrollOffset={scrollOffset}
+                        searchQuery={state.searchQuery}
+                    />
+                </DateLocaleProvider>
             }
             <StatusBar
                 isLoading={isLoading}
