@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { Box, Text } from 'ink'
 
 import type { CompareEntry, FileEntry, PanelSide } from '~/utils/types'
@@ -51,9 +52,12 @@ export function DirectoryPanel({
                     const isCursorRow = absoluteIndex === cursorIndex
                     const isSelected = isCursorRow && isFocused
                     const isDimSelected = isCursorRow && !isFocused
+                    const isPaired = !!entry.pairedLeftPath
                     const isMissingSide =
-                        (side === 'left' && entry.status === 'only-right')
-                        || (side === 'right' && entry.status === 'only-left')
+                        !isPaired
+                        && ((side === 'left' && entry.status === 'only-right')
+                            || (side === 'right'
+                                && entry.status === 'only-left'))
 
                     const entryKey =
                         entry.relativePath
@@ -73,10 +77,20 @@ export function DirectoryPanel({
 
                     const fileEntry = side === 'left' ? entry.left : entry.right
 
+                    // For paired entries, show each side's own name
+                    let displayEntry = entry
+                    if (entry.pairedLeftPath && entry.pairedRightPath) {
+                        const displayName =
+                            side === 'left' ?
+                                path.basename(entry.pairedLeftPath)
+                            :   path.basename(entry.pairedRightPath)
+                        displayEntry = { ...entry, name: displayName }
+                    }
+
                     return (
                         <EntryRow
                             key={entryKey}
-                            entry={entry}
+                            entry={displayEntry}
                             fileEntry={fileEntry}
                             isSelected={isSelected}
                             isDimSelected={isDimSelected}

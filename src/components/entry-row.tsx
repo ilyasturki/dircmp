@@ -85,9 +85,11 @@ export function EntryRow({
     const nerdFont = useNerdFont()
     const errorIcon = nerdFont ? ERROR_ICON : ERROR_ICON_PLAIN
     const hasError = fileEntry?.error
-    const dimColor = !hasError && entry.status === 'identical'
+    const isPaired = !!entry.pairedLeftPath
+    const dimColor = !hasError && entry.status === 'identical' && !isPaired
     const color =
         hasError || dimColor ? undefined
+        : isPaired ? 'magenta'
         : entry.status === 'modified' ? 'yellow'
         : entry.status === 'only-left' || entry.status === 'only-right' ?
             'green'

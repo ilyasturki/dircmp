@@ -10,9 +10,13 @@ import type {
     Action,
     CompareEntry,
     FilterMode,
+    PanelSide,
     ScanResult,
 } from '~/utils/types'
-import { countDescendantDiffs } from '~/utils/compare'
+import {
+    countDescendantDiffs,
+    countDescendantDiffsCrossPath,
+} from '~/utils/compare'
 import { KeyboardHints } from './keyboard-hints'
 import { SearchInput } from './search-input'
 
@@ -35,6 +39,7 @@ interface StatusBarProps {
     columns: number
     entryCount: number
     dispatch: Dispatch<Action>
+    pendingPairMark: { relativePath: string; side: PanelSide } | null
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -137,6 +142,25 @@ function getEntryInfo(
 ): string {
     if (!entry) return ''
 
+    // Paired directory info
+    if (entry.pairedLeftPath && entry.pairedRightPath) {
+        if (!leftScan || !rightScan) return 'paired'
+        const count = countDescendantDiffsCrossPath(
+            leftScan,
+            rightScan,
+            entry.pairedLeftPath,
+            entry.pairedRightPath,
+            { compareDates, compareContents },
+        )
+        const leftName = path.basename(entry.pairedLeftPath)
+        const rightName = path.basename(entry.pairedRightPath)
+        const diffInfo =
+            count > 0 ?
+                `${count} different file${count !== 1 ? 's' : ''}`
+            :   'identical'
+        return `paired: ${leftName}/ → ${rightName}/ (${diffInfo})`
+    }
+
     switch (entry.status) {
         case 'identical':
             return 'identical'
@@ -193,6 +217,7 @@ export function StatusBar({
     columns,
     entryCount,
     dispatch,
+    pendingPairMark,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
     const dateFormatter = useMemo(
@@ -247,6 +272,13 @@ export function StatusBar({
                     <Box>
                         <Text color='cyan'>{filterLabel} </Text>
                         {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
+                        {pendingPairMark && (
+                            <Text color='magenta'>
+                                [pair:{' '}
+                                {path.basename(pendingPairMark.relativePath)}
+                                /]{' '}
+                            </Text>
+                        )}
                         {searchQuery !== '' && (
                             <Text color='cyan'>[filter: {searchQuery}] </Text>
                         )}

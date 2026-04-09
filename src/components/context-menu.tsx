@@ -44,6 +44,25 @@ function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
         })
     }
 
+    if (
+        entry.isDirectory
+        && (entry.status === 'only-left' || entry.status === 'only-right')
+    ) {
+        items.push({
+            label: 'Pair directory',
+            hint: 'm',
+            action: { type: 'MARK_PAIR' },
+        })
+    }
+
+    if (entry.pairedLeftPath) {
+        items.push({
+            label: 'Unpair directory',
+            hint: 'u',
+            action: { type: 'UNPAIR' },
+        })
+    }
+
     const file = side === 'left' ? entry.left : entry.right
     if (file) {
         items.push({

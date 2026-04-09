@@ -23,7 +23,7 @@ function collectAllEntries(
     depth: number,
     filter: DiffFilter,
 ): CompareEntry[] {
-    const entries = compareAtPath(leftScan, rightScan, dirPath, {
+    const entries = compareAtPath(leftScan, rightScan, dirPath, dirPath, {
         compareDates: false,
         compareContents: true,
     })

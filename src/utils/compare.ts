@@ -3,6 +3,7 @@ import path from 'node:path'
 import type {
     CompareEntry,
     DiffStatus,
+    FileEntry,
     FilterMode,
     ScanResult,
 } from '~/utils/types'
@@ -113,14 +114,118 @@ export function countDescendantDiffs(
     return count
 }
 
+function hasDescendantDiffCrossPath(
+    leftScan: ScanResult,
+    rightScan: ScanResult,
+    leftDirPath: string,
+    rightDirPath: string,
+    options: CompareOptions,
+): boolean {
+    const leftPrefix = leftDirPath === '' ? '' : leftDirPath + path.sep
+    const rightPrefix = rightDirPath === '' ? '' : rightDirPath + path.sep
+
+    const leftBySuffix = new Map<string, FileEntry>()
+    for (const [relPath, entry] of leftScan) {
+        if (relPath.startsWith(leftPrefix) && !entry.isDirectory) {
+            leftBySuffix.set(relPath.slice(leftPrefix.length), entry)
+        }
+    }
+
+    const rightBySuffix = new Map<string, FileEntry>()
+    for (const [relPath, entry] of rightScan) {
+        if (relPath.startsWith(rightPrefix) && !entry.isDirectory) {
+            rightBySuffix.set(relPath.slice(rightPrefix.length), entry)
+        }
+    }
+
+    for (const [suffix, leftEntry] of leftBySuffix) {
+        const rightEntry = rightBySuffix.get(suffix)
+        if (!rightEntry) return true
+        if (leftEntry.size !== rightEntry.size) return true
+        if (
+            options.compareDates
+            && leftEntry.modifiedTime.getTime()
+                !== rightEntry.modifiedTime.getTime()
+        )
+            return true
+        if (
+            options.compareContents
+            && leftEntry.contentHash !== null
+            && rightEntry.contentHash !== null
+            && leftEntry.contentHash !== rightEntry.contentHash
+        )
+            return true
+    }
+
+    for (const suffix of rightBySuffix.keys()) {
+        if (!leftBySuffix.has(suffix)) return true
+    }
+
+    return false
+}
+
+export function countDescendantDiffsCrossPath(
+    leftScan: ScanResult,
+    rightScan: ScanResult,
+    leftDirPath: string,
+    rightDirPath: string,
+    options: CompareOptions,
+): number {
+    const leftPrefix = leftDirPath === '' ? '' : leftDirPath + path.sep
+    const rightPrefix = rightDirPath === '' ? '' : rightDirPath + path.sep
+    let count = 0
+
+    const leftBySuffix = new Map<string, FileEntry>()
+    for (const [relPath, entry] of leftScan) {
+        if (relPath.startsWith(leftPrefix) && !entry.isDirectory) {
+            leftBySuffix.set(relPath.slice(leftPrefix.length), entry)
+        }
+    }
+
+    const rightBySuffix = new Map<string, FileEntry>()
+    for (const [relPath, entry] of rightScan) {
+        if (relPath.startsWith(rightPrefix) && !entry.isDirectory) {
+            rightBySuffix.set(relPath.slice(rightPrefix.length), entry)
+        }
+    }
+
+    for (const [suffix, leftEntry] of leftBySuffix) {
+        const rightEntry = rightBySuffix.get(suffix)
+        if (!rightEntry) {
+            count++
+            continue
+        }
+        if (
+            leftEntry.size !== rightEntry.size
+            || (options.compareDates
+                && leftEntry.modifiedTime.getTime()
+                    !== rightEntry.modifiedTime.getTime())
+            || (options.compareContents
+                && leftEntry.contentHash !== null
+                && rightEntry.contentHash !== null
+                && leftEntry.contentHash !== rightEntry.contentHash)
+        ) {
+            count++
+        }
+    }
+
+    for (const suffix of rightBySuffix.keys()) {
+        if (!leftBySuffix.has(suffix)) count++
+    }
+
+    return count
+}
+
 export function compareAtPath(
     leftScan: ScanResult,
     rightScan: ScanResult,
-    dirPath: string,
+    leftDirPath: string,
+    rightDirPath: string,
     options: CompareOptions,
+    manualPairings?: Map<string, string>,
 ): CompareEntry[] {
-    const leftEntries = getEntriesAtPath(leftScan, dirPath)
-    const rightEntries = getEntriesAtPath(rightScan, dirPath)
+    const leftEntries = getEntriesAtPath(leftScan, leftDirPath)
+    const rightEntries = getEntriesAtPath(rightScan, rightDirPath)
 
     const leftMap = new Map(
         leftEntries.map((e) => [e.name + (e.isDirectory ? '/' : ''), e]),
@@ -129,6 +234,66 @@ export function compareAtPath(
         rightEntries.map((e) => [e.name + (e.isDirectory ? '/' : ''), e]),
     )
 
+    // Process manual pairings: find pairings relevant to this directory level
+    const pairedEntries: CompareEntry[] = []
+    if (manualPairings) {
+        for (const [leftPath, rightPath] of manualPairings) {
+            const leftParent =
+                leftPath.includes('/') ?
+                    leftPath.substring(0, leftPath.lastIndexOf('/'))
+                :   ''
+            const rightParent =
+                rightPath.includes('/') ?
+                    rightPath.substring(0, rightPath.lastIndexOf('/'))
+                :   ''
+            if (leftParent !== leftDirPath || rightParent !== rightDirPath)
+                continue
+
+            const leftName = leftPath.slice(
+                leftParent ? leftParent.length + 1 : 0,
+            )
+            const rightName = rightPath.slice(
+                rightParent ? rightParent.length + 1 : 0,
+            )
+            const leftKey = leftName + '/'
+            const rightKey = rightName + '/'
+            const left = leftMap.get(leftKey)
+            const right = rightMap.get(rightKey)
+            if (!left || !right) continue
+
+            // Remove from maps so they aren't processed as unmatched
+            leftMap.delete(leftKey)
+            rightMap.delete(rightKey)
+
+            const status: DiffStatus =
+                (
+                    hasDescendantDiffCrossPath(
+                        leftScan,
+                        rightScan,
+                        leftPath,
+                        rightPath,
+                        options,
+                    )
+                ) ?
+                    'modified'
+                :   'identical'
+
+            pairedEntries.push({
+                relativePath: left.relativePath,
+                name: left.name,
+                isDirectory: true,
+                status,
+                left,
+                right,
+                depth: 0,
+                isExpanded: false,
+                pairedLeftPath: leftPath,
+                pairedRightPath: rightPath,
+            })
+        }
+    }
+
+    const samePath = leftDirPath === rightDirPath
     const allKeys = new Set([...leftMap.keys(), ...rightMap.keys()])
     const entries: CompareEntry[] = []
 
@@ -137,8 +302,9 @@ export function compareAtPath(
         const right = rightMap.get(key)
         const isDir = (left?.isDirectory ?? right?.isDirectory) as boolean
         const name = (left?.name ?? right?.name) as string
-        const relativePath = (left?.relativePath
-            ?? right?.relativePath) as string
+        const canonicalRelPath =
+            left?.relativePath
+            ?? (leftDirPath ? leftDirPath + '/' + name : name)
 
         // Handle same name but different types (file vs dir)
         if (left && right && left.isDirectory !== right.isDirectory) {
@@ -152,7 +318,7 @@ export function compareAtPath(
                 isExpanded: false,
             })
             entries.push({
-                relativePath: right.relativePath,
+                relativePath: canonicalRelPath,
                 name: right.name,
                 isDirectory: right.isDirectory,
                 status: 'only-right',
@@ -169,10 +335,32 @@ export function compareAtPath(
         } else if (!right) {
             status = 'only-left'
         } else if (isDir) {
-            status =
-                hasDescendantDiff(leftScan, rightScan, relativePath, options) ?
-                    'modified'
-                :   'identical'
+            if (samePath) {
+                status =
+                    (
+                        hasDescendantDiff(
+                            leftScan,
+                            rightScan,
+                            canonicalRelPath,
+                            options,
+                        )
+                    ) ?
+                        'modified'
+                    :   'identical'
+            } else {
+                status =
+                    (
+                        hasDescendantDiffCrossPath(
+                            leftScan,
+                            rightScan,
+                            left.relativePath,
+                            right.relativePath,
+                            options,
+                        )
+                    ) ?
+                        'modified'
+                    :   'identical'
+            }
         } else {
             const sizeMatch = left.size === right.size
             const dateMatch =
@@ -190,7 +378,7 @@ export function compareAtPath(
         }
 
         entries.push({
-            relativePath,
+            relativePath: canonicalRelPath,
             name,
             isDirectory: isDir,
             status,
@@ -200,6 +388,8 @@ export function compareAtPath(
             isExpanded: false,
         })
     }
+
+    entries.push(...pairedEntries)
 
     entries.sort((a, b) => {
         if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
@@ -215,11 +405,19 @@ export function buildVisibleTree(
     expandedDirs: Set<string>,
     filterMode: FilterMode = 'all',
     options: CompareOptions = { compareDates: false, compareContents: true },
+    manualPairings?: Map<string, string>,
 ): CompareEntry[] {
     const result: CompareEntry[] = []
 
-    function walk(dirPath: string, depth: number) {
-        const entries = compareAtPath(leftScan, rightScan, dirPath, options)
+    function walk(leftDirPath: string, rightDirPath: string, depth: number) {
+        const entries = compareAtPath(
+            leftScan,
+            rightScan,
+            leftDirPath,
+            rightDirPath,
+            options,
+            manualPairings,
+        )
         for (const entry of entries) {
             if (filterMode === 'diff-only' && entry.status === 'identical') {
                 continue
@@ -228,11 +426,21 @@ export function buildVisibleTree(
                 entry.isDirectory && expandedDirs.has(entry.relativePath)
             result.push({ ...entry, depth, isExpanded })
             if (isExpanded) {
-                walk(entry.relativePath, depth + 1)
+                const childLeft =
+                    entry.pairedLeftPath
+                    ?? (leftDirPath ?
+                        leftDirPath + '/' + entry.name
+                    :   entry.name)
+                const childRight =
+                    entry.pairedRightPath
+                    ?? (rightDirPath ?
+                        rightDirPath + '/' + entry.name
+                    :   entry.name)
+                walk(childLeft, childRight, depth + 1)
             }
         }
     }
 
-    walk('', 0)
+    walk('', '', 0)
     return result
 }

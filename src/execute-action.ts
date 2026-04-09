@@ -53,14 +53,19 @@ export function executeAction(
         if (copyRight && entry.status === 'only-right') return
         if (!copyRight && entry.status === 'only-left') return
 
+        const sourceRelPath =
+            copyRight ?
+                (entry.left?.relativePath ?? entry.relativePath)
+            :   (entry.right?.relativePath ?? entry.relativePath)
+        const destRelPath =
+            copyRight ?
+                (entry.right?.relativePath ?? entry.relativePath)
+            :   (entry.left?.relativePath ?? entry.relativePath)
         const sourcePath = path.join(
             copyRight ? leftDir : rightDir,
-            entry.relativePath,
+            sourceRelPath,
         )
-        const destPath = path.join(
-            copyRight ? rightDir : leftDir,
-            entry.relativePath,
-        )
+        const destPath = path.join(copyRight ? rightDir : leftDir, destRelPath)
         copyEntry(sourcePath, destPath, entry.isDirectory)
 
         const destSide: PanelSide = copyRight ? 'right' : 'left'

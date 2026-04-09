@@ -26,6 +26,8 @@ export function createInitialState(init: {
         keybindingVersion: 0,
         searchQuery: '',
         searchInputActive: false,
+        pendingPairMark: null,
+        manualPairings: new Map(),
     }
 }
 
@@ -104,6 +106,7 @@ function recomputeEntries(state: AppState): CompareEntry[] {
             compareDates: state.config.compareDates,
             compareContents: state.config.compareContents,
         },
+        state.manualPairings.size > 0 ? state.manualPairings : undefined,
     )
     return filterBySearch(tree, state.searchQuery)
 }
@@ -275,17 +278,24 @@ export function reducer(state: AppState, action: Action): AppState {
                 rightScan: null,
                 entries: [],
                 swapped: false,
+                pendingPairMark: null,
             }
         }
         case 'SWAP_PANELS': {
             const flippedPanel: PanelSide =
                 state.focusedPanel === 'left' ? 'right' : 'left'
+            const swappedPairings = new Map<string, string>()
+            for (const [left, right] of state.manualPairings) {
+                swappedPairings.set(right, left)
+            }
             const newState: AppState = {
                 ...state,
                 leftScan: state.rightScan,
                 rightScan: state.leftScan,
                 swapped: !state.swapped,
                 focusedPanel: flippedPanel,
+                manualPairings: swappedPairings,
+                pendingPairMark: null,
             }
             newState.entries = recomputeEntries(newState)
             newState.cursorIndex = Math.min(
@@ -367,6 +377,9 @@ export function reducer(state: AppState, action: Action): AppState {
                     compareDates: state.config.compareDates,
                     compareContents: state.config.compareContents,
                 },
+                state.manualPairings.size > 0 ?
+                    state.manualPairings
+                :   undefined,
             )
 
             // Find current entry in full tree
@@ -624,6 +637,100 @@ export function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 searchInputActive: false,
                 searchQuery: '',
+            }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'MARK_PAIR': {
+            const entry = state.entries[state.cursorIndex]
+            if (!entry || !entry.isDirectory) return state
+            if (entry.status !== 'only-left' && entry.status !== 'only-right')
+                return state
+
+            const side: PanelSide =
+                entry.status === 'only-left' ? 'left' : 'right'
+
+            if (!state.pendingPairMark) {
+                return {
+                    ...state,
+                    pendingPairMark: {
+                        relativePath: entry.relativePath,
+                        side,
+                    },
+                }
+            }
+
+            // Same side: replace the pending mark
+            if (state.pendingPairMark.side === side) {
+                return {
+                    ...state,
+                    pendingPairMark: {
+                        relativePath: entry.relativePath,
+                        side,
+                    },
+                }
+            }
+
+            // Opposite side: create the pairing
+            const leftPath =
+                side === 'right' ?
+                    state.pendingPairMark.relativePath
+                :   entry.relativePath
+            const rightPath =
+                side === 'right' ?
+                    entry.relativePath
+                :   state.pendingPairMark.relativePath
+
+            // Validate same parent directory
+            const leftParent =
+                leftPath.includes('/') ?
+                    leftPath.substring(0, leftPath.lastIndexOf('/'))
+                :   ''
+            const rightParent =
+                rightPath.includes('/') ?
+                    rightPath.substring(0, rightPath.lastIndexOf('/'))
+                :   ''
+            if (leftParent !== rightParent) {
+                return { ...state, pendingPairMark: null }
+            }
+
+            const manualPairings = new Map(state.manualPairings)
+            manualPairings.set(leftPath, rightPath)
+            const newState = {
+                ...state,
+                pendingPairMark: null,
+                manualPairings,
+            }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'UNPAIR': {
+            const entry = state.entries[state.cursorIndex]
+            if (!entry || !entry.pairedLeftPath) return state
+
+            const manualPairings = new Map(state.manualPairings)
+            manualPairings.delete(entry.pairedLeftPath)
+
+            // Collapse the paired entry and its descendants
+            const expandedDirs = new Set(state.expandedDirs)
+            expandedDirs.delete(entry.relativePath)
+            const prefix = entry.relativePath + '/'
+            for (const p of expandedDirs) {
+                if (p.startsWith(prefix)) expandedDirs.delete(p)
+            }
+
+            const newState = {
+                ...state,
+                manualPairings,
+                expandedDirs,
             }
             newState.entries = recomputeEntries(newState)
             newState.cursorIndex = Math.min(

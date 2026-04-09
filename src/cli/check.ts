@@ -13,7 +13,7 @@ function hasDifferences(
     dirPath: string,
     counts: { modified: number; leftOnly: number; rightOnly: number },
 ): boolean {
-    const entries = compareAtPath(leftScan, rightScan, dirPath, {
+    const entries = compareAtPath(leftScan, rightScan, dirPath, dirPath, {
         compareDates: false,
         compareContents: true,
     })

@@ -19,6 +19,8 @@ export interface CompareEntry {
     right?: FileEntry
     depth: number
     isExpanded: boolean
+    pairedLeftPath?: string
+    pairedRightPath?: string
 }
 
 export type ScanResult = Map<string, FileEntry>
@@ -94,6 +96,8 @@ export type Action =
     | { type: 'KEYBINDINGS_UPDATED' }
     | { type: 'SHOW_RELEASE_NOTES' }
     | { type: 'HIDE_RELEASE_NOTES' }
+    | { type: 'MARK_PAIR' }
+    | { type: 'UNPAIR' }
     | { type: 'OPEN_SEARCH' }
     | { type: 'SET_SEARCH_QUERY'; query: string }
     | { type: 'CLOSE_SEARCH' }
@@ -119,4 +123,6 @@ export interface AppState {
     keybindingVersion: number
     searchQuery: string
     searchInputActive: boolean
+    pendingPairMark: { relativePath: string; side: PanelSide } | null
+    manualPairings: Map<string, string>
 }

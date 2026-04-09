@@ -213,6 +213,7 @@ export function App({
                 columns={columns}
                 entryCount={state.entries.length}
                 dispatch={dispatch}
+                pendingPairMark={state.pendingPairMark}
             />
             {state.dialog === 'preferences' && (
                 <PreferencesDialog
