@@ -471,8 +471,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'SHOW_QUICK_IGNORE': {
@@ -502,8 +500,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'REMOVE_IGNORE_PATTERN': {
@@ -515,8 +511,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'UPDATE_IGNORE_PATTERN': {
@@ -528,8 +522,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'ADD_GLOBAL_IGNORE_PATTERN': {
@@ -542,8 +534,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'REMOVE_GLOBAL_IGNORE_PATTERN': {
@@ -555,8 +545,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'UPDATE_GLOBAL_IGNORE_PATTERN': {
@@ -568,8 +556,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
-                cursorIndex: 0,
-                scrollOffset: 0,
             }
         }
         case 'REDRAW':
