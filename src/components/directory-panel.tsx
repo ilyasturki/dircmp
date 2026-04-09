@@ -55,10 +55,16 @@ export function DirectoryPanel({
                         (side === 'left' && entry.status === 'only-right')
                         || (side === 'right' && entry.status === 'only-left')
 
+                    const entryKey =
+                        entry.relativePath
+                        + '-'
+                        + side
+                        + (entry.isDirectory ? '-d' : '-f')
+
                     if (isMissingSide) {
                         return (
                             <MissingEntryRow
-                                key={entry.relativePath + '-' + side}
+                                key={entryKey}
                                 isSelected={isSelected}
                                 isDimSelected={isDimSelected}
                             />
@@ -69,7 +75,7 @@ export function DirectoryPanel({
 
                     return (
                         <EntryRow
-                            key={entry.relativePath + '-' + side}
+                            key={entryKey}
                             entry={entry}
                             fileEntry={fileEntry}
                             isSelected={isSelected}
