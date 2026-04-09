@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { Box, Text } from 'ink'
+import { Box, Text, useStdout } from 'ink'
 
 import type { CompareEntry, FileEntry, PanelSide } from '~/utils/types'
 import { EntryRow, MissingEntryRow } from './entry-row'
@@ -34,6 +34,10 @@ export function DirectoryPanel({
     scrollOffset,
     searchQuery,
 }: DirectoryPanelProps) {
+    const { stdout } = useStdout()
+    const columns = stdout?.columns ?? 80
+    const panelWidth = Math.floor(columns / 2) - 2
+
     const visibleEntries = entries.slice(
         scrollOffset,
         scrollOffset + visibleHeight,
@@ -71,6 +75,7 @@ export function DirectoryPanel({
                                 key={entryKey}
                                 isSelected={isSelected}
                                 isDimSelected={isDimSelected}
+                                panelWidth={panelWidth}
                             />
                         )
                     }
@@ -94,6 +99,7 @@ export function DirectoryPanel({
                             fileEntry={fileEntry}
                             isSelected={isSelected}
                             isDimSelected={isDimSelected}
+                            panelWidth={panelWidth}
                             searchQuery={searchQuery}
                         />
                     )

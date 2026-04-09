@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Box, Text, useStdout } from 'ink'
+import { Box, Text } from 'ink'
+import { memo } from 'react'
 
 import type { CompareEntry, FileEntry } from '~/utils/types'
 import { useDateFormatter } from '~/context/date-locale'
@@ -36,22 +37,15 @@ function highlightMatches(text: string, query: string): ReactNode {
     return parts.length > 0 ? <>{parts}</> : text
 }
 
-/** Available width inside one panel (half terminal minus border chrome) */
-function usePanelWidth() {
-    const { stdout } = useStdout()
-    const columns = stdout?.columns ?? 80
-    // Each panel is 50% width, border takes 2 chars on each side
-    return Math.floor(columns / 2) - 2
-}
-
-export function MissingEntryRow({
+export const MissingEntryRow = memo(function MissingEntryRow({
     isSelected,
     isDimSelected,
+    panelWidth,
 }: {
     isSelected: boolean
     isDimSelected: boolean
+    panelWidth: number
 }) {
-    const panelWidth = usePanelWidth()
     const dimSelectedBg = 'white'
     const content = ''
 
@@ -66,19 +60,21 @@ export function MissingEntryRow({
             </Text>
         </Box>
     )
-}
+})
 
-export function EntryRow({
+export const EntryRow = memo(function EntryRow({
     entry,
     fileEntry,
     isSelected,
     isDimSelected,
+    panelWidth,
     searchQuery = '',
 }: {
     entry: CompareEntry
     fileEntry: FileEntry | undefined
     isSelected: boolean
     isDimSelected: boolean
+    panelWidth: number
     searchQuery?: string
 }) {
     const dateFormatter = useDateFormatter()
@@ -105,7 +101,6 @@ export function EntryRow({
     const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
-    const panelWidth = usePanelWidth()
     const dimSelectedBg = 'white'
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
@@ -152,4 +147,4 @@ export function EntryRow({
             </Text>
         </Box>
     )
-}
+})

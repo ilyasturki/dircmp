@@ -235,6 +235,32 @@ export function StatusBar({
         [],
     )
 
+    const entryInfo = useMemo(
+        () =>
+            getEntryInfo(
+                focusedEntry,
+                leftScan,
+                rightScan,
+                lineDiffCount,
+                compareDates,
+                compareContents,
+                dateFormatter,
+            ),
+        [
+            focusedEntry?.relativePath,
+            focusedEntry?.status,
+            focusedEntry?.isDirectory,
+            focusedEntry?.pairedLeftPath,
+            focusedEntry?.pairedRightPath,
+            leftScan,
+            rightScan,
+            lineDiffCount,
+            compareDates,
+            compareContents,
+            dateFormatter,
+        ],
+    )
+
     if (isLoading) {
         return (
             <Box flexDirection='column'>
@@ -249,16 +275,6 @@ export function StatusBar({
     const helpItems = keymap
         .filter((s) => s.keyLabel !== '')
         .map((s) => ({ key: s.keyLabel, label: s.description }))
-
-    const entryInfo = getEntryInfo(
-        focusedEntry,
-        leftScan,
-        rightScan,
-        lineDiffCount,
-        compareDates,
-        compareContents,
-        dateFormatter,
-    )
 
     return (
         <Box flexDirection='column'>
