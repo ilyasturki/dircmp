@@ -18,12 +18,14 @@ interface PreferencesDialogProps {
 type Field =
     | 'dateLocale'
     | 'showHints'
+    | 'nerdFont'
     | 'compareDates'
     | 'compareContents'
     | 'diffCommand'
 const fields: Field[] = [
     'dateLocale',
     'showHints',
+    'nerdFont',
     'compareDates',
     'compareContents',
     'diffCommand',
@@ -81,6 +83,12 @@ export function PreferencesDialog({
         saveConfig(newConfig)
     }
 
+    const toggleNerdFont = () => {
+        const newConfig = { ...config, nerdFont: !config.nerdFont }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+    }
+
     const toggleCompareDates = () => {
         const newConfig = { ...config, compareDates: !config.compareDates }
         dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
@@ -130,6 +138,7 @@ export function PreferencesDialog({
             key.return
             || (input === ' '
                 && (focusedField === 'showHints'
+                    || focusedField === 'nerdFont'
                     || focusedField === 'compareDates'
                     || focusedField === 'compareContents'))
         ) {
@@ -139,6 +148,8 @@ export function PreferencesDialog({
                 setError('')
             } else if (focusedField === 'showHints') {
                 toggleShowHints()
+            } else if (focusedField === 'nerdFont') {
+                toggleNerdFont()
             } else if (focusedField === 'compareDates') {
                 toggleCompareDates()
             } else if (focusedField === 'compareContents') {
@@ -199,6 +210,19 @@ export function PreferencesDialog({
                     </Text>
                 </Text>
                 <Text>{config.showHints ? 'yes' : 'no'}</Text>
+            </Box>
+            <Box justifyContent='space-between'>
+                <Text>
+                    {isModified('nerdFont') ? '*' : ' '}
+                    <Text
+                        bold={focusedField === 'nerdFont'}
+                        inverse={focusedField === 'nerdFont'}
+                    >
+                        {' '}
+                        Nerd Font icons{' '}
+                    </Text>
+                </Text>
+                <Text>{config.nerdFont ? 'yes' : 'no'}</Text>
             </Box>
             <Box justifyContent='space-between'>
                 <Text>

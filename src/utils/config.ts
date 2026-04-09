@@ -8,6 +8,7 @@ export interface AppConfig {
     compareDates: boolean
     compareContents: boolean
     diffCommand: string | undefined
+    nerdFont: boolean
 }
 
 export const defaultConfig: AppConfig = {
@@ -16,6 +17,7 @@ export const defaultConfig: AppConfig = {
     compareDates: false,
     compareContents: true,
     diffCommand: undefined,
+    nerdFont: true,
 }
 
 function getConfigPath(): string {
@@ -45,6 +47,8 @@ export function loadConfig(): AppConfig {
                 typeof parsed.diffCommand === 'string' ?
                     parsed.diffCommand
                 :   undefined,
+            nerdFont:
+                typeof parsed.nerdFont === 'boolean' ? parsed.nerdFont : true,
         }
     } catch {
         return { ...defaultConfig }

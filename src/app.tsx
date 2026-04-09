@@ -17,6 +17,7 @@ import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
 import { ReleaseNotesDialog } from '~/components/release-notes-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
+import { NerdFontProvider } from '~/context/nerd-font'
 import { executeAction } from '~/execute-action'
 import {
     useDirectoryScan,
@@ -174,21 +175,23 @@ export function App({
                     <Text color='yellow'>Scanning directories...</Text>
                 </Box>
             :   <DateLocaleProvider value={state.config.dateLocale}>
-                    <DirectoryDiff
-                        leftDir={effectiveLeftDir}
-                        rightDir={effectiveRightDir}
-                        leftLabel={effectiveLeftLabel}
-                        rightLabel={effectiveRightLabel}
-                        entries={state.entries}
-                        cursorIndex={state.cursorIndex}
-                        focusedPanel={state.focusedPanel}
-                        dialogOpen={
-                            state.dialog !== null || state.searchInputActive
-                        }
-                        visibleHeight={contentHeight}
-                        scrollOffset={scrollOffset}
-                        searchQuery={state.searchQuery}
-                    />
+                    <NerdFontProvider value={state.config.nerdFont}>
+                        <DirectoryDiff
+                            leftDir={effectiveLeftDir}
+                            rightDir={effectiveRightDir}
+                            leftLabel={effectiveLeftLabel}
+                            rightLabel={effectiveRightLabel}
+                            entries={state.entries}
+                            cursorIndex={state.cursorIndex}
+                            focusedPanel={state.focusedPanel}
+                            dialogOpen={
+                                state.dialog !== null || state.searchInputActive
+                            }
+                            visibleHeight={contentHeight}
+                            scrollOffset={scrollOffset}
+                            searchQuery={state.searchQuery}
+                        />
+                    </NerdFontProvider>
                 </DateLocaleProvider>
             }
             <StatusBar

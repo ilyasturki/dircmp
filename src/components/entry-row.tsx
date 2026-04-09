@@ -3,7 +3,8 @@ import { Box, Text, useStdout } from 'ink'
 
 import type { CompareEntry, FileEntry } from '~/utils/types'
 import { useDateFormatter } from '~/context/date-locale'
-import { getFileIcon } from '~/utils/file-icons'
+import { useNerdFont } from '~/context/nerd-font'
+import { ERROR_ICON, ERROR_ICON_PLAIN, getFileIcon } from '~/utils/file-icons'
 import { formatSize } from '~/utils/format-size'
 
 function highlightMatches(text: string, query: string): ReactNode {
@@ -81,6 +82,8 @@ export function EntryRow({
     searchQuery?: string
 }) {
     const dateFormatter = useDateFormatter()
+    const nerdFont = useNerdFont()
+    const errorIcon = nerdFont ? ERROR_ICON : ERROR_ICON_PLAIN
     const hasError = fileEntry?.error
     const dimColor = !hasError && entry.status === 'identical'
     const color =
@@ -91,7 +94,12 @@ export function EntryRow({
         :   undefined
     const name = entry.isDirectory ? `${entry.name}/` : entry.name
     const indent = '  '.repeat(entry.depth)
-    const icon = getFileIcon(entry.name, entry.isDirectory, entry.isExpanded)
+    const icon = getFileIcon(
+        entry.name,
+        entry.isDirectory,
+        entry.isExpanded,
+        nerdFont,
+    )
     const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
@@ -99,7 +107,7 @@ export function EntryRow({
     const dimSelectedBg = 'gray'
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
-    const errorSuffix = hasError ? ' \uf127' : ''
+    const errorSuffix = hasError ? ` ${errorIcon}` : ''
     const left = `${indent}${icon} ${name}`
     const right = `${size}  ${date}`
     const maxLeft = panelWidth - right.length - errorSuffix.length - 1 // at least 1 space gap
@@ -127,14 +135,14 @@ export function EntryRow({
                         {indent}
                         <Text color={color}>{icon} </Text>
                         {highlightedName}
-                        {hasError && <Text color='red'> {'\uf127'}</Text>}
+                        {hasError && <Text color='red'> {errorIcon}</Text>}
                         {' '.repeat(gap)}
                         {right}
                     </>
                 :   <>
                         {prefix}
                         {highlightedName}
-                        {hasError && <Text color='red'> {'\uf127'}</Text>}
+                        {hasError && <Text color='red'> {errorIcon}</Text>}
                         {' '.repeat(gap)}
                         {right}
                     </>

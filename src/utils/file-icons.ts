@@ -90,14 +90,21 @@ const EXTENSION_ICONS: Record<string, string> = {
     patch: '\uf440',
 }
 
+export const ERROR_ICON = '\uf127'
+export const ERROR_ICON_PLAIN = '!'
+
 export function getFileIcon(
     name: string,
     isDirectory: boolean,
     isExpanded: boolean,
+    nerdFont = true,
 ): string {
     if (isDirectory) {
+        if (!nerdFont) return isExpanded ? 'v' : '>'
         return isExpanded ? '\uf115' : '\uf114'
     }
+
+    if (!nerdFont) return '-'
 
     const lower = name.toLowerCase()
     const filenameIcon = FILENAME_ICONS[lower]
