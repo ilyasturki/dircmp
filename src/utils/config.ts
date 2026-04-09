@@ -6,6 +6,7 @@ export interface AppConfig {
     dateLocale: string | undefined
     showHints: boolean
     compareDates: boolean
+    compareContents: boolean
     diffCommand: string | undefined
 }
 
@@ -13,6 +14,7 @@ export const defaultConfig: AppConfig = {
     dateLocale: undefined,
     showHints: true,
     compareDates: false,
+    compareContents: true,
     diffCommand: undefined,
 }
 
@@ -34,6 +36,10 @@ export function loadConfig(): AppConfig {
             compareDates:
                 typeof parsed.compareDates === 'boolean' ?
                     parsed.compareDates
+                :   true,
+            compareContents:
+                typeof parsed.compareContents === 'boolean' ?
+                    parsed.compareContents
                 :   true,
             diffCommand:
                 typeof parsed.diffCommand === 'string' ?

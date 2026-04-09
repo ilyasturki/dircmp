@@ -15,11 +15,17 @@ interface PreferencesDialogProps {
     rows: number
 }
 
-type Field = 'dateLocale' | 'showHints' | 'compareDates' | 'diffCommand'
+type Field =
+    | 'dateLocale'
+    | 'showHints'
+    | 'compareDates'
+    | 'compareContents'
+    | 'diffCommand'
 const fields: Field[] = [
     'dateLocale',
     'showHints',
     'compareDates',
+    'compareContents',
     'diffCommand',
 ]
 
@@ -81,6 +87,15 @@ export function PreferencesDialog({
         saveConfig(newConfig)
     }
 
+    const toggleCompareContents = () => {
+        const newConfig = {
+            ...config,
+            compareContents: !config.compareContents,
+        }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+    }
+
     useInput((input, key) => {
         if (editing) {
             if (key.escape) {
@@ -115,7 +130,8 @@ export function PreferencesDialog({
             key.return
             || (input === ' '
                 && (focusedField === 'showHints'
-                    || focusedField === 'compareDates'))
+                    || focusedField === 'compareDates'
+                    || focusedField === 'compareContents'))
         ) {
             if (focusedField === 'dateLocale' && key.return) {
                 setEditing(true)
@@ -125,6 +141,8 @@ export function PreferencesDialog({
                 toggleShowHints()
             } else if (focusedField === 'compareDates') {
                 toggleCompareDates()
+            } else if (focusedField === 'compareContents') {
+                toggleCompareContents()
             } else if (focusedField === 'diffCommand' && key.return) {
                 setEditing(true)
                 setEditValue(config.diffCommand ?? '')
@@ -194,6 +212,19 @@ export function PreferencesDialog({
                     </Text>
                 </Text>
                 <Text>{config.compareDates ? 'yes' : 'no'}</Text>
+            </Box>
+            <Box justifyContent='space-between'>
+                <Text>
+                    {isModified('compareContents') ? '*' : ' '}
+                    <Text
+                        bold={focusedField === 'compareContents'}
+                        inverse={focusedField === 'compareContents'}
+                    >
+                        {' '}
+                        Compare contents{' '}
+                    </Text>
+                </Text>
+                <Text>{config.compareContents ? 'yes' : 'no'}</Text>
             </Box>
             <InputField
                 label='Diff command'

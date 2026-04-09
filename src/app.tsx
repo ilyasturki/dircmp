@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { Box, Text, useApp, useStdout } from 'ink'
-import { terminal } from 'os-theme'
+import { appearance } from 'os-theme'
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
@@ -63,9 +63,9 @@ export function App({
 
     useEffect(() => {
         if (process.env['DIRCMP_RECORDING']) return
-        terminal.on('change', setTheme)
+        appearance.on('change', setTheme).catch(() => {})
         return () => {
-            terminal.off('change', setTheme)
+            appearance.off('change', setTheme).catch(() => {})
         }
     }, [])
 
@@ -89,6 +89,7 @@ export function App({
         rightRemote,
         leftPreScan,
         rightPreScan,
+        state.config.compareContents,
     )
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir
@@ -219,6 +220,7 @@ export function App({
                 toastMessage={toastMessage}
                 showHints={state.config.showHints}
                 compareDates={state.config.compareDates}
+                compareContents={state.config.compareContents}
                 searchInputActive={state.searchInputActive}
                 searchQuery={state.searchQuery}
                 columns={columns}

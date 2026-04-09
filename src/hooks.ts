@@ -68,6 +68,7 @@ export function useDirectoryScan(
     rightRemote?: string,
     leftPreScan?: ScanResult,
     rightPreScan?: ScanResult,
+    compareContents: boolean = true,
 ) {
     const [refreshCounter, setRefreshCounter] = useState(0)
     const preScanUsed = useRef(false)
@@ -92,11 +93,11 @@ export function useDirectoryScan(
             const leftPromise =
                 leftPreScan ?
                     Promise.resolve(leftPreScan)
-                :   scanDirectory(leftDir, shouldIgnore)
+                :   scanDirectory(leftDir, shouldIgnore, compareContents)
             const rightPromise =
                 rightPreScan ?
                     Promise.resolve(rightPreScan)
-                :   scanDirectory(rightDir, shouldIgnore)
+                :   scanDirectory(rightDir, shouldIgnore, compareContents)
             Promise.all([leftPromise, rightPromise])
                 .then(([leftScan, rightScan]) => {
                     const elapsed = performance.now() - start
@@ -121,10 +122,10 @@ export function useDirectoryScan(
         Promise.all([
             leftRemote ?
                 scanRemote(leftRemote, shouldIgnore)
-            :   scanDirectory(leftDir, shouldIgnore),
+            :   scanDirectory(leftDir, shouldIgnore, compareContents),
             rightRemote ?
                 scanRemote(rightRemote, shouldIgnore)
-            :   scanDirectory(rightDir, shouldIgnore),
+            :   scanDirectory(rightDir, shouldIgnore, compareContents),
         ])
             .then(([leftScan, rightScan]) => {
                 const elapsed = performance.now() - start
@@ -134,7 +135,7 @@ export function useDirectoryScan(
             .catch((err) => {
                 dispatch({ type: 'SCAN_ERROR', error: String(err) })
             })
-    }, [leftDir, rightDir, refreshCounter, ignoreEnabled])
+    }, [leftDir, rightDir, refreshCounter, ignoreEnabled, compareContents])
 
     const refresh = useCallback(() => {
         setRefreshCounter((c) => c + 1)

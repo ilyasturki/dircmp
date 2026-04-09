@@ -100,7 +100,10 @@ function recomputeEntries(state: AppState): CompareEntry[] {
         state.rightScan,
         expandedDirs,
         state.filterMode,
-        { compareDates: state.config.compareDates },
+        {
+            compareDates: state.config.compareDates,
+            compareContents: state.config.compareContents,
+        },
     )
     return filterBySearch(tree, state.searchQuery)
 }
@@ -360,7 +363,10 @@ export function reducer(state: AppState, action: Action): AppState {
                 state.rightScan,
                 allDirs,
                 state.filterMode,
-                { compareDates: state.config.compareDates },
+                {
+                    compareDates: state.config.compareDates,
+                    compareContents: state.config.compareContents,
+                },
             )
 
             // Find current entry in full tree
@@ -574,7 +580,11 @@ export function reducer(state: AppState, action: Action): AppState {
             }
         case 'UPDATE_CONFIG': {
             const newState = { ...state, config: action.config }
-            if (action.config.compareDates !== state.config.compareDates) {
+            if (
+                action.config.compareDates !== state.config.compareDates
+                || action.config.compareContents
+                    !== state.config.compareContents
+            ) {
                 newState.entries = recomputeEntries(newState)
                 newState.cursorIndex = Math.min(
                     state.cursorIndex,

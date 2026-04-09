@@ -25,6 +25,7 @@ function collectAllEntries(
 ): CompareEntry[] {
     const entries = compareAtPath(leftScan, rightScan, dirPath, {
         compareDates: false,
+        compareContents: true,
     })
     const result: CompareEntry[] = []
 

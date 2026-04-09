@@ -10,6 +10,7 @@ import { getEntriesAtPath } from '~/utils/scanner'
 
 export interface CompareOptions {
     compareDates: boolean
+    compareContents: boolean
 }
 
 function hasDescendantDiff(
@@ -43,6 +44,13 @@ function hasDescendantDiff(
             options.compareDates
             && leftEntry.modifiedTime.getTime()
                 !== rightEntry.modifiedTime.getTime()
+        )
+            return true
+        if (
+            options.compareContents
+            && leftEntry.contentHash !== null
+            && rightEntry.contentHash !== null
+            && leftEntry.contentHash !== rightEntry.contentHash
         )
             return true
     }
@@ -89,6 +97,10 @@ export function countDescendantDiffs(
             || (options.compareDates
                 && leftEntry.modifiedTime.getTime()
                     !== rightEntry.modifiedTime.getTime())
+            || (options.compareContents
+                && leftEntry.contentHash !== null
+                && rightEntry.contentHash !== null
+                && leftEntry.contentHash !== rightEntry.contentHash)
         ) {
             count++
         }
@@ -166,7 +178,15 @@ export function compareAtPath(
             const dateMatch =
                 !options.compareDates
                 || left.modifiedTime.getTime() === right.modifiedTime.getTime()
-            status = sizeMatch && dateMatch ? 'identical' : 'modified'
+            const contentMatch =
+                !options.compareContents
+                || left.contentHash === null
+                || right.contentHash === null
+                || left.contentHash === right.contentHash
+            status =
+                sizeMatch && dateMatch && contentMatch ?
+                    'identical'
+                :   'modified'
         }
 
         entries.push({
@@ -194,7 +214,7 @@ export function buildVisibleTree(
     rightScan: ScanResult,
     expandedDirs: Set<string>,
     filterMode: FilterMode = 'all',
-    options: CompareOptions = { compareDates: false },
+    options: CompareOptions = { compareDates: false, compareContents: true },
 ): CompareEntry[] {
     const result: CompareEntry[] = []
 

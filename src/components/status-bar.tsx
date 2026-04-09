@@ -29,6 +29,7 @@ interface StatusBarProps {
     toastMessage: string | null
     showHints: boolean
     compareDates: boolean
+    compareContents: boolean
     searchInputActive: boolean
     searchQuery: string
     columns: number
@@ -37,6 +38,13 @@ interface StatusBarProps {
 }
 
 const MAX_DIFF_SIZE = 1_000_000
+
+function isBinary(buffer: Buffer): boolean {
+    for (let i = 0; i < Math.min(buffer.length, 8000); i++) {
+        if (buffer[i] === 0) return true
+    }
+    return false
+}
 
 function useLineDiffCount(
     entry: CompareEntry | undefined,
@@ -77,11 +85,18 @@ function useLineDiffCount(
             try {
                 const leftPath = path.join(leftDir, relPath)
                 const rightPath = path.join(rightDir, relPath)
-                const [leftContent, rightContent] = await Promise.all([
-                    fsp.readFile(leftPath, 'utf-8'),
-                    fsp.readFile(rightPath, 'utf-8'),
+                const [leftBuf, rightBuf] = await Promise.all([
+                    fsp.readFile(leftPath),
+                    fsp.readFile(rightPath),
                 ])
-                const changes = diffLines(leftContent, rightContent)
+                if (isBinary(leftBuf) || isBinary(rightBuf)) {
+                    if (!cancelled) setCount(-1)
+                    return
+                }
+                const changes = diffLines(
+                    leftBuf.toString('utf-8'),
+                    rightBuf.toString('utf-8'),
+                )
                 let diffLineCount = 0
                 for (const change of changes) {
                     if (change.added || change.removed) {
@@ -117,6 +132,7 @@ function getEntryInfo(
     rightScan: ScanResult | null,
     lineDiffCount: number | null,
     compareDates: boolean,
+    compareContents: boolean,
     dateFormatter: Intl.DateTimeFormat,
 ): string {
     if (!entry) return ''
@@ -135,11 +151,12 @@ function getEntryInfo(
                     leftScan,
                     rightScan,
                     entry.relativePath,
-                    { compareDates },
+                    { compareDates, compareContents },
                 )
                 return `${count} different file${count !== 1 ? 's' : ''}`
             }
             if (lineDiffCount === null) return '...'
+            if (lineDiffCount === -1) return 'binary files differ'
             if (lineDiffCount === 0) {
                 const leftDate =
                     entry.left ?
@@ -170,6 +187,7 @@ export function StatusBar({
     toastMessage,
     showHints,
     compareDates,
+    compareContents,
     searchInputActive,
     searchQuery,
     columns,
@@ -213,6 +231,7 @@ export function StatusBar({
         rightScan,
         lineDiffCount,
         compareDates,
+        compareContents,
         dateFormatter,
     )
 

@@ -1,9 +1,15 @@
+import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 
 import type { FileEntry, ScanResult } from '~/utils/types'
 
 const STAT_CONCURRENCY = 64
+
+async function computeFileHash(filePath: string): Promise<string> {
+    const content = await fsp.readFile(filePath)
+    return createHash('sha256').update(content).digest('hex')
+}
 
 type StatResult =
     | {
@@ -76,6 +82,7 @@ async function walkDirectory(
     currentPath: string,
     result: ScanResult,
     shouldIgnore: ((relativePath: string) => boolean) | null,
+    computeHash: boolean = false,
 ): Promise<number> {
     let dirents
     try {
@@ -132,6 +139,29 @@ async function walkDirectory(
         },
     )
 
+    // Phase 1.5: compute hashes for files in parallel
+    const hashResults = new Map<number, string>()
+    if (computeHash) {
+        const fileIndices: number[] = []
+        for (let i = 0; i < statResults.length; i++) {
+            if (statResults[i]!.kind === 'file') {
+                fileIndices.push(i)
+            }
+        }
+        await mapConcurrent(fileIndices, STAT_CONCURRENCY, async (idx) => {
+            const sr = statResults[idx]! as Extract<
+                StatResult,
+                { kind: 'file' }
+            >
+            try {
+                const hash = await computeFileHash(sr.resolvedPath)
+                hashResults.set(idx, hash)
+            } catch {
+                // Unreadable file — leave hash as null
+            }
+        })
+    }
+
     // Phase 2: process results sequentially, recurse into directories
     let totalSize = 0
     for (let i = 0; i < filtered.length; i++) {
@@ -161,7 +191,7 @@ async function walkDirectory(
                     isDirectory: false,
                     size,
                     modifiedTime: sr.stat.mtime,
-                    contentHash: null,
+                    contentHash: hashResults.get(i) ?? null,
                 })
                 break
             }
@@ -179,6 +209,7 @@ async function walkDirectory(
                     sr.fullPath,
                     result,
                     shouldIgnore,
+                    computeHash,
                 )
                 const dirEntry = result.get(item.relativePath)!
                 dirEntry.size = subtreeSize
@@ -194,9 +225,10 @@ async function walkDirectory(
 export async function scanDirectory(
     rootPath: string,
     shouldIgnore: ((relativePath: string) => boolean) | null = null,
+    computeHash: boolean = false,
 ): Promise<ScanResult> {
     const result: ScanResult = new Map()
-    await walkDirectory(rootPath, rootPath, result, shouldIgnore)
+    await walkDirectory(rootPath, rootPath, result, shouldIgnore, computeHash)
     return result
 }
 
