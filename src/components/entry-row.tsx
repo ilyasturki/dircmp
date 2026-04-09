@@ -102,11 +102,15 @@ export function EntryRow({
     const dimSelectedBg = theme === 'light' ? '#d4d4d4' : 'gray'
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
+    const errorSuffix = hasError ? ' \uf127' : ''
     const left = `${indent}${icon} ${name}`
-    const right = `${size}  ${date}${hasError ? ' !' : ''}`
-    const maxLeft = panelWidth - right.length - 1 // at least 1 space gap
+    const right = `${size}  ${date}`
+    const maxLeft = panelWidth - right.length - errorSuffix.length - 1 // at least 1 space gap
     const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left
-    const gap = Math.max(1, panelWidth - truncLeft.length - right.length)
+    const gap = Math.max(
+        1,
+        panelWidth - truncLeft.length - errorSuffix.length - right.length,
+    )
 
     const prefix = `${indent}${icon} `
     const visibleName = truncLeft.slice(prefix.length)
@@ -126,12 +130,14 @@ export function EntryRow({
                         {indent}
                         <Text color={color}>{icon} </Text>
                         {highlightedName}
+                        {hasError && <Text color='red'> {'\uf127'}</Text>}
                         {' '.repeat(gap)}
                         {right}
                     </>
                 :   <>
                         {prefix}
                         {highlightedName}
+                        {hasError && <Text color='red'> {'\uf127'}</Text>}
                         {' '.repeat(gap)}
                         {right}
                     </>
