@@ -12,7 +12,7 @@ export interface AppConfig {
 export const defaultConfig: AppConfig = {
     dateLocale: undefined,
     showHints: true,
-    compareDates: true,
+    compareDates: false,
     diffCommand: undefined,
 }
 

@@ -194,7 +194,7 @@ export function buildVisibleTree(
     rightScan: ScanResult,
     expandedDirs: Set<string>,
     filterMode: FilterMode = 'all',
-    options: CompareOptions = { compareDates: true },
+    options: CompareOptions = { compareDates: false },
 ): CompareEntry[] {
     const result: CompareEntry[] = []
 
