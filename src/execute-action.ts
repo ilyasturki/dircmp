@@ -87,7 +87,7 @@ export function executeAction(
     // Intercept OPEN_DIFF for files: use external diff command or built-in viewer
     if (action.type === 'OPEN_DIFF') {
         const entry = state.entries[state.cursorIndex]
-        if (entry && !entry.isDirectory && entry.status !== 'identical') {
+        if (entry && !entry.isDirectory) {
             const diffCmd = state.config.diffCommand?.trim()
             if (diffCmd && onShellOut) {
                 const leftPath = path.join(leftDir, entry.relativePath)

@@ -21,13 +21,11 @@ function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
             action: { type: 'NAVIGATE_INTO' },
         })
     } else {
-        if (entry.status !== 'identical') {
-            items.push({
-                label: 'Open diff',
-                hint: 'Enter',
-                action: { type: 'OPEN_DIFF' },
-            })
-        }
+        items.push({
+            label: 'Open diff',
+            hint: 'Enter',
+            action: { type: 'OPEN_DIFF' },
+        })
     }
 
     if (entry.status === 'modified' || entry.status === 'only-left') {
