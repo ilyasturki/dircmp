@@ -52,7 +52,7 @@ export function MissingEntryRow({
     isDimSelected: boolean
 }) {
     const panelWidth = usePanelWidth()
-    const dimSelectedBg = 'gray'
+    const dimSelectedBg = 'white'
     const content = ''
 
     return (
@@ -104,7 +104,7 @@ export function EntryRow({
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const panelWidth = usePanelWidth()
-    const dimSelectedBg = 'gray'
+    const dimSelectedBg = 'white'
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
     const errorSuffix = hasError ? ` ${errorIcon}` : ''
