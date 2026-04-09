@@ -114,7 +114,13 @@ async function walkDirectory(
     for (const dirent of dirents) {
         const fullPath = path.join(currentPath, dirent.name)
         const relativePath = path.relative(rootPath, fullPath)
-        if (shouldIgnore && shouldIgnore(relativePath)) continue
+        if (
+            shouldIgnore
+            && shouldIgnore(
+                dirent.isDirectory() ? relativePath + '/' : relativePath,
+            )
+        )
+            continue
         filtered.push({ dirent, fullPath, relativePath })
     }
 

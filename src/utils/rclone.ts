@@ -226,7 +226,11 @@ export async function scanRemote(
         const relativePath =
             entry.IsDir ? entry.Path.replace(/\/$/, '') : entry.Path
         if (!relativePath) continue
-        if (shouldIgnore && shouldIgnore(relativePath)) continue
+        if (
+            shouldIgnore
+            && shouldIgnore(entry.IsDir ? relativePath + '/' : relativePath)
+        )
+            continue
 
         result.set(relativePath, {
             name: entry.Name,
