@@ -191,7 +191,7 @@ export function PreferencesDialog({
             title='Preferences'
             columns={columns}
             rows={rows}
-            width={40}
+            width={46}
         >
             <InputField
                 label='Date locale'
@@ -248,18 +248,21 @@ export function PreferencesDialog({
                 </Text>
                 <Text>{config.compareDates ? 'yes' : 'no'}</Text>
             </Box>
-            <Box justifyContent='space-between'>
-                <Text>
-                    {isModified('compareContents') ? '*' : ' '}
-                    <Text
-                        bold={focusedField === 'compareContents'}
-                        inverse={focusedField === 'compareContents'}
-                    >
-                        {' '}
-                        Compare contents{' '}
+            <Box flexDirection='column'>
+                <Box justifyContent='space-between'>
+                    <Text>
+                        {isModified('compareContents') ? '*' : ' '}
+                        <Text
+                            bold={focusedField === 'compareContents'}
+                            inverse={focusedField === 'compareContents'}
+                        >
+                            {' '}
+                            Compare contents{' '}
+                        </Text>
                     </Text>
-                </Text>
-                <Text>{config.compareContents ? 'yes' : 'no'}</Text>
+                    <Text>{config.compareContents ? 'yes' : 'no'}</Text>
+                </Box>
+                <Text dimColor> hash file contents to detect changes</Text>
             </Box>
             <Box justifyContent='space-between'>
                 <Text>
