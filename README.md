@@ -232,6 +232,16 @@ Patterns use gitignore syntax and are stored in:
 
 Default ignored: `.git`, `node_modules`, `.DS_Store`.
 
+## Manual directory pairing
+
+When a directory has been renamed on one side, it shows up as two unmatched entries (one left-only, one right-only) instead of being compared together. Manual pairing lets you tell dircmp that two differently-named directories are logically the same, so their contents are diffed against each other.
+
+1. Navigate to the directory on one side and press `m` — a magenta `[m]` indicator appears next to the name.
+2. Switch to the other panel (`Tab`) and navigate to the corresponding renamed directory.
+3. Press `m` again — the pairing is created and the two directories are compared as one entry.
+
+Both directories must share the same parent directory. To remove a pairing later press `u` on the paired entry, or restart the app.
+
 ## Color coding
 
 | Color  | Meaning                    |
