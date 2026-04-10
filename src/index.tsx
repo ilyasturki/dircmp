@@ -212,25 +212,45 @@ const rightRemote = resolvedArgs[1]!.remote
 const leftPreScan = resolvedArgs[0]!.preScan
 const rightPreScan = resolvedArgs[1]!.preScan
 
+// Detect whether both args are files (for direct file diff)
+let fileMode = false
 for (const { dir, label } of resolvedArgs) {
     try {
         const stat = fs.statSync(dir)
         if (!stat.isDirectory()) {
-            console.error(`Not a directory: ${label ?? dir}`)
-            process.exit(1)
+            if (!stat.isFile()) {
+                console.error(`Not a file or directory: ${label ?? dir}`)
+                process.exit(1)
+            }
         }
     } catch {
-        console.error(`Directory not found: ${label ?? dir}`)
+        console.error(`Path not found: ${label ?? dir}`)
         process.exit(1)
     }
 }
+
+const leftIsFile = fs.statSync(leftDir).isFile()
+const rightIsFile = fs.statSync(rightDir).isFile()
+if (leftIsFile !== rightIsFile) {
+    console.error('Cannot compare a file with a directory')
+    process.exit(1)
+}
+fileMode = leftIsFile
 
 const ignoreOptions: CliIgnoreOptions = {
     noIgnore: cli.flags.noIgnore,
     extraIgnorePatterns: cli.flags.ignore,
 }
 
-if (subcommand === 'diff') {
+if (fileMode && subcommand === 'diff') {
+    const { runFileDiff } = await import('~/cli/file-diff')
+    await runFileDiff(leftDir, rightDir)
+    cleanupMounts()
+} else if (fileMode && subcommand === 'check') {
+    const { runFileCheck } = await import('~/cli/file-check')
+    await runFileCheck(leftDir, rightDir, { stat: cli.flags.stat })
+    cleanupMounts()
+} else if (subcommand === 'diff') {
     const onlyMap: Record<string, 'modified' | 'only-left' | 'only-right'> = {
         modified: 'modified',
         'left-only': 'only-left',
@@ -263,10 +283,6 @@ if (subcommand === 'diff') {
 } else {
     // Default: interactive TUI
     const { render } = await import('ink')
-    const { App } = await import('~/app')
-    const { loadConfig } = await import('~/utils/config')
-
-    const config = loadConfig()
 
     const ENTER_ALT_SCREEN = '\x1b[?1049h'
     const EXIT_ALT_SCREEN = '\x1b[?1049l'
@@ -284,24 +300,40 @@ if (subcommand === 'diff') {
     inAlternateScreen = true
     process.on('exit', exitAlternateScreen)
 
-    const { waitUntilExit } = render(
-        <App
-            leftDir={leftDir}
-            rightDir={rightDir}
-            leftLabel={leftLabel}
-            rightLabel={rightLabel}
-            leftRemote={leftRemote}
-            rightRemote={rightRemote}
-            leftPreScan={leftPreScan}
-            rightPreScan={rightPreScan}
-            initialConfig={config}
-            ignoreOptions={ignoreOptions}
-            changelog={changelogText}
-        />,
-    )
+    let instance: { waitUntilExit: () => Promise<unknown> }
+
+    if (fileMode) {
+        const { FileDiffApp } = await import('~/file-diff-app')
+        instance = render(
+            <FileDiffApp
+                leftFile={leftDir}
+                rightFile={rightDir}
+            />,
+        )
+    } else {
+        const { App } = await import('~/app')
+        const { loadConfig } = await import('~/utils/config')
+        const config = loadConfig()
+
+        instance = render(
+            <App
+                leftDir={leftDir}
+                rightDir={rightDir}
+                leftLabel={leftLabel}
+                rightLabel={rightLabel}
+                leftRemote={leftRemote}
+                rightRemote={rightRemote}
+                leftPreScan={leftPreScan}
+                rightPreScan={rightPreScan}
+                initialConfig={config}
+                ignoreOptions={ignoreOptions}
+                changelog={changelogText}
+            />,
+        )
+    }
 
     try {
-        await waitUntilExit()
+        await instance.waitUntilExit()
     } finally {
         exitAlternateScreen()
         cleanupMounts()

@@ -12,6 +12,8 @@ interface DiffViewProps {
     entry: CompareEntry
     leftDir: string
     rightDir: string
+    leftFilePath?: string
+    rightFilePath?: string
     dispatch: Dispatch<Action>
     columns: number
     rows: number
@@ -87,6 +89,8 @@ export function DiffView({
     entry,
     leftDir,
     rightDir,
+    leftFilePath,
+    rightFilePath,
     dispatch,
     columns,
     rows,
@@ -103,8 +107,10 @@ export function DiffView({
 
         async function load() {
             try {
-                const leftPath = path.join(leftDir, entry.relativePath)
-                const rightPath = path.join(rightDir, entry.relativePath)
+                const leftPath =
+                    leftFilePath ?? path.join(leftDir, entry.relativePath)
+                const rightPath =
+                    rightFilePath ?? path.join(rightDir, entry.relativePath)
 
                 let leftContent = ''
                 let rightContent = ''
