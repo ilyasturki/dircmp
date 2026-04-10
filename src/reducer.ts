@@ -524,6 +524,15 @@ export function reducer(state: AppState, action: Action): AppState {
             const side: PanelSide =
                 entry.status === 'only-left' ? 'left' : 'right'
 
+            // Toggle off if pressing on the already-marked entry
+            if (
+                state.pendingPairMark
+                && state.pendingPairMark.relativePath === entry.relativePath
+                && state.pendingPairMark.side === side
+            ) {
+                return { ...state, pendingPairMark: null }
+            }
+
             if (!state.pendingPairMark || state.pendingPairMark.side === side) {
                 return {
                     ...state,
@@ -564,7 +573,13 @@ export function reducer(state: AppState, action: Action): AppState {
                 manualPairings,
             })
         }
+        case 'CLEAR_PAIR_MARK':
+            if (!state.pendingPairMark) return state
+            return { ...state, pendingPairMark: null }
         case 'UNPAIR': {
+            if (state.pendingPairMark) {
+                return { ...state, pendingPairMark: null }
+            }
             const entry = state.entries[state.cursorIndex]
             if (!entry || !entry.pairedLeftPath) return state
 

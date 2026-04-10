@@ -406,6 +406,17 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'UNPAIR' } },
     },
     {
+        id: 'clearPairMark',
+        mode: 'browser',
+        keyLabel: 'Esc',
+        description: 'clear mark',
+        helpDescription: 'Clear pending pair mark',
+        keyDef: 'escape',
+        helpKey: 'Esc',
+        match: (_input, key) => key.escape,
+        effect: { type: 'dispatch', action: { type: 'CLEAR_PAIR_MARK' } },
+    },
+    {
         id: 'refresh',
         mode: 'browser',
         keyLabel: 'r',

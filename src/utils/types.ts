@@ -108,6 +108,7 @@ export type Action =
     | { type: 'HIDE_RELEASE_NOTES' }
     | { type: 'MARK_PAIR' }
     | { type: 'UNPAIR' }
+    | { type: 'CLEAR_PAIR_MARK' }
     | { type: 'OPEN_SEARCH' }
     | { type: 'SET_SEARCH_QUERY'; query: string }
     | { type: 'CLOSE_SEARCH' }
