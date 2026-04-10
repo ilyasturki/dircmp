@@ -3,7 +3,7 @@ name: release
 description: Generate changelog and bump version. Use when the user invokes /release.
 disable-model-invocation: true
 argument-hint: <patch|minor|major>
-allowed-tools: Bash Read Write Edit Grep Glob
+allowed-tools: Bash Read Write Edit Grep Glob AskUserQuestion
 ---
 
 # Release
@@ -30,7 +30,7 @@ Run CI locally before proceeding. If it fails, stop and report the error.
 
 ## Instructions
 
-1. **Validate argument**: `$ARGUMENTS` must be one of `patch`, `minor`, `major`. If missing or invalid, ask the user.
+1. **Determine bump level**: If `$ARGUMENTS` is one of `patch`, `minor`, `major`, use it. Otherwise, deduce the level from the commits since the last tag and confirm with the user using AskUserQuestion.
 
 2. **Compute new version**: Based on the current version and `$ARGUMENTS`, determine the new version number.
 

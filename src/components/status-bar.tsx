@@ -1,4 +1,4 @@
-import type { Dispatch } from 'react'
+import type { Dispatch, ReactNode } from 'react'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { diffLines } from 'diff'
@@ -17,6 +17,7 @@ import type {
 } from '~/utils/types'
 import { isBinary } from '~/utils/binary'
 import { countDescendantDiffs } from '~/utils/compare'
+import { formatSize } from '~/utils/format-size'
 import { KeyboardHints } from './keyboard-hints'
 import { SearchInput } from './search-input'
 
@@ -46,12 +47,23 @@ interface StatusBarProps {
 
 const MAX_DIFF_SIZE = 1_000_000
 
-function useLineDiffCount(
+interface LineDiffStats {
+    added: number
+    removed: number
+}
+
+type LineDiffResult =
+    | { type: 'loading' }
+    | { type: 'binary' }
+    | { type: 'dateOnly' }
+    | { type: 'stats'; stats: LineDiffStats }
+
+function useLineDiff(
     entry: CompareEntry | undefined,
     leftDir: string,
     rightDir: string,
-): number | null {
-    const [count, setCount] = useState<number | null>(null)
+): LineDiffResult | null {
+    const [result, setResult] = useState<LineDiffResult | null>(null)
     const prevPathRef = useRef<string | null>(null)
 
     useEffect(() => {
@@ -62,7 +74,7 @@ function useLineDiffCount(
             || !entry.left
             || !entry.right
         ) {
-            setCount(null)
+            setResult(null)
             prevPathRef.current = null
             return
         }
@@ -74,7 +86,7 @@ function useLineDiffCount(
             entry.left.size > MAX_DIFF_SIZE
             || entry.right.size > MAX_DIFF_SIZE
         ) {
-            setCount(null)
+            setResult(null)
             return
         }
 
@@ -90,26 +102,31 @@ function useLineDiffCount(
                     fsp.readFile(rightPath),
                 ])
                 if (isBinary(leftBuf) || isBinary(rightBuf)) {
-                    if (!cancelled) setCount(-1)
+                    if (!cancelled) setResult({ type: 'binary' })
                     return
                 }
                 const changes = diffLines(
                     leftBuf.toString('utf-8'),
                     rightBuf.toString('utf-8'),
                 )
-                let diffLineCount = 0
+                let added = 0
+                let removed = 0
                 for (const change of changes) {
-                    if (change.added || change.removed) {
-                        diffLineCount += change.count ?? 0
-                    }
+                    if (change.added) added += change.count ?? 0
+                    else if (change.removed) removed += change.count ?? 0
                 }
-                if (!cancelled) setCount(diffLineCount)
+                if (added === 0 && removed === 0) {
+                    if (!cancelled) setResult({ type: 'dateOnly' })
+                } else {
+                    if (!cancelled)
+                        setResult({ type: 'stats', stats: { added, removed } })
+                }
             } catch {
-                if (!cancelled) setCount(null)
+                if (!cancelled) setResult(null)
             }
         }
 
-        setCount(null)
+        setResult({ type: 'loading' })
         compute()
 
         return () => {
@@ -123,19 +140,40 @@ function useLineDiffCount(
         rightDir,
     ])
 
-    return count
+    return result
+}
+
+function sizeInfo(entry: CompareEntry): string {
+    if (entry.isDirectory) return ''
+    const leftSize = entry.left?.size
+    const rightSize = entry.right?.size
+    if (leftSize != null && rightSize != null) {
+        if (leftSize === rightSize) return formatSize(leftSize).trim()
+        return `${formatSize(leftSize).trim()} → ${formatSize(rightSize).trim()}`
+    }
+    if (leftSize != null) return formatSize(leftSize).trim()
+    if (rightSize != null) return formatSize(rightSize).trim()
+    return ''
+}
+
+const SEP = ' · '
+
+function joinTextParts(parts: string[]): string {
+    return parts.filter((p) => p !== '').join(SEP)
 }
 
 function getEntryInfo(
     entry: CompareEntry | undefined,
     leftScan: ScanResult | null,
     rightScan: ScanResult | null,
-    lineDiffCount: number | null,
+    lineDiff: LineDiffResult | null,
     compareDates: boolean,
     compareContents: boolean,
     dateFormatter: Intl.DateTimeFormat,
-): string {
-    if (!entry) return ''
+): ReactNode | null {
+    if (!entry) return null
+
+    const pathPrefix = entry.depth > 0 ? entry.relativePath : ''
 
     // Paired directory info
     if (entry.pairedLeftPath && entry.pairedRightPath) {
@@ -153,19 +191,22 @@ function getEntryInfo(
             count > 0 ?
                 `${count} different file${count !== 1 ? 's' : ''}`
             :   'identical'
-        return `paired: ${leftName}/ → ${rightName}/ (${diffInfo})`
+        return joinTextParts([
+            pathPrefix,
+            `paired: ${leftName}/ → ${rightName}/ (${diffInfo})`,
+        ])
     }
 
     switch (entry.status) {
         case 'identical':
-            return 'identical'
+            return joinTextParts([pathPrefix, 'identical', sizeInfo(entry)])
         case 'only-left':
-            return 'only in left'
+            return joinTextParts([pathPrefix, 'only in left', sizeInfo(entry)])
         case 'only-right':
-            return 'only in right'
-        case 'modified':
+            return joinTextParts([pathPrefix, 'only in right', sizeInfo(entry)])
+        case 'modified': {
             if (entry.isDirectory) {
-                if (!leftScan || !rightScan) return ''
+                if (!leftScan || !rightScan) return joinTextParts([pathPrefix])
                 const count = countDescendantDiffs(
                     leftScan,
                     rightScan,
@@ -173,11 +214,20 @@ function getEntryInfo(
                     entry.relativePath,
                     { compareDates, compareContents },
                 )
-                return `${count} different file${count !== 1 ? 's' : ''}`
+                return joinTextParts([
+                    pathPrefix,
+                    `${count} different file${count !== 1 ? 's' : ''}`,
+                ])
             }
-            if (lineDiffCount === null) return '...'
-            if (lineDiffCount === -1) return 'binary files differ'
-            if (lineDiffCount === 0) {
+            if (!lineDiff || lineDiff.type === 'loading')
+                return joinTextParts([pathPrefix, '...'])
+            if (lineDiff.type === 'binary')
+                return joinTextParts([
+                    pathPrefix,
+                    'binary files differ',
+                    sizeInfo(entry),
+                ])
+            if (lineDiff.type === 'dateOnly') {
                 const leftDate =
                     entry.left ?
                         dateFormatter.format(entry.left.modifiedTime)
@@ -186,11 +236,26 @@ function getEntryInfo(
                     entry.right ?
                         dateFormatter.format(entry.right.modifiedTime)
                     :   ''
-                return `${leftDate} → ${rightDate}`
+                return joinTextParts([
+                    pathPrefix,
+                    `${leftDate} → ${rightDate}`,
+                    sizeInfo(entry),
+                ])
             }
-            return `${lineDiffCount} different line${lineDiffCount !== 1 ? 's' : ''}`
+            const { added, removed } = lineDiff.stats
+            const prefix = joinTextParts([pathPrefix])
+            const suffix = joinTextParts([sizeInfo(entry)])
+            return (
+                <>
+                    {prefix !== '' && `${prefix}${SEP}`}
+                    <Text color='green'>+{added}</Text>{' '}
+                    <Text color='red'>-{removed}</Text>
+                    {suffix !== '' && `${SEP}${suffix}`}
+                </>
+            )
+        }
         default:
-            return ''
+            return null
     }
 }
 
@@ -217,7 +282,7 @@ export function StatusBar({
     sortMode,
     sortDirection,
 }: StatusBarProps) {
-    const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
+    const lineDiff = useLineDiff(focusedEntry, leftDir, rightDir)
     const dateFormatter = useMemo(
         () =>
             new Intl.DateTimeFormat(undefined, {
@@ -239,7 +304,7 @@ export function StatusBar({
                 focusedEntry,
                 leftScan,
                 rightScan,
-                lineDiffCount,
+                lineDiff,
                 compareDates,
                 compareContents,
                 dateFormatter,
@@ -252,7 +317,7 @@ export function StatusBar({
             focusedEntry?.pairedRightPath,
             leftScan,
             rightScan,
-            lineDiffCount,
+            lineDiff,
             compareDates,
             compareContents,
             dateFormatter,
@@ -299,7 +364,7 @@ export function StatusBar({
                         {searchQuery !== '' && (
                             <Text color='cyan'>[filter: {searchQuery}] </Text>
                         )}
-                        {entryInfo !== '' && <Text dimColor>{entryInfo}</Text>}
+                        {entryInfo != null && <Text dimColor>{entryInfo}</Text>}
                     </Box>
                     {toastMessage && <Text dimColor>{toastMessage}</Text>}
                 </Box>
