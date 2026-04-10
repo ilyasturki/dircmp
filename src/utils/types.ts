@@ -41,7 +41,7 @@ export type DialogType =
 
 export type FilterMode = 'all' | 'diff-only'
 
-export type SortMode = 'name' | 'size'
+export type SortMode = 'name' | 'size' | 'date' | 'status'
 export type SortDirection = 'asc' | 'desc'
 
 export type Action =

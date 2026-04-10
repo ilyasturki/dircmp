@@ -50,6 +50,34 @@ function sortEntries(entries: CompareEntry[], opts: SortOptions): void {
                     sensitivity: 'base',
                 })
             }
+            case 'date': {
+                const dateA = Math.max(
+                    a.left?.modifiedTime.getTime() ?? 0,
+                    a.right?.modifiedTime.getTime() ?? 0,
+                )
+                const dateB = Math.max(
+                    b.left?.modifiedTime.getTime() ?? 0,
+                    b.right?.modifiedTime.getTime() ?? 0,
+                )
+                if (dateA !== dateB) return dir * (dateA - dateB)
+                return a.name.localeCompare(b.name, undefined, {
+                    sensitivity: 'base',
+                })
+            }
+            case 'status': {
+                const statusOrder: Record<DiffStatus, number> = {
+                    'only-left': 0,
+                    'only-right': 1,
+                    modified: 2,
+                    identical: 3,
+                }
+                const orderA = statusOrder[a.status]
+                const orderB = statusOrder[b.status]
+                if (orderA !== orderB) return dir * (orderA - orderB)
+                return a.name.localeCompare(b.name, undefined, {
+                    sensitivity: 'base',
+                })
+            }
         }
     })
 }

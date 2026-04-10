@@ -8,6 +8,8 @@ import { Dialog } from './dialog'
 const sortModes: { mode: SortMode; label: string }[] = [
     { mode: 'name', label: 'Name' },
     { mode: 'size', label: 'Size' },
+    { mode: 'date', label: 'Date modified' },
+    { mode: 'status', label: 'Status' },
 ]
 
 interface SortDialogProps {
