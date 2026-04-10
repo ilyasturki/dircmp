@@ -13,16 +13,14 @@ Terminal TUI for comparing two directories side by side.
 ## Features
 
 - **Side-by-side tree view** with color-coded diff status
-- **Vim keybindings** for fast navigation (`j/k/h/l`, `gg/G`, `Ctrl+D/U`)
 - **Built-in unified diff viewer** with line-level added/removed counts
 - **Copy, delete, and sync** entries between directories
 - **Gitignore-style ignore patterns** (global and per-directory-pair)
-- **Live search filtering** with `/`
 - **Remote directory support** via rclone (SFTP, S3, GCS)
-- **Shell completions** for bash, zsh, and fish
+- **Manual directory pairing** for renamed directories
+- **Content-based comparison** via SHA-256 hashing
+- **Sortable entries** by name, size, date modified, or status
 - **Configurable** preferences, keybindings, and external diff command
-- **Nerd Font icons** for file types
-- **Dark/light theme** auto-detection
 
 ## Installation
 
@@ -178,6 +176,9 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 | `y` | Yank file path to clipboard |
 | `r` | Refresh comparison          |
 | `S` | Swap panels                 |
+| `s` | Open sort options           |
+| `m` | Mark/pair renamed directory |
+| `u` | Unpair directory            |
 
 ### Filtering & Config
 
@@ -205,16 +206,22 @@ Stored in `~/.config/dircmp/config.json`:
     "dateLocale": "en-US",
     "showHints": true,
     "compareDates": true,
+    "compareContents": true,
+    "nerdFont": true,
+    "dirsFirst": true,
     "diffCommand": "nvim -d"
 }
 ```
 
-| Option         | Description                                      |
-| -------------- | ------------------------------------------------ |
-| `dateLocale`   | Locale for date formatting                       |
-| `showHints`    | Show keyboard hints in the status bar            |
-| `compareDates` | Include modification dates in file comparison    |
-| `diffCommand`  | External diff command (e.g., `nvim -d`, `delta`) |
+| Option            | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `dateLocale`      | Locale for date formatting                       |
+| `showHints`       | Show keyboard hints in the status bar            |
+| `compareDates`    | Include modification dates in file comparison    |
+| `compareContents` | Hash file contents (SHA-256) to detect changes   |
+| `nerdFont`        | Use Nerd Font icons (falls back to ASCII)        |
+| `dirsFirst`       | List directories before files                    |
+| `diffCommand`     | External diff command (e.g., `nvim -d`, `delta`) |
 
 ### Ignore patterns
 

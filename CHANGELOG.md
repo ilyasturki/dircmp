@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.1.0]
+
+### Added
+
+- Sort options dialog with name, size, date modified, and status sort modes
+- Directories-first toggle in sort options
+- Content-based file comparison via SHA-256 hashing
+- Manual directory pairing for renamed directories
+- Nerd Font config option with ASCII fallback for non-nerd-font terminals
+- Hint text for compare contents preference
+
+### Fixed
+
+- Remove os-theme dependency that froze TUI in release builds
+- Show broken-link icon for broken symlinks
+- Correct ignore pattern matching for directory paths
+- Preserve cursor position across ignore pattern changes
+- Improve light mode contrast for dimmed selections
+- Unify directory icon color with row highlight on selection
+- Allow opening identical files in diff view
+- Deduplicate entry keys and disambiguate files from directories
+- Default `compareDates` option to false
+- Fix Homebrew binary permissions for shell completions
+
+### Performance
+
+- Memoize entry row components and lift panel width to reduce re-renders
+
 ## [1.0.3]
 
 ## [1.0.2]
