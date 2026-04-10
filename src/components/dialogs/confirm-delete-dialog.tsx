@@ -2,6 +2,7 @@ import type { Dispatch } from 'react'
 import fs from 'node:fs'
 import path from 'node:path'
 import { Box, Text, useInput } from 'ink'
+import { useState } from 'react'
 
 import type { Action, CompareEntry, PanelSide } from '~/utils/types'
 import { Dialog } from '../dialog'
@@ -29,9 +30,10 @@ export function ConfirmDeleteDialog({
 }: ConfirmDeleteDialogProps) {
     const dir = side === 'left' ? leftDir : rightDir
     const fullPath = path.join(dir, entry.relativePath)
+    const [selectedIndex, setSelectedIndex] = useState(1)
 
     useInput((input, key) => {
-        if (input === 'y' || key.return) {
+        if (input === 'y') {
             fs.rm(fullPath, { recursive: true, force: true }, () => {
                 dispatch({ type: 'DELETE_COMPLETE' })
                 refresh()
@@ -40,8 +42,32 @@ export function ConfirmDeleteDialog({
         }
         if (key.escape || input === 'n' || input === 'q') {
             dispatch({ type: 'CANCEL_DELETE' })
+            return
+        }
+        if (input === 'j' || key.downArrow) {
+            setSelectedIndex((i) => Math.min(i + 1, 1))
+            return
+        }
+        if (input === 'k' || key.upArrow) {
+            setSelectedIndex((i) => Math.max(i - 1, 0))
+            return
+        }
+        if (key.return) {
+            if (selectedIndex === 0) {
+                fs.rm(fullPath, { recursive: true, force: true }, () => {
+                    dispatch({ type: 'DELETE_COMPLETE' })
+                    refresh()
+                })
+            } else {
+                dispatch({ type: 'CANCEL_DELETE' })
+            }
         }
     })
+
+    const options = [
+        { label: 'Confirm', shortcut: 'y', color: 'green' },
+        { label: 'Cancel', shortcut: 'n', color: 'yellow' },
+    ] as const
 
     return (
         <Dialog
@@ -64,22 +90,27 @@ export function ConfirmDeleteDialog({
                 </Text>
                 <Text dimColor>{fullPath}</Text>
             </Box>
-            <Text>
-                <Text
-                    bold
-                    color='green'
-                >
-                    y
-                </Text>
-                {' confirm  '}
-                <Text
-                    bold
-                    color='yellow'
-                >
-                    n/Esc
-                </Text>
-                {' cancel'}
-            </Text>
+            <Box
+                flexDirection='column'
+                alignItems='center'
+            >
+                {options.map((opt, i) => (
+                    <Text key={opt.label}>
+                        {i === selectedIndex ?
+                            <Text
+                                bold
+                                inverse
+                                color={opt.color}
+                            >
+                                {` ${opt.label} (${opt.shortcut}) `}
+                            </Text>
+                        :   <Text
+                                dimColor
+                            >{` ${opt.label} (${opt.shortcut}) `}</Text>
+                        }
+                    </Text>
+                ))}
+            </Box>
         </Dialog>
     )
 }
