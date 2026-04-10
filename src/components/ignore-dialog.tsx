@@ -80,7 +80,11 @@ export function IgnoreDialog({
                 return
             }
             await savePairIgnorePattern(newPattern, leftDir, rightDir)
-            dispatch({ type: 'ADD_IGNORE_PATTERN', pattern: newPattern })
+            dispatch({
+                type: 'ADD_IGNORE_PATTERN',
+                scope: 'pair',
+                pattern: newPattern,
+            })
             refresh()
             setEditValue('')
             setError('')
@@ -98,7 +102,8 @@ export function IgnoreDialog({
             }
             await saveGlobalIgnorePatterns([...globalPatterns, newPattern])
             dispatch({
-                type: 'ADD_GLOBAL_IGNORE_PATTERN',
+                type: 'ADD_IGNORE_PATTERN',
+                scope: 'global',
                 pattern: newPattern,
             })
             refresh()
@@ -129,7 +134,8 @@ export function IgnoreDialog({
             )
             await saveGlobalIgnorePatterns(updated)
             dispatch({
-                type: 'UPDATE_GLOBAL_IGNORE_PATTERN',
+                type: 'UPDATE_IGNORE_PATTERN',
+                scope: 'global',
                 oldPattern,
                 newPattern,
             })
@@ -140,6 +146,7 @@ export function IgnoreDialog({
             await savePairIgnorePatterns(updated, leftDir, rightDir)
             dispatch({
                 type: 'UPDATE_IGNORE_PATTERN',
+                scope: 'pair',
                 oldPattern,
                 newPattern,
             })
@@ -156,7 +163,11 @@ export function IgnoreDialog({
         if (section === 'global') {
             const remaining = globalPatterns.filter((p) => p !== pattern)
             await saveGlobalIgnorePatterns(remaining)
-            dispatch({ type: 'REMOVE_GLOBAL_IGNORE_PATTERN', pattern })
+            dispatch({
+                type: 'REMOVE_IGNORE_PATTERN',
+                scope: 'global',
+                pattern,
+            })
             refresh()
             if (remaining.length === 0) {
                 setSection('pair')
@@ -167,7 +178,11 @@ export function IgnoreDialog({
         } else {
             const remaining = pairPatterns.filter((p) => p !== pattern)
             await savePairIgnorePatterns(remaining, leftDir, rightDir)
-            dispatch({ type: 'REMOVE_IGNORE_PATTERN', pattern })
+            dispatch({
+                type: 'REMOVE_IGNORE_PATTERN',
+                scope: 'pair',
+                pattern,
+            })
             refresh()
             if (remaining.length === 0 && globalPatterns.length > 0) {
                 setSection('global')

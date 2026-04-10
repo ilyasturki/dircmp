@@ -102,11 +102,16 @@ export function QuickIgnoreDialog({
 
         if (item.scope === 'pair') {
             await savePairIgnorePattern(item.pattern, leftDir, rightDir)
-            dispatch({ type: 'ADD_IGNORE_PATTERN', pattern: item.pattern })
+            dispatch({
+                type: 'ADD_IGNORE_PATTERN',
+                scope: 'pair',
+                pattern: item.pattern,
+            })
         } else {
             await saveGlobalIgnorePatterns([...globalPatterns, item.pattern])
             dispatch({
-                type: 'ADD_GLOBAL_IGNORE_PATTERN',
+                type: 'ADD_IGNORE_PATTERN',
+                scope: 'global',
                 pattern: item.pattern,
             })
         }

@@ -154,6 +154,61 @@ const SCROLL_CONFIG: Record<
     fullPageUp: { direction: 'up', factor: 1 },
 }
 
+export type MatchResult =
+    | { type: 'scroll'; direction: 'up' | 'down'; count: number }
+    | { type: 'sequence-partial' }
+    | { type: 'matched'; shortcut: Shortcut }
+    | null
+
+export function matchShortcut(
+    input: string,
+    key: import('ink').Key,
+    keymap: Shortcut[],
+    pendingKeys: string,
+    contentHeight: number,
+): MatchResult {
+    // Scroll shortcuts need dynamic count based on contentHeight
+    for (const shortcut of keymap) {
+        const scrollCfg = SCROLL_CONFIG[shortcut.id]
+        if (!scrollCfg) continue
+        if (!shortcut.match(input, key)) continue
+        return {
+            type: 'scroll',
+            direction: scrollCfg.direction,
+            count: Math.floor(contentHeight * scrollCfg.factor),
+        }
+    }
+
+    const pending = pendingKeys + input
+
+    // Check for sequence matches first
+    for (const shortcut of keymap) {
+        if (shortcut.mode !== 'global' && shortcut.mode !== 'browser') continue
+        if (!shortcut.sequence) continue
+        if (pending === shortcut.sequence) {
+            return { type: 'matched', shortcut }
+        }
+        if (
+            pending.length > 0
+            && shortcut.sequence.startsWith(pending)
+            && pending.length < shortcut.sequence.length
+        ) {
+            return { type: 'sequence-partial' }
+        }
+    }
+
+    // No sequence match — check normal shortcuts
+    for (const shortcut of keymap) {
+        if (shortcut.mode !== 'global' && shortcut.mode !== 'browser') continue
+        if (shortcut.sequence) continue
+        if (SCROLL_CONFIG[shortcut.id]) continue
+        if (!shortcut.match(input, key)) continue
+        return { type: 'matched', shortcut }
+    }
+
+    return null
+}
+
 export function useKeymap(
     state: AppState,
     keymap: Shortcut[],
@@ -177,77 +232,59 @@ export function useKeymap(
 
     useInput(
         (input, key) => {
-            // Scroll shortcuts need dynamic count based on contentHeight
-            for (const shortcut of keymap) {
-                const scrollCfg = SCROLL_CONFIG[shortcut.id]
-                if (!scrollCfg) continue
-                if (!shortcut.match(input, key)) continue
+            const result = matchShortcut(
+                input,
+                key,
+                keymap,
+                pendingKeyRef.current,
+                contentHeight,
+            )
+
+            if (!result) {
+                pendingKeyRef.current = ''
+                if (pendingTimerRef.current)
+                    clearTimeout(pendingTimerRef.current)
+                return
+            }
+
+            if (result.type === 'scroll') {
                 dispatch({
                     type: 'MOVE_CURSOR',
-                    direction: scrollCfg.direction,
-                    count: Math.floor(contentHeight * scrollCfg.factor),
+                    direction: result.direction,
+                    count: result.count,
                 })
                 return
             }
 
-            const pending = pendingKeyRef.current + input
-
-            // Check for sequence matches first
-            for (const shortcut of keymap) {
-                if (shortcut.mode !== 'global' && shortcut.mode !== 'browser')
-                    continue
-                if (!shortcut.sequence) continue
-                if (pending === shortcut.sequence) {
+            if (result.type === 'sequence-partial') {
+                pendingKeyRef.current = pendingKeyRef.current + input
+                if (pendingTimerRef.current)
+                    clearTimeout(pendingTimerRef.current)
+                pendingTimerRef.current = setTimeout(() => {
                     pendingKeyRef.current = ''
-                    if (pendingTimerRef.current)
-                        clearTimeout(pendingTimerRef.current)
-                    if (shortcut.effect.type === 'exit') exit()
-                    else dispatch(shortcut.effect.action)
-                    return
-                }
-                if (
-                    pending.length > 0
-                    && shortcut.sequence.startsWith(pending)
-                    && pending.length < shortcut.sequence.length
-                ) {
-                    pendingKeyRef.current = pending
-                    if (pendingTimerRef.current)
-                        clearTimeout(pendingTimerRef.current)
-                    pendingTimerRef.current = setTimeout(() => {
-                        pendingKeyRef.current = ''
-                    }, 500)
-                    return
-                }
+                }, 500)
+                return
             }
 
-            // No sequence match — clear pending and check normal shortcuts
+            // matched
             pendingKeyRef.current = ''
             if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
 
-            for (const shortcut of keymap) {
-                if (shortcut.mode !== 'global' && shortcut.mode !== 'browser')
-                    continue
-                if (shortcut.sequence) continue
-                if (SCROLL_CONFIG[shortcut.id]) continue
-                if (!shortcut.match(input, key)) continue
-
-                if (shortcut.effect.type === 'exit') {
-                    exit()
-                    return
-                }
-
-                executeAction(
-                    shortcut.effect.action,
-                    state,
-                    leftDir,
-                    rightDir,
-                    dispatch,
-                    exit,
-                    onRefresh,
-                    onShellOut,
-                )
+            if (result.shortcut.effect.type === 'exit') {
+                exit()
                 return
             }
+
+            executeAction(
+                result.shortcut.effect.action,
+                state,
+                leftDir,
+                rightDir,
+                dispatch,
+                exit,
+                onRefresh,
+                onShellOut,
+            )
         },
         { isActive },
     )

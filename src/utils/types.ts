@@ -80,13 +80,19 @@ export type Action =
     | { type: 'HIDE_QUICK_IGNORE' }
     | { type: 'SHOW_IGNORE_DIALOG' }
     | { type: 'HIDE_IGNORE_DIALOG' }
-    | { type: 'ADD_IGNORE_PATTERN'; pattern: string }
-    | { type: 'REMOVE_IGNORE_PATTERN'; pattern: string }
-    | { type: 'UPDATE_IGNORE_PATTERN'; oldPattern: string; newPattern: string }
-    | { type: 'ADD_GLOBAL_IGNORE_PATTERN'; pattern: string }
-    | { type: 'REMOVE_GLOBAL_IGNORE_PATTERN'; pattern: string }
     | {
-          type: 'UPDATE_GLOBAL_IGNORE_PATTERN'
+          type: 'ADD_IGNORE_PATTERN'
+          scope: 'pair' | 'global'
+          pattern: string
+      }
+    | {
+          type: 'REMOVE_IGNORE_PATTERN'
+          scope: 'pair' | 'global'
+          pattern: string
+      }
+    | {
+          type: 'UPDATE_IGNORE_PATTERN'
+          scope: 'pair' | 'global'
           oldPattern: string
           newPattern: string
       }

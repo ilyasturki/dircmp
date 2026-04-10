@@ -15,10 +15,8 @@ import type {
     SortDirection,
     SortMode,
 } from '~/utils/types'
-import {
-    countDescendantDiffs,
-    countDescendantDiffsCrossPath,
-} from '~/utils/compare'
+import { isBinary } from '~/utils/binary'
+import { countDescendantDiffs } from '~/utils/compare'
 import { KeyboardHints } from './keyboard-hints'
 import { SearchInput } from './search-input'
 
@@ -47,13 +45,6 @@ interface StatusBarProps {
 }
 
 const MAX_DIFF_SIZE = 1_000_000
-
-function isBinary(buffer: Buffer): boolean {
-    for (let i = 0; i < Math.min(buffer.length, 8000); i++) {
-        if (buffer[i] === 0) return true
-    }
-    return false
-}
 
 function useLineDiffCount(
     entry: CompareEntry | undefined,
@@ -149,7 +140,7 @@ function getEntryInfo(
     // Paired directory info
     if (entry.pairedLeftPath && entry.pairedRightPath) {
         if (!leftScan || !rightScan) return 'paired'
-        const count = countDescendantDiffsCrossPath(
+        const count = countDescendantDiffs(
             leftScan,
             rightScan,
             entry.pairedLeftPath,
@@ -178,6 +169,7 @@ function getEntryInfo(
                 const count = countDescendantDiffs(
                     leftScan,
                     rightScan,
+                    entry.relativePath,
                     entry.relativePath,
                     { compareDates, compareContents },
                 )

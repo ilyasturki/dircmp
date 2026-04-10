@@ -82,50 +82,59 @@ function sortEntries(entries: CompareEntry[], opts: SortOptions): void {
     })
 }
 
+function isFileDifferent(
+    left: FileEntry,
+    right: FileEntry,
+    options: CompareOptions,
+): boolean {
+    if (left.size !== right.size) return true
+    if (
+        options.compareDates
+        && left.modifiedTime.getTime() !== right.modifiedTime.getTime()
+    )
+        return true
+    if (
+        options.compareContents
+        && left.contentHash !== null
+        && right.contentHash !== null
+        && left.contentHash !== right.contentHash
+    )
+        return true
+    return false
+}
+
+function collectDescendantFiles(
+    scan: ScanResult,
+    dirPath: string,
+): Map<string, FileEntry> {
+    const prefix = dirPath === '' ? '' : dirPath + path.sep
+    const bySuffix = new Map<string, FileEntry>()
+    for (const [relPath, entry] of scan) {
+        if (relPath.startsWith(prefix) && !entry.isDirectory) {
+            bySuffix.set(relPath.slice(prefix.length), entry)
+        }
+    }
+    return bySuffix
+}
+
 function hasDescendantDiff(
     leftScan: ScanResult,
     rightScan: ScanResult,
-    dirPath: string,
+    leftDirPath: string,
+    rightDirPath: string,
     options: CompareOptions,
 ): boolean {
-    const prefix = dirPath === '' ? '' : dirPath + path.sep
+    const leftFiles = collectDescendantFiles(leftScan, leftDirPath)
+    const rightFiles = collectDescendantFiles(rightScan, rightDirPath)
 
-    const leftPaths = new Set<string>()
-    for (const [relPath, entry] of leftScan) {
-        if (relPath.startsWith(prefix) && !entry.isDirectory) {
-            leftPaths.add(relPath)
-        }
-    }
-
-    const rightPaths = new Set<string>()
-    for (const [relPath, entry] of rightScan) {
-        if (relPath.startsWith(prefix) && !entry.isDirectory) {
-            rightPaths.add(relPath)
-        }
-    }
-
-    for (const p of leftPaths) {
-        const rightEntry = rightScan.get(p)
-        if (!rightEntry) return true
-        const leftEntry = leftScan.get(p)!
-        if (leftEntry.size !== rightEntry.size) return true
-        if (
-            options.compareDates
-            && leftEntry.modifiedTime.getTime()
-                !== rightEntry.modifiedTime.getTime()
-        )
-            return true
-        if (
-            options.compareContents
-            && leftEntry.contentHash !== null
-            && rightEntry.contentHash !== null
-            && leftEntry.contentHash !== rightEntry.contentHash
-        )
+    for (const [suffix, leftEntry] of leftFiles) {
+        const rightEntry = rightFiles.get(suffix)
+        if (!rightEntry || isFileDifferent(leftEntry, rightEntry, options))
             return true
     }
 
-    for (const p of rightPaths) {
-        if (!leftPaths.has(p)) return true
+    for (const suffix of rightFiles.keys()) {
+        if (!leftFiles.has(suffix)) return true
     }
 
     return false
@@ -134,151 +143,23 @@ function hasDescendantDiff(
 export function countDescendantDiffs(
     leftScan: ScanResult,
     rightScan: ScanResult,
-    dirPath: string,
-    options: CompareOptions,
-): number {
-    const prefix = dirPath === '' ? '' : dirPath + path.sep
-    let count = 0
-
-    const leftPaths = new Set<string>()
-    for (const [relPath, entry] of leftScan) {
-        if (relPath.startsWith(prefix) && !entry.isDirectory) {
-            leftPaths.add(relPath)
-        }
-    }
-
-    const rightPaths = new Set<string>()
-    for (const [relPath, entry] of rightScan) {
-        if (relPath.startsWith(prefix) && !entry.isDirectory) {
-            rightPaths.add(relPath)
-        }
-    }
-
-    for (const p of leftPaths) {
-        const rightEntry = rightScan.get(p)
-        if (!rightEntry) {
-            count++
-            continue
-        }
-        const leftEntry = leftScan.get(p)!
-        if (
-            leftEntry.size !== rightEntry.size
-            || (options.compareDates
-                && leftEntry.modifiedTime.getTime()
-                    !== rightEntry.modifiedTime.getTime())
-            || (options.compareContents
-                && leftEntry.contentHash !== null
-                && rightEntry.contentHash !== null
-                && leftEntry.contentHash !== rightEntry.contentHash)
-        ) {
-            count++
-        }
-    }
-
-    for (const p of rightPaths) {
-        if (!leftPaths.has(p)) count++
-    }
-
-    return count
-}
-
-function hasDescendantDiffCrossPath(
-    leftScan: ScanResult,
-    rightScan: ScanResult,
-    leftDirPath: string,
-    rightDirPath: string,
-    options: CompareOptions,
-): boolean {
-    const leftPrefix = leftDirPath === '' ? '' : leftDirPath + path.sep
-    const rightPrefix = rightDirPath === '' ? '' : rightDirPath + path.sep
-
-    const leftBySuffix = new Map<string, FileEntry>()
-    for (const [relPath, entry] of leftScan) {
-        if (relPath.startsWith(leftPrefix) && !entry.isDirectory) {
-            leftBySuffix.set(relPath.slice(leftPrefix.length), entry)
-        }
-    }
-
-    const rightBySuffix = new Map<string, FileEntry>()
-    for (const [relPath, entry] of rightScan) {
-        if (relPath.startsWith(rightPrefix) && !entry.isDirectory) {
-            rightBySuffix.set(relPath.slice(rightPrefix.length), entry)
-        }
-    }
-
-    for (const [suffix, leftEntry] of leftBySuffix) {
-        const rightEntry = rightBySuffix.get(suffix)
-        if (!rightEntry) return true
-        if (leftEntry.size !== rightEntry.size) return true
-        if (
-            options.compareDates
-            && leftEntry.modifiedTime.getTime()
-                !== rightEntry.modifiedTime.getTime()
-        )
-            return true
-        if (
-            options.compareContents
-            && leftEntry.contentHash !== null
-            && rightEntry.contentHash !== null
-            && leftEntry.contentHash !== rightEntry.contentHash
-        )
-            return true
-    }
-
-    for (const suffix of rightBySuffix.keys()) {
-        if (!leftBySuffix.has(suffix)) return true
-    }
-
-    return false
-}
-
-export function countDescendantDiffsCrossPath(
-    leftScan: ScanResult,
-    rightScan: ScanResult,
     leftDirPath: string,
     rightDirPath: string,
     options: CompareOptions,
 ): number {
-    const leftPrefix = leftDirPath === '' ? '' : leftDirPath + path.sep
-    const rightPrefix = rightDirPath === '' ? '' : rightDirPath + path.sep
+    const leftFiles = collectDescendantFiles(leftScan, leftDirPath)
+    const rightFiles = collectDescendantFiles(rightScan, rightDirPath)
     let count = 0
 
-    const leftBySuffix = new Map<string, FileEntry>()
-    for (const [relPath, entry] of leftScan) {
-        if (relPath.startsWith(leftPrefix) && !entry.isDirectory) {
-            leftBySuffix.set(relPath.slice(leftPrefix.length), entry)
-        }
-    }
-
-    const rightBySuffix = new Map<string, FileEntry>()
-    for (const [relPath, entry] of rightScan) {
-        if (relPath.startsWith(rightPrefix) && !entry.isDirectory) {
-            rightBySuffix.set(relPath.slice(rightPrefix.length), entry)
-        }
-    }
-
-    for (const [suffix, leftEntry] of leftBySuffix) {
-        const rightEntry = rightBySuffix.get(suffix)
-        if (!rightEntry) {
-            count++
-            continue
-        }
-        if (
-            leftEntry.size !== rightEntry.size
-            || (options.compareDates
-                && leftEntry.modifiedTime.getTime()
-                    !== rightEntry.modifiedTime.getTime())
-            || (options.compareContents
-                && leftEntry.contentHash !== null
-                && rightEntry.contentHash !== null
-                && leftEntry.contentHash !== rightEntry.contentHash)
-        ) {
+    for (const [suffix, leftEntry] of leftFiles) {
+        const rightEntry = rightFiles.get(suffix)
+        if (!rightEntry || isFileDifferent(leftEntry, rightEntry, options)) {
             count++
         }
     }
 
-    for (const suffix of rightBySuffix.keys()) {
-        if (!leftBySuffix.has(suffix)) count++
+    for (const suffix of rightFiles.keys()) {
+        if (!leftFiles.has(suffix)) count++
     }
 
     return count
@@ -336,7 +217,7 @@ export function compareAtPath(
 
             const status: DiffStatus =
                 (
-                    hasDescendantDiffCrossPath(
+                    hasDescendantDiff(
                         leftScan,
                         rightScan,
                         leftPath,
@@ -404,46 +285,23 @@ export function compareAtPath(
         } else if (!right) {
             status = 'only-left'
         } else if (isDir) {
-            if (samePath) {
-                status =
-                    (
-                        hasDescendantDiff(
-                            leftScan,
-                            rightScan,
-                            canonicalRelPath,
-                            options,
-                        )
-                    ) ?
-                        'modified'
-                    :   'identical'
-            } else {
-                status =
-                    (
-                        hasDescendantDiffCrossPath(
-                            leftScan,
-                            rightScan,
-                            left.relativePath,
-                            right.relativePath,
-                            options,
-                        )
-                    ) ?
-                        'modified'
-                    :   'identical'
-            }
-        } else {
-            const sizeMatch = left.size === right.size
-            const dateMatch =
-                !options.compareDates
-                || left.modifiedTime.getTime() === right.modifiedTime.getTime()
-            const contentMatch =
-                !options.compareContents
-                || left.contentHash === null
-                || right.contentHash === null
-                || left.contentHash === right.contentHash
+            const leftPath = samePath ? canonicalRelPath : left.relativePath
+            const rightPath = samePath ? canonicalRelPath : right.relativePath
             status =
-                sizeMatch && dateMatch && contentMatch ?
-                    'identical'
-                :   'modified'
+                (
+                    hasDescendantDiff(
+                        leftScan,
+                        rightScan,
+                        leftPath,
+                        rightPath,
+                        options,
+                    )
+                ) ?
+                    'modified'
+                :   'identical'
+        } else {
+            status =
+                isFileDifferent(left, right, options) ? 'modified' : 'identical'
         }
 
         entries.push({

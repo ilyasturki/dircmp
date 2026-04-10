@@ -6,6 +6,7 @@ import { Box, Text, useInput } from 'ink'
 import { useEffect, useState } from 'react'
 
 import type { Action, CompareEntry } from '~/utils/types'
+import { isBinary } from '~/utils/binary'
 
 interface DiffViewProps {
     entry: CompareEntry
@@ -24,13 +25,6 @@ interface DiffLine {
 }
 
 const MAX_DIFF_SIZE = 1_000_000
-
-function isBinary(buffer: Buffer): boolean {
-    for (let i = 0; i < Math.min(buffer.length, 8000); i++) {
-        if (buffer[i] === 0) return true
-    }
-    return false
-}
 
 function computeDiffLines(
     leftContent: string,

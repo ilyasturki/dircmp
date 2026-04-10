@@ -131,24 +131,54 @@ function removeDescendants(
     return next
 }
 
+/** Recompute entries from updated state fields and clamp cursor to bounds. */
+function withRecompute(state: AppState, updates: Partial<AppState>): AppState {
+    const newState = { ...state, ...updates } as AppState
+    newState.entries = recomputeEntries(newState)
+    newState.cursorIndex = Math.min(
+        state.cursorIndex,
+        Math.max(0, newState.entries.length - 1),
+    )
+    return newState
+}
+
+function toggleExpandDir(state: AppState): AppState {
+    const entry = state.entries[state.cursorIndex]
+    if (!entry || !entry.isDirectory) return state
+    const expandedDirs =
+        state.expandedDirs.has(entry.relativePath) ?
+            removeDescendants(state.expandedDirs, entry.relativePath)
+        :   new Set(state.expandedDirs).add(entry.relativePath)
+    return withRecompute(state, { expandedDirs })
+}
+
+function collectAllDirs(state: AppState): Set<string> {
+    const dirs = new Set<string>()
+    if (state.leftScan) {
+        for (const [, e] of state.leftScan) {
+            if (e.isDirectory) dirs.add(e.relativePath)
+        }
+    }
+    if (state.rightScan) {
+        for (const [, e] of state.rightScan) {
+            if (e.isDirectory) dirs.add(e.relativePath)
+        }
+    }
+    return dirs
+}
+
 export function reducer(state: AppState, action: Action): AppState {
     switch (action.type) {
         case 'SCAN_COMPLETE': {
-            const newState = {
-                ...state,
+            const result = withRecompute(state, {
                 leftScan: action.leftScan,
                 rightScan: action.rightScan,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            newState.scrollOffset = Math.min(
+            })
+            result.scrollOffset = Math.min(
                 state.scrollOffset,
-                Math.max(0, newState.entries.length - 1),
+                Math.max(0, result.entries.length - 1),
             )
-            return newState
+            return result
         }
         case 'SCAN_ERROR':
             return { ...state, error: action.error }
@@ -176,78 +206,27 @@ export function reducer(state: AppState, action: Action): AppState {
             }
         case 'FOCUS_PANEL':
             return { ...state, focusedPanel: action.panel }
-        case 'NAVIGATE_INTO': {
-            const entry = state.entries[state.cursorIndex]
-            if (!entry || !entry.isDirectory) return state
-            let expandedDirs: Set<string>
-            if (state.expandedDirs.has(entry.relativePath)) {
-                expandedDirs = removeDescendants(
-                    state.expandedDirs,
-                    entry.relativePath,
-                )
-            } else {
-                expandedDirs = new Set(state.expandedDirs)
-                expandedDirs.add(entry.relativePath)
-            }
-            const newState = {
-                ...state,
-                expandedDirs,
-                cursorIndex: state.cursorIndex,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                newState.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
-        case 'OPEN_DIFF': {
-            const entry = state.entries[state.cursorIndex]
-            if (!entry || !entry.isDirectory) return state
-            let expandedDirs: Set<string>
-            if (state.expandedDirs.has(entry.relativePath)) {
-                expandedDirs = removeDescendants(
-                    state.expandedDirs,
-                    entry.relativePath,
-                )
-            } else {
-                expandedDirs = new Set(state.expandedDirs)
-                expandedDirs.add(entry.relativePath)
-            }
-            const newState = {
-                ...state,
-                expandedDirs,
-                cursorIndex: state.cursorIndex,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                newState.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
+        case 'NAVIGATE_INTO':
+        case 'OPEN_DIFF':
+            return toggleExpandDir(state)
         case 'COLLAPSE_PARENT': {
             const entry = state.entries[state.cursorIndex]
             if (!entry) return state
 
-            const parts = entry.relativePath.split('/')
             if (
                 entry.isDirectory
                 && state.expandedDirs.has(entry.relativePath)
             ) {
-                const expandedDirs = removeDescendants(
-                    state.expandedDirs,
-                    entry.relativePath,
-                )
-                const newState = { ...state, expandedDirs }
-                newState.entries = recomputeEntries(newState)
-                newState.cursorIndex = Math.min(
-                    state.cursorIndex,
-                    Math.max(0, newState.entries.length - 1),
-                )
-                return newState
+                return withRecompute(state, {
+                    expandedDirs: removeDescendants(
+                        state.expandedDirs,
+                        entry.relativePath,
+                    ),
+                })
             }
 
+            // Find nearest expanded ancestor
+            const parts = entry.relativePath.split('/')
             let ancestorPath = ''
             let foundAncestor = ''
             for (let i = 0; i < parts.length - 1; i++) {
@@ -257,28 +236,21 @@ export function reducer(state: AppState, action: Action): AppState {
                     foundAncestor = ancestorPath
                 }
             }
-
             if (!foundAncestor) return state
 
-            const expandedDirs = removeDescendants(
-                state.expandedDirs,
-                foundAncestor,
-            )
-            const newState = { ...state, expandedDirs }
-            newState.entries = recomputeEntries(newState)
-            const ancestorIndex = newState.entries.findIndex(
+            const result = withRecompute(state, {
+                expandedDirs: removeDescendants(
+                    state.expandedDirs,
+                    foundAncestor,
+                ),
+            })
+            const ancestorIndex = result.entries.findIndex(
                 (e) => e.relativePath === foundAncestor,
             )
-            newState.cursorIndex =
-                ancestorIndex >= 0 ? ancestorIndex : (
-                    Math.min(
-                        state.cursorIndex,
-                        Math.max(0, newState.entries.length - 1),
-                    )
-                )
-            return newState
+            if (ancestorIndex >= 0) result.cursorIndex = ancestorIndex
+            return result
         }
-        case 'REFRESH': {
+        case 'REFRESH':
             return {
                 ...state,
                 leftScan: null,
@@ -287,66 +259,34 @@ export function reducer(state: AppState, action: Action): AppState {
                 swapped: false,
                 pendingPairMark: null,
             }
-        }
         case 'SWAP_PANELS': {
-            const flippedPanel: PanelSide =
-                state.focusedPanel === 'left' ? 'right' : 'left'
             const swappedPairings = new Map<string, string>()
             for (const [left, right] of state.manualPairings) {
                 swappedPairings.set(right, left)
             }
-            const newState: AppState = {
-                ...state,
+            return withRecompute(state, {
                 leftScan: state.rightScan,
                 rightScan: state.leftScan,
                 swapped: !state.swapped,
-                focusedPanel: flippedPanel,
+                focusedPanel: state.focusedPanel === 'left' ? 'right' : 'left',
                 manualPairings: swappedPairings,
                 pendingPairMark: null,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
+            })
         }
         case 'EXPAND_ALL': {
             if (!state.leftScan || !state.rightScan) return state
-            const expandedDirs = new Set<string>()
-            for (const [, entry] of state.leftScan) {
-                if (entry.isDirectory) expandedDirs.add(entry.relativePath)
-            }
-            for (const [, entry] of state.rightScan) {
-                if (entry.isDirectory) expandedDirs.add(entry.relativePath)
-            }
-            const newState = { ...state, expandedDirs }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
+            return withRecompute(state, {
+                expandedDirs: collectAllDirs(state),
+            })
         }
-        case 'COLLAPSE_ALL': {
-            const newState = { ...state, expandedDirs: new Set<string>() }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
-        case 'TOGGLE_FILTER': {
-            const filterMode = state.filterMode === 'all' ? 'diff-only' : 'all'
-            const newState = { ...state, filterMode } as AppState
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
+        case 'COLLAPSE_ALL':
+            return withRecompute(state, {
+                expandedDirs: new Set<string>(),
+            })
+        case 'TOGGLE_FILTER':
+            return withRecompute(state, {
+                filterMode: state.filterMode === 'all' ? 'diff-only' : 'all',
+            })
         case 'COPY_COMPLETE': {
             const destKey = action.side === 'left' ? 'leftScan' : 'rightScan'
             const destScan = state[destKey]
@@ -355,30 +295,17 @@ export function reducer(state: AppState, action: Action): AppState {
             for (const fe of action.entries) {
                 patched.set(fe.relativePath, fe)
             }
-            const newState = { ...state, [destKey]: patched }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
+            return withRecompute(state, { [destKey]: patched })
         }
         case 'JUMP_TO_DIFF': {
             if (!state.leftScan || !state.rightScan) return state
             if (state.entries.length === 0) return state
 
             // Build fully expanded tree to see all files
-            const allDirs = new Set<string>()
-            for (const [, e] of state.leftScan) {
-                if (e.isDirectory) allDirs.add(e.relativePath)
-            }
-            for (const [, e] of state.rightScan) {
-                if (e.isDirectory) allDirs.add(e.relativePath)
-            }
             const allEntries = buildVisibleTree(
                 state.leftScan,
                 state.rightScan,
-                allDirs,
+                collectAllDirs(state),
                 state.filterMode,
                 {
                     compareDates: state.config.compareDates,
@@ -436,30 +363,34 @@ export function reducer(state: AppState, action: Action): AppState {
                 expandedDirs.add(ancestorPath)
             }
 
-            // Recompute entries and find target
-            const newState = { ...state, expandedDirs }
-            newState.entries = recomputeEntries(newState)
-            const newIdx = newState.entries.findIndex(
+            const result = withRecompute(state, { expandedDirs })
+            const newIdx = result.entries.findIndex(
                 (e) => e.relativePath === target!.relativePath,
             )
             if (newIdx === -1) return state
-            newState.cursorIndex = newIdx
-            return newState
+            result.cursorIndex = newIdx
+            return result
         }
         case 'YANK_PATH':
-            return state
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
             return state
         case 'CONFIRM_DELETE': {
             const entry = state.entries[state.cursorIndex]
             if (!entry) return state
-            const side = state.focusedPanel
-            const file = side === 'left' ? entry.left : entry.right
+            const file =
+                state.focusedPanel === 'left' ? entry.left : entry.right
             if (!file) return state
             return { ...state, dialog: 'deleteConfirm' }
         }
         case 'CANCEL_DELETE':
+        case 'HIDE_CONTEXT_MENU':
+        case 'HIDE_QUICK_IGNORE':
+        case 'HIDE_IGNORE_DIALOG':
+        case 'HIDE_HELP':
+        case 'HIDE_KEYBINDINGS_EDITOR':
+        case 'HIDE_RELEASE_NOTES':
+        case 'HIDE_SORT_MENU':
             return { ...state, dialog: null }
         case 'DELETE_COMPLETE':
             return {
@@ -474,9 +405,7 @@ export function reducer(state: AppState, action: Action): AppState {
             if (!entry) return state
             return { ...state, dialog: 'contextMenu' }
         }
-        case 'HIDE_CONTEXT_MENU':
-            return { ...state, dialog: null }
-        case 'TOGGLE_IGNORE': {
+        case 'TOGGLE_IGNORE':
             return {
                 ...state,
                 ignoreEnabled: !state.ignoreEnabled,
@@ -484,18 +413,13 @@ export function reducer(state: AppState, action: Action): AppState {
                 rightScan: null,
                 entries: [],
             }
-        }
         case 'SHOW_QUICK_IGNORE': {
             const entry = state.entries[state.cursorIndex]
             if (!entry) return state
             return { ...state, dialog: 'quickIgnore' }
         }
-        case 'HIDE_QUICK_IGNORE':
-            return { ...state, dialog: null }
         case 'SHOW_IGNORE_DIALOG':
             return { ...state, dialog: 'ignoreDialog' }
-        case 'HIDE_IGNORE_DIALOG':
-            return { ...state, dialog: null }
         case 'SET_IGNORE_PATTERNS':
             return {
                 ...state,
@@ -503,66 +427,39 @@ export function reducer(state: AppState, action: Action): AppState {
                 pairIgnorePatterns: action.pair,
             }
         case 'ADD_IGNORE_PATTERN': {
+            const key =
+                action.scope === 'global' ?
+                    'globalIgnorePatterns'
+                :   'pairIgnorePatterns'
             return {
                 ...state,
-                pairIgnorePatterns: [
-                    ...state.pairIgnorePatterns,
-                    action.pattern,
-                ],
+                [key]: [...state[key], action.pattern],
                 leftScan: null,
                 rightScan: null,
                 entries: [],
             }
         }
         case 'REMOVE_IGNORE_PATTERN': {
+            const key =
+                action.scope === 'global' ?
+                    'globalIgnorePatterns'
+                :   'pairIgnorePatterns'
             return {
                 ...state,
-                pairIgnorePatterns: state.pairIgnorePatterns.filter(
-                    (p) => p !== action.pattern,
-                ),
+                [key]: state[key].filter((p) => p !== action.pattern),
                 leftScan: null,
                 rightScan: null,
                 entries: [],
             }
         }
         case 'UPDATE_IGNORE_PATTERN': {
+            const key =
+                action.scope === 'global' ?
+                    'globalIgnorePatterns'
+                :   'pairIgnorePatterns'
             return {
                 ...state,
-                pairIgnorePatterns: state.pairIgnorePatterns.map((p) =>
-                    p === action.oldPattern ? action.newPattern : p,
-                ),
-                leftScan: null,
-                rightScan: null,
-                entries: [],
-            }
-        }
-        case 'ADD_GLOBAL_IGNORE_PATTERN': {
-            return {
-                ...state,
-                globalIgnorePatterns: [
-                    ...state.globalIgnorePatterns,
-                    action.pattern,
-                ],
-                leftScan: null,
-                rightScan: null,
-                entries: [],
-            }
-        }
-        case 'REMOVE_GLOBAL_IGNORE_PATTERN': {
-            return {
-                ...state,
-                globalIgnorePatterns: state.globalIgnorePatterns.filter(
-                    (p) => p !== action.pattern,
-                ),
-                leftScan: null,
-                rightScan: null,
-                entries: [],
-            }
-        }
-        case 'UPDATE_GLOBAL_IGNORE_PATTERN': {
-            return {
-                ...state,
-                globalIgnorePatterns: state.globalIgnorePatterns.map((p) =>
+                [key]: state[key].map((p) =>
                     p === action.oldPattern ? action.newPattern : p,
                 ),
                 leftScan: null,
@@ -574,8 +471,6 @@ export function reducer(state: AppState, action: Action): AppState {
             return { ...state }
         case 'SHOW_HELP':
             return { ...state, dialog: 'help' }
-        case 'HIDE_HELP':
-            return { ...state, dialog: null }
         case 'SHOW_DIFF_VIEW':
             return {
                 ...state,
@@ -590,29 +485,20 @@ export function reducer(state: AppState, action: Action): AppState {
                 dialog: state.dialog === 'preferences' ? null : 'preferences',
             }
         case 'UPDATE_CONFIG': {
-            const newState = { ...state, config: action.config }
             if (
                 action.config.compareDates !== state.config.compareDates
                 || action.config.compareContents
                     !== state.config.compareContents
                 || action.config.dirsFirst !== state.config.dirsFirst
             ) {
-                newState.entries = recomputeEntries(newState)
-                newState.cursorIndex = Math.min(
-                    state.cursorIndex,
-                    Math.max(0, newState.entries.length - 1),
-                )
+                return withRecompute(state, { config: action.config })
             }
-            return newState
+            return { ...state, config: action.config }
         }
         case 'SHOW_KEYBINDINGS_EDITOR':
             return { ...state, dialog: 'keybindingsEditor' }
-        case 'HIDE_KEYBINDINGS_EDITOR':
-            return { ...state, dialog: null }
         case 'SHOW_RELEASE_NOTES':
             return { ...state, dialog: 'releaseNotes' }
-        case 'HIDE_RELEASE_NOTES':
-            return { ...state, dialog: null }
         case 'KEYBINDINGS_UPDATED':
             return {
                 ...state,
@@ -620,30 +506,15 @@ export function reducer(state: AppState, action: Action): AppState {
             }
         case 'OPEN_SEARCH':
             return { ...state, searchInputActive: true }
-        case 'SET_SEARCH_QUERY': {
-            const newState = { ...state, searchQuery: action.query }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
+        case 'SET_SEARCH_QUERY':
+            return withRecompute(state, { searchQuery: action.query })
         case 'CLOSE_SEARCH':
             return { ...state, searchInputActive: false }
-        case 'CANCEL_SEARCH': {
-            const newState = {
-                ...state,
+        case 'CANCEL_SEARCH':
+            return withRecompute(state, {
                 searchInputActive: false,
                 searchQuery: '',
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
+            })
         case 'MARK_PAIR': {
             const entry = state.entries[state.cursorIndex]
             if (!entry || !entry.isDirectory) return state
@@ -653,18 +524,7 @@ export function reducer(state: AppState, action: Action): AppState {
             const side: PanelSide =
                 entry.status === 'only-left' ? 'left' : 'right'
 
-            if (!state.pendingPairMark) {
-                return {
-                    ...state,
-                    pendingPairMark: {
-                        relativePath: entry.relativePath,
-                        side,
-                    },
-                }
-            }
-
-            // Same side: replace the pending mark
-            if (state.pendingPairMark.side === side) {
+            if (!state.pendingPairMark || state.pendingPairMark.side === side) {
                 return {
                     ...state,
                     pendingPairMark: {
@@ -699,17 +559,10 @@ export function reducer(state: AppState, action: Action): AppState {
 
             const manualPairings = new Map(state.manualPairings)
             manualPairings.set(leftPath, rightPath)
-            const newState = {
-                ...state,
+            return withRecompute(state, {
                 pendingPairMark: null,
                 manualPairings,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
+            })
         }
         case 'UNPAIR': {
             const entry = state.entries[state.cursorIndex]
@@ -726,22 +579,10 @@ export function reducer(state: AppState, action: Action): AppState {
                 if (p.startsWith(prefix)) expandedDirs.delete(p)
             }
 
-            const newState = {
-                ...state,
-                manualPairings,
-                expandedDirs,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
+            return withRecompute(state, { manualPairings, expandedDirs })
         }
         case 'SHOW_SORT_MENU':
             return { ...state, dialog: 'sortMenu' }
-        case 'HIDE_SORT_MENU':
-            return { ...state, dialog: null }
         case 'SET_SORT': {
             const toggleDirection =
                 action.mode === state.sortMode ?
@@ -749,31 +590,16 @@ export function reducer(state: AppState, action: Action): AppState {
                         'desc'
                     :   'asc'
                 :   state.sortDirection
-            const newState = {
-                ...state,
+            return withRecompute(state, {
                 sortMode: action.mode,
                 sortDirection: toggleDirection,
                 dialog: action.close === false ? state.dialog : null,
-            }
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
+            })
         }
-        case 'TOGGLE_SORT_DIRECTION': {
-            const newState = {
-                ...state,
+        case 'TOGGLE_SORT_DIRECTION':
+            return withRecompute(state, {
                 sortDirection: state.sortDirection === 'asc' ? 'desc' : 'asc',
-            } as AppState
-            newState.entries = recomputeEntries(newState)
-            newState.cursorIndex = Math.min(
-                state.cursorIndex,
-                Math.max(0, newState.entries.length - 1),
-            )
-            return newState
-        }
+            })
         default:
             return state
     }
