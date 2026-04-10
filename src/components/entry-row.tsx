@@ -69,6 +69,7 @@ export const EntryRow = memo(function EntryRow({
     isDimSelected,
     panelWidth,
     searchQuery = '',
+    isPendingPairMark = false,
 }: {
     entry: CompareEntry
     fileEntry: FileEntry | undefined
@@ -76,6 +77,7 @@ export const EntryRow = memo(function EntryRow({
     isDimSelected: boolean
     panelWidth: number
     searchQuery?: string
+    isPendingPairMark?: boolean
 }) {
     const dateFormatter = useDateFormatter()
     const nerdFont = useNerdFont()
@@ -105,46 +107,68 @@ export const EntryRow = memo(function EntryRow({
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
     const errorSuffix = hasError ? ` ${errorIcon}` : ''
+    const pairMark = isPendingPairMark ? ' [m]' : ''
     const left = `${indent}${icon} ${name}`
     const right = `${size}  ${date}`
-    const maxLeft = panelWidth - right.length - errorSuffix.length - 1 // at least 1 space gap
+    const maxLeft =
+        panelWidth - right.length - errorSuffix.length - pairMark.length - 1 // at least 1 space gap
     const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left
     const gap = Math.max(
         1,
-        panelWidth - truncLeft.length - errorSuffix.length - right.length,
+        panelWidth
+            - truncLeft.length
+            - errorSuffix.length
+            - pairMark.length
+            - right.length,
     )
 
     const prefix = `${indent}${icon} `
     const visibleName = truncLeft.slice(prefix.length)
     const highlightedName = highlightMatches(visibleName, searchQuery)
 
+    const textProps = {
+        bold: entry.isDirectory,
+        dimColor,
+        color: colorIconOnly ? undefined : color,
+        inverse: isSelected,
+        backgroundColor: isDimSelected ? dimSelectedBg : undefined,
+    } as const
+
+    const nameContent =
+        colorIconOnly ?
+            <>
+                {indent}
+                <Text color={color}>{icon} </Text>
+                {highlightedName}
+            </>
+        :   <>
+                {prefix}
+                {highlightedName}
+            </>
+
+    const restContent = (
+        <>
+            {hasError && <Text color='red'> {errorIcon}</Text>}
+            {' '.repeat(gap)}
+            {right}
+        </>
+    )
+
     return (
         <Box width='100%'>
-            <Text
-                bold={entry.isDirectory}
-                dimColor={dimColor}
-                color={colorIconOnly ? undefined : color}
-                inverse={isSelected}
-                backgroundColor={isDimSelected ? dimSelectedBg : undefined}
-            >
-                {colorIconOnly ?
-                    <>
-                        {indent}
-                        <Text color={color}>{icon} </Text>
-                        {highlightedName}
-                        {hasError && <Text color='red'> {errorIcon}</Text>}
-                        {' '.repeat(gap)}
-                        {right}
-                    </>
-                :   <>
-                        {prefix}
-                        {highlightedName}
-                        {hasError && <Text color='red'> {errorIcon}</Text>}
-                        {' '.repeat(gap)}
-                        {right}
-                    </>
-                }
+            <Text {...textProps}>
+                {nameContent}
+                {isPendingPairMark && ' '}
             </Text>
+            {isPendingPairMark && (
+                <Text
+                    color='magenta'
+                    inverse={isSelected}
+                >
+                    [m]
+                </Text>
+            )}
+            <Text {...textProps}>{restContent}</Text>
         </Box>
     )
 })

@@ -191,6 +191,7 @@ export function App({
                             visibleHeight={contentHeight}
                             scrollOffset={scrollOffset}
                             searchQuery={state.searchQuery}
+                            pendingPairMark={state.pendingPairMark}
                         />
                     </NerdFontProvider>
                 </DateLocaleProvider>

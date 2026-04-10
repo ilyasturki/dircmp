@@ -1,7 +1,7 @@
 import os from 'node:os'
 import { Box } from 'ink'
 
-import type { CompareEntry, PanelSide } from '~/utils/types'
+import type { AppState, CompareEntry, PanelSide } from '~/utils/types'
 import { DirectoryPanel } from '~/components/directory-panel'
 
 const homeDir = os.homedir()
@@ -18,6 +18,7 @@ interface DirectoryDiffProps {
     visibleHeight: number
     scrollOffset: number
     searchQuery: string
+    pendingPairMark: AppState['pendingPairMark']
 }
 
 export function DirectoryDiff({
@@ -32,6 +33,7 @@ export function DirectoryDiff({
     visibleHeight,
     scrollOffset,
     searchQuery,
+    pendingPairMark,
 }: DirectoryDiffProps) {
     return (
         <Box flexGrow={1}>
@@ -44,6 +46,7 @@ export function DirectoryDiff({
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
                 searchQuery={searchQuery}
+                pendingPairMark={pendingPairMark}
             />
             <DirectoryPanel
                 rootPath={rightLabel ?? rightDir.replace(homeDir, '~')}
@@ -54,6 +57,7 @@ export function DirectoryDiff({
                 visibleHeight={visibleHeight}
                 scrollOffset={scrollOffset}
                 searchQuery={searchQuery}
+                pendingPairMark={pendingPairMark}
             />
         </Box>
     )

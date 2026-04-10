@@ -1,7 +1,12 @@
 import path from 'node:path'
 import { Box, Text, useStdout } from 'ink'
 
-import type { CompareEntry, FileEntry, PanelSide } from '~/utils/types'
+import type {
+    AppState,
+    CompareEntry,
+    FileEntry,
+    PanelSide,
+} from '~/utils/types'
 import { EntryRow, MissingEntryRow } from './entry-row'
 import { PanelBox } from './panel-box'
 
@@ -14,6 +19,7 @@ interface DirectoryPanelProps {
     visibleHeight: number
     scrollOffset: number
     searchQuery: string
+    pendingPairMark: AppState['pendingPairMark']
 }
 
 function EmptyPanel() {
@@ -33,6 +39,7 @@ export function DirectoryPanel({
     visibleHeight,
     scrollOffset,
     searchQuery,
+    pendingPairMark,
 }: DirectoryPanelProps) {
     const { stdout } = useStdout()
     const columns = stdout?.columns ?? 80
@@ -92,6 +99,11 @@ export function DirectoryPanel({
                         displayEntry = { ...entry, name: displayName }
                     }
 
+                    const isPendingPairMark =
+                        pendingPairMark !== null
+                        && pendingPairMark.relativePath === entry.relativePath
+                        && pendingPairMark.side === side
+
                     return (
                         <EntryRow
                             key={entryKey}
@@ -101,6 +113,7 @@ export function DirectoryPanel({
                             isDimSelected={isDimSelected}
                             panelWidth={panelWidth}
                             searchQuery={searchQuery}
+                            isPendingPairMark={isPendingPairMark}
                         />
                     )
                 })
