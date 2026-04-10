@@ -1,9 +1,10 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import { useState } from 'react'
 
 import type { Action, CompareEntry, PanelSide } from '~/utils/types'
+import { useListNavigation } from '~/hooks'
 import { Dialog } from './dialog'
+import { KeyboardHints } from './keyboard-hints'
 
 interface MenuItem {
     label: string
@@ -93,7 +94,14 @@ export function ContextMenu({
     rows,
 }: ContextMenuProps) {
     const items = getMenuItems(entry, side)
-    const [selectedIndex, setSelectedIndex] = useState(0)
+    const {
+        selectedIndex,
+        scrollTo,
+        handleInput: handleNav,
+    } = useListNavigation({
+        itemCount: items.length,
+        maxVisibleItems: items.length,
+    })
 
     useInput((input, key) => {
         if (key.escape || input === 'q' || input === '.') {
@@ -103,14 +111,7 @@ export function ContextMenu({
 
         if (items.length === 0) return
 
-        if (input === 'j' || key.downArrow) {
-            setSelectedIndex((i) => Math.min(items.length - 1, i + 1))
-            return
-        }
-        if (input === 'k' || key.upArrow) {
-            setSelectedIndex((i) => Math.max(0, i - 1))
-            return
-        }
+        if (handleNav(input, key)) return
 
         if (key.return) {
             const item = items[selectedIndex]
@@ -122,7 +123,7 @@ export function ContextMenu({
 
         const hintIndex = items.findIndex((item) => item.hint === input)
         if (hintIndex !== -1) {
-            setSelectedIndex(hintIndex)
+            scrollTo(hintIndex)
         }
     })
 
@@ -151,7 +152,14 @@ export function ContextMenu({
                     ))}
                 </Box>
             }
-            <Text dimColor>j/k navigate Enter select Esc close</Text>
+            <KeyboardHints
+                items={[
+                    { key: 'j/k', label: 'navigate' },
+                    { key: '<enter>', label: 'select' },
+                    { key: 'esc', label: 'close' },
+                ]}
+                columns={columns}
+            />
         </Dialog>
     )
 }

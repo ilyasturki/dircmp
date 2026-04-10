@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { Action } from '~/utils/types'
+import { useListNavigation } from '~/hooks'
 import { getHelpItems } from '~/keymap'
 import { Dialog } from './dialog'
 
@@ -26,8 +27,6 @@ export function HelpDialog({
     rows,
 }: HelpDialogProps) {
     const items = getHelpItems(keymap)
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const [scrollOffset, setScrollOffset] = useState(0)
     const [searchActive, setSearchActive] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
 
@@ -44,6 +43,17 @@ export function HelpDialog({
 
     // Reserve rows for dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + search (1) = 7
     const maxVisibleItems = Math.min(items.length, Math.max(1, rows - 11))
+
+    const {
+        selectedIndex,
+        scrollOffset,
+        setSelectedIndex,
+        setScrollOffset,
+        handleInput: handleNav,
+    } = useListNavigation({
+        itemCount: filteredItems.length,
+        maxVisibleItems,
+    })
 
     const visibleItems = filteredItems.slice(
         scrollOffset,
@@ -80,34 +90,7 @@ export function HelpDialog({
             return
         }
 
-        if (input === 'j' || key.downArrow) {
-            setSelectedIndex((prev) => {
-                const next = Math.min(filteredItems.length - 1, prev + 1)
-                setScrollOffset((offset) => {
-                    if (next >= offset + maxVisibleItems)
-                        return next - maxVisibleItems + 1
-                    return offset
-                })
-                return next
-            })
-            return
-        }
-        if (input === 'k' || key.upArrow) {
-            setSelectedIndex((prev) => {
-                const next = Math.max(0, prev - 1)
-                setScrollOffset((offset) => {
-                    if (next < offset) return next
-                    return offset
-                })
-                return next
-            })
-            return
-        }
-        if (input === 'G') {
-            setSelectedIndex(filteredItems.length - 1)
-            setScrollOffset(Math.max(0, filteredItems.length - maxVisibleItems))
-            return
-        }
+        if (handleNav(input, key)) return
 
         if (key.return) {
             const item = filteredItems[selectedIndex]

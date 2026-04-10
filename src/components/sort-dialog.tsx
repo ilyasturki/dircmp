@@ -1,11 +1,12 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import { useState } from 'react'
 
 import type { AppConfig } from '~/utils/config'
 import type { Action, SortDirection, SortMode } from '~/utils/types'
+import { useListNavigation } from '~/hooks'
 import { saveConfig } from '~/utils/config'
 import { Dialog } from './dialog'
+import { KeyboardHints } from './keyboard-hints'
 
 const sortModes: { mode: SortMode; label: string }[] = [
     { mode: 'name', label: 'Name' },
@@ -33,12 +34,14 @@ export function SortDialog({
     columns,
     rows,
 }: SortDialogProps) {
-    const [selectedIndex, setSelectedIndex] = useState(
-        Math.max(
+    const { selectedIndex, handleInput: handleNav } = useListNavigation({
+        itemCount,
+        maxVisibleItems: itemCount,
+        initialIndex: Math.max(
             0,
             sortModes.findIndex((m) => m.mode === currentMode),
         ),
-    )
+    })
 
     const onDirsFirstRow = selectedIndex === sortModes.length
 
@@ -48,14 +51,7 @@ export function SortDialog({
             return
         }
 
-        if (input === 'j' || key.downArrow) {
-            setSelectedIndex((i) => Math.min(itemCount - 1, i + 1))
-            return
-        }
-        if (input === 'k' || key.upArrow) {
-            setSelectedIndex((i) => Math.max(0, i - 1))
-            return
-        }
+        if (handleNav(input, key)) return
 
         if (input === 'r') {
             dispatch({ type: 'TOGGLE_SORT_DIRECTION' })
@@ -134,7 +130,15 @@ export function SortDialog({
                     <Text dimColor> {config.dirsFirst ? 'yes' : 'no'}</Text>
                 </Text>
             </Box>
-            <Text dimColor>j/k navigate Enter select r reverse Esc close</Text>
+            <KeyboardHints
+                items={[
+                    { key: 'j/k', label: 'navigate' },
+                    { key: '<enter>', label: 'select' },
+                    { key: 'r', label: 'reverse' },
+                    { key: 'esc', label: 'close' },
+                ]}
+                columns={columns}
+            />
         </Dialog>
     )
 }

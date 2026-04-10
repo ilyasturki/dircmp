@@ -1,9 +1,10 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
 import TextInput from 'ink-text-input'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import type { Action } from '~/utils/types'
+import { useScrollNavigation } from '~/hooks'
 import { Dialog } from './dialog'
 
 interface ReleaseNotesDialogProps {
@@ -116,10 +117,8 @@ export function ReleaseNotesDialog({
         () => parseChangelog(changelog, contentWidth),
         [changelog, contentWidth],
     )
-    const [scrollOffset, setScrollOffset] = useState(0)
     const [searchActive, setSearchActive] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
-    const pendingGRef = useRef(false)
 
     const filteredLines = useMemo(
         () => filterLines(allLines, searchQuery),
@@ -127,7 +126,15 @@ export function ReleaseNotesDialog({
     )
     // Reserve rows for dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + search bar (1) + footer (1) = 8
     const maxVisibleLines = Math.max(1, rows - 12)
-    const maxScroll = Math.max(0, filteredLines.length - maxVisibleLines)
+
+    const {
+        scrollOffset,
+        setScrollOffset,
+        handleInput: handleNav,
+    } = useScrollNavigation({
+        totalLines: filteredLines.length,
+        maxVisibleLines,
+    })
 
     const visibleLines = filteredLines.slice(
         scrollOffset,
@@ -162,50 +169,7 @@ export function ReleaseNotesDialog({
             return
         }
 
-        // gg — go to top
-        if (input === 'g') {
-            if (pendingGRef.current) {
-                pendingGRef.current = false
-                setScrollOffset(0)
-            } else {
-                pendingGRef.current = true
-            }
-            return
-        }
-        pendingGRef.current = false
-
-        if (input === 'j' || key.downArrow) {
-            setScrollOffset((prev) => Math.min(maxScroll, prev + 1))
-            return
-        }
-        if (input === 'k' || key.upArrow) {
-            setScrollOffset((prev) => Math.max(0, prev - 1))
-            return
-        }
-        if (input === 'G') {
-            setScrollOffset(maxScroll)
-            return
-        }
-        if (key.ctrl && input === 'd') {
-            const half = Math.floor(maxVisibleLines / 2)
-            setScrollOffset((prev) => Math.min(maxScroll, prev + half))
-            return
-        }
-        if (key.ctrl && input === 'u') {
-            const half = Math.floor(maxVisibleLines / 2)
-            setScrollOffset((prev) => Math.max(0, prev - half))
-            return
-        }
-        if (key.ctrl && input === 'f') {
-            setScrollOffset((prev) =>
-                Math.min(maxScroll, prev + maxVisibleLines),
-            )
-            return
-        }
-        if (key.ctrl && input === 'b') {
-            setScrollOffset((prev) => Math.max(0, prev - maxVisibleLines))
-            return
-        }
+        handleNav(input, key)
     })
 
     if (!changelog) {

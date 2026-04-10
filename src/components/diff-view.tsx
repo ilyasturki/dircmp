@@ -6,6 +6,7 @@ import { Box, Text, useInput } from 'ink'
 import { useEffect, useState } from 'react'
 
 import type { Action, CompareEntry } from '~/utils/types'
+import { useScrollNavigation } from '~/hooks'
 import { isBinary } from '~/utils/binary'
 
 interface DiffViewProps {
@@ -95,12 +96,17 @@ export function DiffView({
     columns,
     rows,
 }: DiffViewProps) {
-    const [scrollOffset, setScrollOffset] = useState(0)
     const [lines, setLines] = useState<DiffLine[] | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     // header (1) + footer (1) = 2 reserved rows
     const contentHeight = Math.max(1, rows - 2)
+
+    const { scrollOffset, handleInput: handleNav } = useScrollNavigation({
+        totalLines: lines?.length ?? 0,
+        maxVisibleLines: contentHeight,
+        useDoubleG: false,
+    })
 
     useEffect(() => {
         let cancelled = false
@@ -174,8 +180,6 @@ export function DiffView({
         }
     }, [entry, leftDir, rightDir])
 
-    const maxScroll = lines ? Math.max(0, lines.length - contentHeight) : 0
-
     useInput((input, key) => {
         if (key.escape || input === 'q') {
             dispatch({ type: 'HIDE_DIFF_VIEW' })
@@ -184,40 +188,7 @@ export function DiffView({
 
         if (!lines) return
 
-        if (input === 'j' || key.downArrow) {
-            setScrollOffset((prev) => Math.min(maxScroll, prev + 1))
-            return
-        }
-        if (input === 'k' || key.upArrow) {
-            setScrollOffset((prev) => Math.max(0, prev - 1))
-            return
-        }
-        if (key.ctrl && input === 'd') {
-            const half = Math.floor(contentHeight / 2)
-            setScrollOffset((prev) => Math.min(maxScroll, prev + half))
-            return
-        }
-        if (key.ctrl && input === 'u') {
-            const half = Math.floor(contentHeight / 2)
-            setScrollOffset((prev) => Math.max(0, prev - half))
-            return
-        }
-        if (key.ctrl && input === 'f') {
-            setScrollOffset((prev) => Math.min(maxScroll, prev + contentHeight))
-            return
-        }
-        if (key.ctrl && input === 'b') {
-            setScrollOffset((prev) => Math.max(0, prev - contentHeight))
-            return
-        }
-        if (input === 'g') {
-            setScrollOffset(0)
-            return
-        }
-        if (input === 'G') {
-            setScrollOffset(maxScroll)
-            return
-        }
+        handleNav(input, key)
     })
 
     const visibleLines = lines?.slice(

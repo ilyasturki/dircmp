@@ -1,10 +1,11 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { KeybindingOverrides } from '~/utils/keybindings'
 import type { Action } from '~/utils/types'
+import { useListNavigation } from '~/hooks'
 import {
     formatKeyDef,
     loadKeybindings,
@@ -39,8 +40,6 @@ export function KeybindingsDialog({
     columns,
     rows,
 }: KeybindingsDialogProps) {
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const [scrollOffset, setScrollOffset] = useState(0)
     const [displayMode, setDisplayMode] = useState<DisplayMode>('browse')
     const [editValue, setEditValue] = useState('')
     const [error, setError] = useState('')
@@ -51,6 +50,17 @@ export function KeybindingsDialog({
     const maxRows = Math.max(1, rows - 12)
     const needsScroll = defaults.length > maxRows
     const maxVisibleItems = needsScroll ? maxRows - 1 : maxRows
+
+    const {
+        selectedIndex,
+        scrollOffset,
+        scrollTo,
+        handleInput: handleNav,
+    } = useListNavigation({
+        itemCount: defaults.length,
+        maxVisibleItems,
+    })
+
     const hasArrowUp = needsScroll && scrollOffset > 0
     const hasArrowDown =
         needsScroll && scrollOffset + maxVisibleItems < defaults.length
@@ -59,16 +69,6 @@ export function KeybindingsDialog({
         scrollOffset,
         scrollOffset + maxVisibleItems,
     )
-
-    const scrollTo = (index: number) => {
-        setSelectedIndex(index)
-        setScrollOffset((offset) => {
-            if (index < offset) return index
-            if (index >= offset + maxVisibleItems)
-                return index - maxVisibleItems + 1
-            return offset
-        })
-    }
 
     const handleEditSubmit = async (input: string) => {
         const trimmed = input.trim()
@@ -117,8 +117,6 @@ export function KeybindingsDialog({
         dispatch({ type: 'KEYBINDINGS_UPDATED' })
     }
 
-    const pendingGRef = useRef(false)
-
     useInput((input, key) => {
         if (displayMode === 'browse') {
             if (key.escape || input === 'q') {
@@ -126,57 +124,7 @@ export function KeybindingsDialog({
                 return
             }
 
-            // gg — go to top
-            if (input === 'g') {
-                if (pendingGRef.current) {
-                    pendingGRef.current = false
-                    scrollTo(0)
-                } else {
-                    pendingGRef.current = true
-                }
-                return
-            }
-            pendingGRef.current = false
-
-            if (input === 'j' || key.downArrow) {
-                scrollTo(Math.min(defaults.length - 1, selectedIndex + 1))
-                return
-            }
-            if (input === 'k' || key.upArrow) {
-                scrollTo(Math.max(0, selectedIndex - 1))
-                return
-            }
-            if (input === 'G') {
-                scrollTo(defaults.length - 1)
-                return
-            }
-
-            // Half-page motions
-            if (key.ctrl && input === 'd') {
-                const jump = Math.floor(maxVisibleItems / 2)
-                scrollTo(Math.min(defaults.length - 1, selectedIndex + jump))
-                return
-            }
-            if (key.ctrl && input === 'u') {
-                const jump = Math.floor(maxVisibleItems / 2)
-                scrollTo(Math.max(0, selectedIndex - jump))
-                return
-            }
-
-            // Full-page motions
-            if (key.ctrl && input === 'f') {
-                scrollTo(
-                    Math.min(
-                        defaults.length - 1,
-                        selectedIndex + maxVisibleItems,
-                    ),
-                )
-                return
-            }
-            if (key.ctrl && input === 'b') {
-                scrollTo(Math.max(0, selectedIndex - maxVisibleItems))
-                return
-            }
+            if (handleNav(input, key)) return
 
             if (key.return) {
                 const shortcut = defaults[selectedIndex]

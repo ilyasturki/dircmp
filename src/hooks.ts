@@ -10,6 +10,9 @@ import { compileIgnoreMatcher, loadAllIgnorePatterns } from '~/utils/ignore'
 import { scanRemote } from '~/utils/rclone'
 import { scanDirectory } from '~/utils/scanner'
 
+export { useListNavigation } from '~/hooks/use-list-navigation'
+export { useScrollNavigation } from '~/hooks/use-scroll-navigation'
+
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
     const [dimensions, setDimensions] = useState({
         columns: stdout?.columns ?? 80,

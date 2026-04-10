@@ -1,10 +1,11 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import { useState } from 'react'
 
 import type { Action, CompareEntry } from '~/utils/types'
+import { useListNavigation } from '~/hooks'
 import { saveGlobalIgnorePatterns, savePairIgnorePattern } from '~/utils/ignore'
 import { Dialog } from './dialog'
+import { KeyboardHints } from './keyboard-hints'
 
 type Scope = 'pair' | 'global'
 
@@ -92,7 +93,10 @@ export function QuickIgnoreDialog({
     rows,
 }: QuickIgnoreDialogProps) {
     const items = buildItems(entry, pairPatterns, globalPatterns)
-    const [selectedIndex, setSelectedIndex] = useState(0)
+    const { selectedIndex, handleInput: handleNav } = useListNavigation({
+        itemCount: items.length,
+        maxVisibleItems: items.length,
+    })
 
     const handleSelect = async (item: MenuItem) => {
         if (item.exists) {
@@ -126,14 +130,7 @@ export function QuickIgnoreDialog({
             return
         }
 
-        if (input === 'j' || key.downArrow) {
-            setSelectedIndex((i) => Math.min(items.length - 1, i + 1))
-            return
-        }
-        if (input === 'k' || key.upArrow) {
-            setSelectedIndex((i) => Math.max(0, i - 1))
-            return
-        }
+        if (handleNav(input, key)) return
 
         if (key.return) {
             const item = items[selectedIndex]
@@ -176,7 +173,14 @@ export function QuickIgnoreDialog({
                     </Text>
                 ))}
             </Box>
-            <Text dimColor>j/k navigate Enter select Esc close</Text>
+            <KeyboardHints
+                items={[
+                    { key: 'j/k', label: 'navigate' },
+                    { key: '<enter>', label: 'select' },
+                    { key: 'esc', label: 'close' },
+                ]}
+                columns={columns}
+            />
         </Dialog>
     )
 }
