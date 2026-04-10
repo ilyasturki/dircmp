@@ -15,6 +15,7 @@ import { KeybindingsDialog } from '~/components/keybindings-dialog'
 import { PreferencesDialog } from '~/components/preferences-dialog'
 import { QuickIgnoreDialog } from '~/components/quick-ignore-dialog'
 import { ReleaseNotesDialog } from '~/components/release-notes-dialog'
+import { SortDialog } from '~/components/sort-dialog'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
 import { NerdFontProvider } from '~/context/nerd-font'
@@ -214,6 +215,8 @@ export function App({
                 entryCount={state.entries.length}
                 dispatch={dispatch}
                 pendingPairMark={state.pendingPairMark}
+                sortMode={state.sortMode}
+                sortDirection={state.sortDirection}
             />
             {state.dialog === 'preferences' && (
                 <PreferencesDialog
@@ -286,6 +289,15 @@ export function App({
             {state.dialog === 'keybindingsEditor' && (
                 <KeybindingsDialog
                     defaults={defaultKeymap}
+                    dispatch={dispatch}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.dialog === 'sortMenu' && (
+                <SortDialog
+                    currentMode={state.sortMode}
+                    currentDirection={state.sortDirection}
                     dispatch={dispatch}
                     columns={columns}
                     rows={rows}

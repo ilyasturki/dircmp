@@ -21,6 +21,7 @@ type Field =
     | 'nerdFont'
     | 'compareDates'
     | 'compareContents'
+    | 'dirsFirst'
     | 'diffCommand'
 const fields: Field[] = [
     'dateLocale',
@@ -28,6 +29,7 @@ const fields: Field[] = [
     'nerdFont',
     'compareDates',
     'compareContents',
+    'dirsFirst',
     'diffCommand',
 ]
 
@@ -104,6 +106,12 @@ export function PreferencesDialog({
         saveConfig(newConfig)
     }
 
+    const toggleDirsFirst = () => {
+        const newConfig = { ...config, dirsFirst: !config.dirsFirst }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+    }
+
     useInput((input, key) => {
         if (editing) {
             if (key.escape) {
@@ -140,7 +148,8 @@ export function PreferencesDialog({
                 && (focusedField === 'showHints'
                     || focusedField === 'nerdFont'
                     || focusedField === 'compareDates'
-                    || focusedField === 'compareContents'))
+                    || focusedField === 'compareContents'
+                    || focusedField === 'dirsFirst'))
         ) {
             if (focusedField === 'dateLocale' && key.return) {
                 setEditing(true)
@@ -154,6 +163,8 @@ export function PreferencesDialog({
                 toggleCompareDates()
             } else if (focusedField === 'compareContents') {
                 toggleCompareContents()
+            } else if (focusedField === 'dirsFirst') {
+                toggleDirsFirst()
             } else if (focusedField === 'diffCommand' && key.return) {
                 setEditing(true)
                 setEditValue(config.diffCommand ?? '')
@@ -249,6 +260,19 @@ export function PreferencesDialog({
                     </Text>
                 </Text>
                 <Text>{config.compareContents ? 'yes' : 'no'}</Text>
+            </Box>
+            <Box justifyContent='space-between'>
+                <Text>
+                    {isModified('dirsFirst') ? '*' : ' '}
+                    <Text
+                        bold={focusedField === 'dirsFirst'}
+                        inverse={focusedField === 'dirsFirst'}
+                    >
+                        {' '}
+                        Directories first{' '}
+                    </Text>
+                </Text>
+                <Text>{config.dirsFirst ? 'yes' : 'no'}</Text>
             </Box>
             <InputField
                 label='Diff command'

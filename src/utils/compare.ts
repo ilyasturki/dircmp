@@ -6,12 +6,52 @@ import type {
     FileEntry,
     FilterMode,
     ScanResult,
+    SortDirection,
+    SortMode,
 } from '~/utils/types'
 import { getEntriesAtPath } from '~/utils/scanner'
 
 export interface CompareOptions {
     compareDates: boolean
     compareContents: boolean
+}
+
+export interface SortOptions {
+    mode: SortMode
+    direction: SortDirection
+    dirsFirst: boolean
+}
+
+const defaultSortOptions: SortOptions = {
+    mode: 'name',
+    direction: 'asc',
+    dirsFirst: true,
+}
+
+function sortEntries(entries: CompareEntry[], opts: SortOptions): void {
+    const dir = opts.direction === 'asc' ? 1 : -1
+    entries.sort((a, b) => {
+        if (opts.dirsFirst && a.isDirectory !== b.isDirectory) {
+            return a.isDirectory ? -1 : 1
+        }
+        switch (opts.mode) {
+            case 'name':
+                return (
+                    dir
+                    * a.name.localeCompare(b.name, undefined, {
+                        sensitivity: 'base',
+                    })
+                )
+            case 'size': {
+                const sizeA = Math.max(a.left?.size ?? 0, a.right?.size ?? 0)
+                const sizeB = Math.max(b.left?.size ?? 0, b.right?.size ?? 0)
+                if (sizeA !== sizeB) return dir * (sizeA - sizeB)
+                return a.name.localeCompare(b.name, undefined, {
+                    sensitivity: 'base',
+                })
+            }
+        }
+    })
 }
 
 function hasDescendantDiff(
@@ -222,6 +262,7 @@ export function compareAtPath(
     leftDirPath: string,
     rightDirPath: string,
     options: CompareOptions,
+    sortOpts: SortOptions = defaultSortOptions,
     manualPairings?: Map<string, string>,
 ): CompareEntry[] {
     const leftEntries = getEntriesAtPath(leftScan, leftDirPath)
@@ -391,10 +432,7 @@ export function compareAtPath(
 
     entries.push(...pairedEntries)
 
-    entries.sort((a, b) => {
-        if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
-        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-    })
+    sortEntries(entries, sortOpts)
 
     return entries
 }
@@ -405,6 +443,7 @@ export function buildVisibleTree(
     expandedDirs: Set<string>,
     filterMode: FilterMode = 'all',
     options: CompareOptions = { compareDates: false, compareContents: true },
+    sortOpts: SortOptions = defaultSortOptions,
     manualPairings?: Map<string, string>,
 ): CompareEntry[] {
     const result: CompareEntry[] = []
@@ -416,6 +455,7 @@ export function buildVisibleTree(
             leftDirPath,
             rightDirPath,
             options,
+            sortOpts,
             manualPairings,
         )
         for (const entry of entries) {

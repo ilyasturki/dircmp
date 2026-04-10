@@ -37,8 +37,12 @@ export type DialogType =
     | 'diffView'
     | 'keybindingsEditor'
     | 'releaseNotes'
+    | 'sortMenu'
 
 export type FilterMode = 'all' | 'diff-only'
+
+export type SortMode = 'name' | 'size'
+export type SortDirection = 'asc' | 'desc'
 
 export type Action =
     | { type: 'SCAN_COMPLETE'; leftScan: ScanResult; rightScan: ScanResult }
@@ -102,6 +106,10 @@ export type Action =
     | { type: 'SET_SEARCH_QUERY'; query: string }
     | { type: 'CLOSE_SEARCH' }
     | { type: 'CANCEL_SEARCH' }
+    | { type: 'SHOW_SORT_MENU' }
+    | { type: 'HIDE_SORT_MENU' }
+    | { type: 'SET_SORT'; mode: SortMode; close?: boolean }
+    | { type: 'TOGGLE_SORT_DIRECTION' }
 
 export interface AppState {
     focusedPanel: PanelSide
@@ -125,4 +133,6 @@ export interface AppState {
     searchInputActive: boolean
     pendingPairMark: { relativePath: string; side: PanelSide } | null
     manualPairings: Map<string, string>
+    sortMode: SortMode
+    sortDirection: SortDirection
 }

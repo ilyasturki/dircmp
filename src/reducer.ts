@@ -28,6 +28,8 @@ export function createInitialState(init: {
         searchInputActive: false,
         pendingPairMark: null,
         manualPairings: new Map(),
+        sortMode: 'name',
+        sortDirection: 'asc',
     }
 }
 
@@ -105,6 +107,11 @@ function recomputeEntries(state: AppState): CompareEntry[] {
         {
             compareDates: state.config.compareDates,
             compareContents: state.config.compareContents,
+        },
+        {
+            mode: state.sortMode,
+            direction: state.sortDirection,
+            dirsFirst: state.config.dirsFirst,
         },
         state.manualPairings.size > 0 ? state.manualPairings : undefined,
     )
@@ -377,6 +384,11 @@ export function reducer(state: AppState, action: Action): AppState {
                     compareDates: state.config.compareDates,
                     compareContents: state.config.compareContents,
                 },
+                {
+                    mode: state.sortMode,
+                    direction: state.sortDirection,
+                    dirsFirst: state.config.dirsFirst,
+                },
                 state.manualPairings.size > 0 ?
                     state.manualPairings
                 :   undefined,
@@ -583,6 +595,7 @@ export function reducer(state: AppState, action: Action): AppState {
                 action.config.compareDates !== state.config.compareDates
                 || action.config.compareContents
                     !== state.config.compareContents
+                || action.config.dirsFirst !== state.config.dirsFirst
             ) {
                 newState.entries = recomputeEntries(newState)
                 newState.cursorIndex = Math.min(
@@ -718,6 +731,42 @@ export function reducer(state: AppState, action: Action): AppState {
                 manualPairings,
                 expandedDirs,
             }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'SHOW_SORT_MENU':
+            return { ...state, dialog: 'sortMenu' }
+        case 'HIDE_SORT_MENU':
+            return { ...state, dialog: null }
+        case 'SET_SORT': {
+            const toggleDirection =
+                action.mode === state.sortMode ?
+                    state.sortDirection === 'asc' ?
+                        'desc'
+                    :   'asc'
+                :   state.sortDirection
+            const newState = {
+                ...state,
+                sortMode: action.mode,
+                sortDirection: toggleDirection,
+                dialog: action.close === false ? state.dialog : null,
+            }
+            newState.entries = recomputeEntries(newState)
+            newState.cursorIndex = Math.min(
+                state.cursorIndex,
+                Math.max(0, newState.entries.length - 1),
+            )
+            return newState
+        }
+        case 'TOGGLE_SORT_DIRECTION': {
+            const newState = {
+                ...state,
+                sortDirection: state.sortDirection === 'asc' ? 'desc' : 'asc',
+            } as AppState
             newState.entries = recomputeEntries(newState)
             newState.cursorIndex = Math.min(
                 state.cursorIndex,

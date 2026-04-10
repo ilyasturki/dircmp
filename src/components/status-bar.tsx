@@ -12,6 +12,8 @@ import type {
     FilterMode,
     PanelSide,
     ScanResult,
+    SortDirection,
+    SortMode,
 } from '~/utils/types'
 import {
     countDescendantDiffs,
@@ -40,6 +42,8 @@ interface StatusBarProps {
     entryCount: number
     dispatch: Dispatch<Action>
     pendingPairMark: { relativePath: string; side: PanelSide } | null
+    sortMode: SortMode
+    sortDirection: SortDirection
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -218,6 +222,8 @@ export function StatusBar({
     entryCount,
     dispatch,
     pendingPairMark,
+    sortMode,
+    sortDirection,
 }: StatusBarProps) {
     const lineDiffCount = useLineDiffCount(focusedEntry, leftDir, rightDir)
     const dateFormatter = useMemo(
@@ -271,6 +277,8 @@ export function StatusBar({
     }
 
     const filterLabel = filterMode === 'all' ? '[all]' : '[diff only]'
+    const sortArrow = sortDirection === 'asc' ? '↑' : '↓'
+    const sortLabel = `[${sortMode} ${sortArrow}]`
 
     const helpItems = keymap
         .filter((s) => s.keyLabel !== '')
@@ -287,6 +295,7 @@ export function StatusBar({
             :   <Box justifyContent='space-between'>
                     <Box>
                         <Text color='cyan'>{filterLabel} </Text>
+                        <Text color='cyan'>{sortLabel} </Text>
                         {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
                         {pendingPairMark && (
                             <Text color='magenta'>
