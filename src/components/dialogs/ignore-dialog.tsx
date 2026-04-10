@@ -8,9 +8,9 @@ import {
     savePairIgnorePattern,
     savePairIgnorePatterns,
 } from '~/utils/ignore'
-import { Dialog } from './dialog'
-import { InputField } from './input-field'
-import { KeyboardHints } from './keyboard-hints'
+import { Dialog } from '../dialog'
+import { InputField } from '../input-field'
+import { KeyboardHints } from '../keyboard-hints'
 
 type DisplayMode = 'browse' | 'edit'
 type Section = 'pair' | 'global'

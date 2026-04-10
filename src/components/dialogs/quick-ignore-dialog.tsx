@@ -4,8 +4,8 @@ import { Box, Text, useInput } from 'ink'
 import type { Action, CompareEntry } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { saveGlobalIgnorePatterns, savePairIgnorePattern } from '~/utils/ignore'
-import { Dialog } from './dialog'
-import { KeyboardHints } from './keyboard-hints'
+import { Dialog } from '../dialog'
+import { KeyboardHints } from '../keyboard-hints'
 
 type Scope = 'pair' | 'global'
 

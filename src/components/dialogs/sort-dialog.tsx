@@ -5,8 +5,8 @@ import type { AppConfig } from '~/utils/config'
 import type { Action, SortDirection, SortMode } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { saveConfig } from '~/utils/config'
-import { Dialog } from './dialog'
-import { KeyboardHints } from './keyboard-hints'
+import { Dialog } from '../dialog'
+import { KeyboardHints } from '../keyboard-hints'
 
 const sortModes: { mode: SortMode; label: string }[] = [
     { mode: 'name', label: 'Name' },

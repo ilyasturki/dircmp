@@ -12,9 +12,9 @@ import {
     saveKeybindings,
     validateKeyDef,
 } from '~/utils/keybindings'
-import { Dialog } from './dialog'
-import { InputField } from './input-field'
-import { KeyboardHints } from './keyboard-hints'
+import { Dialog } from '../dialog'
+import { InputField } from '../input-field'
+import { KeyboardHints } from '../keyboard-hints'
 
 type DisplayMode = 'browse' | 'edit'
 

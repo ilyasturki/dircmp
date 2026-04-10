@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Box, Text, useInput } from 'ink'
 
 import type { Action, CompareEntry, PanelSide } from '~/utils/types'
-import { Dialog } from './dialog'
+import { Dialog } from '../dialog'
 
 interface ConfirmDeleteDialogProps {
     entry: CompareEntry

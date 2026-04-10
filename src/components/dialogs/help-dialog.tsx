@@ -7,7 +7,7 @@ import type { Shortcut } from '~/keymap'
 import type { Action } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { getHelpItems } from '~/keymap'
-import { Dialog } from './dialog'
+import { Dialog } from '../dialog'
 
 interface HelpDialogProps {
     keymap: Shortcut[]

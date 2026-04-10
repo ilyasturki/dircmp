@@ -5,8 +5,8 @@ import { useState } from 'react'
 import type { AppConfig } from '~/utils/config'
 import type { Action } from '~/utils/types'
 import { defaultConfig, saveConfig } from '~/utils/config'
-import { Dialog } from './dialog'
-import { InputField } from './input-field'
+import { Dialog } from '../dialog'
+import { InputField } from '../input-field'
 
 interface PreferencesDialogProps {
     config: AppConfig

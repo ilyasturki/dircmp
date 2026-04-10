@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 
 import type { Action } from '~/utils/types'
 import { useScrollNavigation } from '~/hooks'
-import { Dialog } from './dialog'
+import { Dialog } from '../dialog'
 
 interface ReleaseNotesDialogProps {
     changelog: string

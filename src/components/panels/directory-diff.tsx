@@ -2,7 +2,7 @@ import os from 'node:os'
 import { Box } from 'ink'
 
 import type { AppState, CompareEntry, PanelSide } from '~/utils/types'
-import { DirectoryPanel } from '~/components/directory-panel'
+import { DirectoryPanel } from './directory-panel'
 
 const homeDir = os.homedir()
 
