@@ -48,4 +48,6 @@ Run CI locally before proceeding. If it fails, stop and report the error.
     - Combine related commits into a single entry when appropriate
     - Place the new section at the top, below the `# Changelog` heading
 
-4. **Bump version**: Run `npm version $ARGUMENTS --force`. This triggers the version hook which updates the Nix flake hash and stages flake.nix and CHANGELOG.md automatically.
+4. **Update README**: Review the changelog entry you just wrote and check whether README.md needs updates (e.g. new features, keybindings, config options, CLI flags). If so, update the relevant sections. If the release is only bug fixes or performance improvements, skip this step.
+
+5. **Bump version**: Run `npm version $ARGUMENTS --force`. This triggers the version hook which updates the Nix flake hash and stages flake.nix and CHANGELOG.md automatically.
