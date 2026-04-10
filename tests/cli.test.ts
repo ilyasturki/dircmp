@@ -4,6 +4,10 @@ import { describe, expect, test } from 'bun:test'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const DATA_LEFT = path.join(ROOT, 'data', 'left')
 const DATA_RIGHT = path.join(ROOT, 'data', 'right')
+const FILE_LEFT = path.join(DATA_LEFT, 'edge-cases', 'large-diff.json')
+const FILE_RIGHT = path.join(DATA_RIGHT, 'edge-cases', 'large-diff.json')
+const FILE_IDENTICAL_L = path.join(DATA_LEFT, 'edge-cases', 'empty-file.txt')
+const FILE_IDENTICAL_R = path.join(DATA_RIGHT, 'edge-cases', 'empty-file.txt')
 
 interface RunResult {
     stdout: string
@@ -272,17 +276,81 @@ describe('check', () => {
 })
 
 // ---------------------------------------------------------------------------
+// file-to-file: diff
+// ---------------------------------------------------------------------------
+describe('file-to-file diff', () => {
+    test('outputs diff lines for two different files', async () => {
+        const { stdout, exitCode } = await run('diff', FILE_LEFT, FILE_RIGHT)
+        expect(exitCode).toBe(0)
+        // Should contain added/removed markers (with ANSI codes stripped)
+        const clean = stdout.replace(/\x1b\[[0-9;]*m/g, '')
+        expect(clean).toMatch(/^[+-] /m)
+    })
+
+    test('outputs "Files are identical" for identical files', async () => {
+        const { stdout, exitCode } = await run(
+            'diff',
+            FILE_IDENTICAL_L,
+            FILE_IDENTICAL_R,
+        )
+        expect(exitCode).toBe(0)
+        expect(stdout.trim()).toBe('Files are identical')
+    })
+})
+
+// ---------------------------------------------------------------------------
+// file-to-file: check
+// ---------------------------------------------------------------------------
+describe('file-to-file check', () => {
+    test('exits 1 when files differ', async () => {
+        const { exitCode } = await run('check', FILE_LEFT, FILE_RIGHT)
+        expect(exitCode).toBe(1)
+    })
+
+    test('exits 0 when files are identical', async () => {
+        const { exitCode } = await run(
+            'check',
+            FILE_IDENTICAL_L,
+            FILE_IDENTICAL_R,
+        )
+        expect(exitCode).toBe(0)
+    })
+
+    test('--stat prints summary when files differ', async () => {
+        const { stdout, exitCode } = await run(
+            'check',
+            '--stat',
+            FILE_LEFT,
+            FILE_RIGHT,
+        )
+        expect(exitCode).toBe(1)
+        expect(stdout.trim()).toBe('1 modified')
+    })
+
+    test('--stat prints Identical when files match', async () => {
+        const { stdout, exitCode } = await run(
+            'check',
+            '--stat',
+            FILE_IDENTICAL_L,
+            FILE_IDENTICAL_R,
+        )
+        expect(exitCode).toBe(0)
+        expect(stdout.trim()).toBe('Identical')
+    })
+})
+
+// ---------------------------------------------------------------------------
 // error handling
 // ---------------------------------------------------------------------------
 describe('error handling', () => {
-    test('exits with error for nonexistent directory', async () => {
+    test('exits with error for nonexistent path', async () => {
         const { stderr, exitCode } = await run(
             'diff',
             '/tmp/does-not-exist-dircmp',
             DATA_RIGHT,
         )
         expect(exitCode).not.toBe(0)
-        expect(stderr).toMatch(/not found|not a directory/i)
+        expect(stderr).toMatch(/not found/i)
     })
 
     test('exits with error for invalid --only value', async () => {
@@ -295,5 +363,11 @@ describe('error handling', () => {
         )
         expect(exitCode).not.toBe(0)
         expect(stderr).toMatch(/invalid/i)
+    })
+
+    test('exits with error when mixing file and directory', async () => {
+        const { stderr, exitCode } = await run('diff', FILE_LEFT, DATA_RIGHT)
+        expect(exitCode).not.toBe(0)
+        expect(stderr).toMatch(/cannot compare a file with a directory/i)
     })
 })
