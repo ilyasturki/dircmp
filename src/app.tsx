@@ -298,6 +298,7 @@ export function App({
                 <SortDialog
                     currentMode={state.sortMode}
                     currentDirection={state.sortDirection}
+                    config={state.config}
                     dispatch={dispatch}
                     columns={columns}
                     rows={rows}
