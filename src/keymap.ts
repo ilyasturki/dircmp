@@ -8,7 +8,7 @@ type ShortcutEffect = { type: 'dispatch'; action: Action } | { type: 'exit' }
 
 export interface Shortcut {
     id: string
-    mode: 'browser' | 'global' | 'universal'
+    mode: 'browser' | 'universal'
     keyLabel: string
     description: string
     helpDescription: string
@@ -38,10 +38,10 @@ export function getHelpItems(shortcuts: Shortcut[]): HelpItem[] {
 }
 
 export const defaultKeymap: Shortcut[] = [
-    // Global
+    // Browser mode
     {
         id: 'quit',
-        mode: 'global',
+        mode: 'browser',
         keyLabel: '',
         description: 'quit',
         helpDescription: 'Quit application',
@@ -50,8 +50,6 @@ export const defaultKeymap: Shortcut[] = [
         match: (input) => input === 'q',
         effect: { type: 'exit' },
     },
-
-    // Browser mode
     {
         id: 'moveUp',
         mode: 'browser',
