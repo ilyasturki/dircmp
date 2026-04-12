@@ -30,7 +30,6 @@ interface DiffLine {
     leftLineNum: number | null
     rightLineNum: number | null
     content: string
-    hunkIndex: number
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -52,10 +51,9 @@ function computeDiffLines(
     )
 
     const lines: DiffLine[] = []
-    patch.hunks.forEach((hunk, hunkIndex) => {
+    for (const hunk of patch.hunks) {
         lines.push({
             type: 'hunk-header',
-            hunkIndex,
             leftLineNum: null,
             rightLineNum: null,
             content: `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`,
@@ -69,7 +67,6 @@ function computeDiffLines(
             if (prefix === '-') {
                 lines.push({
                     type: 'removed',
-                    hunkIndex,
                     leftLineNum: leftNum++,
                     rightLineNum: null,
                     content,
@@ -77,7 +74,6 @@ function computeDiffLines(
             } else if (prefix === '+') {
                 lines.push({
                     type: 'added',
-                    hunkIndex,
                     leftLineNum: null,
                     rightLineNum: rightNum++,
                     content,
@@ -85,14 +81,13 @@ function computeDiffLines(
             } else {
                 lines.push({
                     type: 'context',
-                    hunkIndex,
                     leftLineNum: leftNum++,
                     rightLineNum: rightNum++,
                     content,
                 })
             }
         }
-    })
+    }
     return lines
 }
 
@@ -121,16 +116,20 @@ export function FileDiff({
     const hunkRanges = useMemo(() => {
         if (!lines || lines.length === 0) return []
         const ranges: Array<{ start: number; end: number }> = []
-        let currentHunk = lines[0].hunkIndex
-        let start = 0
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].hunkIndex !== currentHunk) {
-                ranges.push({ start, end: i - 1 })
-                currentHunk = lines[i].hunkIndex
-                start = i
+        let blockStart = -1
+        for (let i = 0; i < lines.length; i++) {
+            const isChange =
+                lines[i].type === 'added' || lines[i].type === 'removed'
+            if (isChange) {
+                if (blockStart === -1) blockStart = i
+            } else if (blockStart !== -1) {
+                ranges.push({ start: blockStart, end: i - 1 })
+                blockStart = -1
             }
         }
-        ranges.push({ start, end: lines.length - 1 })
+        if (blockStart !== -1) {
+            ranges.push({ start: blockStart, end: lines.length - 1 })
+        }
         return ranges
     }, [lines])
 
@@ -327,7 +326,11 @@ export function FileDiff({
                 >
                     {visibleLines!.map((line, i) => {
                         const idx = scrollOffset + i
-                        const isFocused = line.hunkIndex === focusedHunk
+                        const focusedRange = hunkRanges[focusedHunk]
+                        const isFocused =
+                            focusedRange !== undefined
+                            && idx >= focusedRange.start
+                            && idx <= focusedRange.end
                         const leftGutter =
                             line.leftLineNum !== null ?
                                 String(line.leftLineNum).padStart(gutterWidth)
@@ -367,10 +370,7 @@ export function FileDiff({
                             <Text
                                 key={idx}
                                 color={color}
-                                dimColor={
-                                    line.type === 'hunk-header' && !isFocused
-                                }
-                                bold={isFocused && line.type === 'hunk-header'}
+                                dimColor={line.type === 'hunk-header'}
                                 backgroundColor={bg}
                             >
                                 <Text
