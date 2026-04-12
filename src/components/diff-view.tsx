@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { Action, CompareEntry } from '~/utils/types'
+import { KeyboardHints } from '~/components/keyboard-hints'
 import { useScrollNavigation, useUniversalShortcuts } from '~/hooks'
 import { isBinary } from '~/utils/binary'
 
@@ -21,6 +22,7 @@ interface DiffViewProps {
     rows: number
     keymap?: Shortcut[]
     dialogOpen?: boolean
+    showHints?: boolean
 }
 
 interface DiffLine {
@@ -100,12 +102,13 @@ export function DiffView({
     rows,
     keymap,
     dialogOpen,
+    showHints,
 }: DiffViewProps) {
     const [lines, setLines] = useState<DiffLine[] | null>(null)
     const [error, setError] = useState<string | null>(null)
 
-    // header (1) + footer (1) = 2 reserved rows
-    const contentHeight = Math.max(1, rows - 2)
+    // header (1) + footer (1) + optional hints (1) reserved rows
+    const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
 
     const { scrollOffset, handleInput: handleNav } = useScrollNavigation({
         totalLines: lines?.length ?? 0,
@@ -116,6 +119,13 @@ export function DiffView({
     const isActive = !(dialogOpen ?? false)
 
     useUniversalShortcuts(keymap ?? [], dispatch, isActive)
+
+    const hintItems = [
+        { key: 'q', label: 'close' },
+        ...(keymap ?? [])
+            .filter((s) => s.mode === 'universal' && s.keyLabel !== '')
+            .map((s) => ({ key: s.keyLabel, label: s.description })),
+    ]
 
     useEffect(() => {
         let cancelled = false
@@ -245,7 +255,6 @@ export function DiffView({
                     {' '}
                     {entry.relativePath}{' '}
                 </Text>
-                <Text dimColor> q/Esc to close</Text>
             </Box>
 
             {/* Content */}
@@ -331,6 +340,16 @@ export function DiffView({
                     :   ''}
                 </Text>
             </Box>
+
+            {/* Keyboard hints */}
+            {showHints && (
+                <Box>
+                    <KeyboardHints
+                        items={hintItems}
+                        columns={columns}
+                    />
+                </Box>
+            )}
         </Box>
     )
 }

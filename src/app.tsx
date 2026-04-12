@@ -235,6 +235,7 @@ export function App({
                         rows={rows}
                         keymap={keymap}
                         dialogOpen={state.dialog !== null}
+                        showHints={state.config.showHints}
                     />
                 )}
             {state.dialog === 'preferences' && (
