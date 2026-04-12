@@ -22,17 +22,11 @@ Current CHANGELOG.md:
 
 !`cat CHANGELOG.md 2>/dev/null || echo "(empty)"`
 
-## Refresh Nix hash
+## Refresh Nix hash and run CI gate
 
-Update `flake.nix` outputHash before CI so the `nix-build` job doesn't fail on a stale hash. The `version` hook re-runs this later; it's idempotent.
+Update `flake.nix` outputHash so the `nix-build` job doesn't fail on a stale hash, then run CI locally. Chained in one block so `act` cannot snapshot the working tree mid-refresh (when flake.nix briefly holds the `AAAA` placeholder). The `version` hook re-runs the hash script later; it's idempotent. If CI fails, stop and report the error.
 
-!`./scripts/update-nix-hash.sh 2>&1 | tail -5`
-
-## CI gate
-
-Run CI locally before proceeding. If it fails, stop and report the error.
-
-!`act push -W .github/workflows/ci.yml 2>&1 | tail -20`
+!`./scripts/update-nix-hash.sh && act push -W .github/workflows/ci.yml 2>&1 | tail -20`
 
 ## Instructions
 

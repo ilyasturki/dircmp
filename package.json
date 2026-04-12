@@ -42,7 +42,7 @@
         "prepublishOnly": "bun run build:npm",
         "test": "bun test",
         "typecheck": "tsc --noEmit",
-        "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md"
+        "version": "./scripts/update-nix-hash.sh && git add flake.nix CHANGELOG.md README.md"
     },
     "dependencies": {
         "diff": "^8.0.4",
