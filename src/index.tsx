@@ -267,7 +267,7 @@ if (fileMode && subcommand === 'diff') {
         process.exit(1)
     }
 
-    const { runDiff } = await import('~/cli/diff')
+    const { runDiff } = await import('~/cli/directory-diff')
     await runDiff(leftDir, rightDir, ignoreOptions, {
         format: cli.flags.format as 'tree' | 'flat' | 'json',
         only: onlyFilter,
@@ -275,7 +275,7 @@ if (fileMode && subcommand === 'diff') {
     })
     cleanupMounts()
 } else if (subcommand === 'check') {
-    const { runCheck } = await import('~/cli/check')
+    const { runCheck } = await import('~/cli/directory-check')
     await runCheck(leftDir, rightDir, ignoreOptions, {
         stat: cli.flags.stat,
     })
