@@ -107,14 +107,6 @@ dircmp check <left-dir> <right-dir>        # exits 0 if identical, 1 if differen
 dircmp check <left-dir> <right-dir> --stat  # print summary before exiting
 ```
 
-**`completions`** — generate shell completions:
-
-```sh
-dircmp completions bash >> ~/.bashrc
-dircmp completions zsh >> ~/.zshrc
-dircmp completions fish > ~/.config/fish/completions/dircmp.fish
-```
-
 ### Remote directories
 
 Requires [rclone](https://rclone.org). Supports SFTP, S3, GCS, and named rclone remotes:
