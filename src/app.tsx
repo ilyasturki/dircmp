@@ -14,7 +14,7 @@ import { PreferencesDialog } from '~/components/dialogs/preferences-dialog'
 import { QuickIgnoreDialog } from '~/components/dialogs/quick-ignore-dialog'
 import { ReleaseNotesDialog } from '~/components/dialogs/release-notes-dialog'
 import { SortDialog } from '~/components/dialogs/sort-dialog'
-import { DiffView } from '~/components/diff-view'
+import { FileDiff } from '~/components/file-diff'
 import { DirectoryDiff } from '~/components/panels/directory-diff'
 import { StatusBar } from '~/components/status-bar'
 import { DateLocaleProvider } from '~/context/date-locale'
@@ -114,7 +114,7 @@ export function App({
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        state.view === 'browser'
+        state.view === 'directoryDiff'
             && state.dialog === null
             && !state.searchInputActive,
         refresh,
@@ -188,7 +188,7 @@ export function App({
                             cursorIndex={state.cursorIndex}
                             focusedPanel={state.focusedPanel}
                             dialogOpen={
-                                state.view !== 'browser'
+                                state.view !== 'directoryDiff'
                                 || state.dialog !== null
                                 || state.searchInputActive
                             }
@@ -223,11 +223,11 @@ export function App({
                 sortMode={state.sortMode}
                 sortDirection={state.sortDirection}
             />
-            {state.view === 'diffView'
-                && state.diffViewEntryIndex !== null
-                && state.entries[state.diffViewEntryIndex] && (
-                    <DiffView
-                        entry={state.entries[state.diffViewEntryIndex]!}
+            {state.view === 'fileDiff'
+                && state.fileDiffEntryIndex !== null
+                && state.entries[state.fileDiffEntryIndex] && (
+                    <FileDiff
+                        entry={state.entries[state.fileDiffEntryIndex]!}
                         leftDir={effectiveLeftDir}
                         rightDir={effectiveRightDir}
                         dispatch={dispatch}

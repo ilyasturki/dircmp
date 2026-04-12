@@ -3,7 +3,7 @@ import { Box, useApp, useStdout } from 'ink'
 import { useCallback } from 'react'
 
 import type { Action, CompareEntry } from '~/utils/types'
-import { DiffView } from '~/components/diff-view'
+import { FileDiff } from '~/components/file-diff'
 import { useTerminalDimensions } from '~/hooks'
 
 interface FileDiffAppProps {
@@ -27,7 +27,7 @@ export function FileDiffApp({ leftFile, rightFile }: FileDiffAppProps) {
 
     const dispatch = useCallback(
         (action: Action) => {
-            if (action.type === 'HIDE_DIFF_VIEW') {
+            if (action.type === 'HIDE_FILE_DIFF') {
                 exit()
             }
         },
@@ -39,7 +39,7 @@ export function FileDiffApp({ leftFile, rightFile }: FileDiffAppProps) {
             flexDirection='column'
             height={rows}
         >
-            <DiffView
+            <FileDiff
                 entry={entry}
                 leftDir=''
                 rightDir=''

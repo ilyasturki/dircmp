@@ -25,7 +25,7 @@ function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
         items.push({
             label: 'Open diff',
             hint: 'Enter',
-            action: { type: 'OPEN_DIFF' },
+            action: { type: 'OPEN_FILE_DIFF' },
         })
     }
 

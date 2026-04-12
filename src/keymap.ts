@@ -8,7 +8,7 @@ type ShortcutEffect = { type: 'dispatch'; action: Action } | { type: 'exit' }
 
 export interface Shortcut {
     id: string
-    mode: 'browser' | 'universal'
+    mode: 'directoryDiff' | 'fileDiff' | 'universal'
     keyLabel: string
     description: string
     helpDescription: string
@@ -38,10 +38,10 @@ export function getHelpItems(shortcuts: Shortcut[]): HelpItem[] {
 }
 
 export const defaultKeymap: Shortcut[] = [
-    // Browser mode
+    // Directory diff
     {
         id: 'quit',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'quit',
         helpDescription: 'Quit application',
@@ -52,7 +52,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'moveUp',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'navigate',
         helpDescription: 'Move cursor up',
@@ -66,7 +66,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'moveDown',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'navigate',
         helpDescription: 'Move cursor down',
@@ -80,7 +80,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'goToBottom',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'go to bottom',
         helpDescription: 'Jump to last entry',
@@ -94,7 +94,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'goToTop',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'go to top',
         helpDescription: 'Jump to first entry',
@@ -109,7 +109,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'focusLeft',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'focus left panel',
         helpDescription: 'Focus left panel',
@@ -123,7 +123,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'focusRight',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'focus right panel',
         helpDescription: 'Focus right panel',
@@ -137,7 +137,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'switchPanel',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'switch panel',
         helpDescription: 'Switch panel focus',
@@ -148,7 +148,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'expandOrOpen',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'expand/collapse',
         helpDescription: 'Expand directory or enter file',
@@ -159,18 +159,18 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'openDiff',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'open diff',
         helpDescription: 'Open unified diff view',
         keyDef: 'enter',
         helpKey: 'Enter',
         match: (_input, key) => key.return,
-        effect: { type: 'dispatch', action: { type: 'OPEN_DIFF' } },
+        effect: { type: 'dispatch', action: { type: 'OPEN_FILE_DIFF' } },
     },
     {
         id: 'collapse',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'collapse',
         helpDescription: 'Collapse directory or go to parent',
@@ -185,7 +185,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'expandAll',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'expand all',
         helpDescription: 'Expand all directories',
@@ -197,7 +197,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'collapseAll',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'collapse all',
         helpDescription: 'Collapse all directories',
@@ -209,7 +209,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'halfPageDown',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'half page down',
         helpDescription: 'Scroll half page down',
@@ -223,7 +223,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'halfPageUp',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'half page up',
         helpDescription: 'Scroll half page up',
@@ -237,7 +237,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'fullPageDown',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'full page down',
         helpDescription: 'Scroll full page down',
@@ -251,7 +251,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'fullPageUp',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'full page up',
         helpDescription: 'Scroll full page up',
@@ -265,7 +265,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'nextDiff',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'next diff',
         helpDescription: 'Jump to next difference',
@@ -280,7 +280,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'prevDiff',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'prev diff',
         helpDescription: 'Jump to previous difference',
@@ -295,7 +295,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'yankPath',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'yank path',
         helpDescription: 'Copy file path to clipboard',
@@ -306,7 +306,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'search',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '/',
         description: 'filter',
         helpDescription: 'Filter entries by name',
@@ -317,7 +317,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'toggleFilter',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'f',
         description: 'diff only',
         helpDescription: 'Toggle diff-only filter',
@@ -328,7 +328,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'copyToRight',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '>/<',
         description: 'copy to right',
         helpDescription: 'Copy entry to right side',
@@ -339,7 +339,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'copyToLeft',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'copy to left',
         helpDescription: 'Copy entry to left side',
@@ -350,7 +350,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'delete',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'd',
         description: 'delete',
         helpDescription: 'Delete selected entry',
@@ -361,7 +361,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'quickIgnore',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'i',
         description: 'ignore entry',
         helpDescription: 'Quick-add entry to ignore',
@@ -372,7 +372,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'contextMenu',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '.',
         description: 'actions',
         helpDescription: 'Open actions menu',
@@ -383,7 +383,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'markPair',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'm',
         description: 'pair dirs',
         helpDescription: 'Mark/pair renamed directory',
@@ -394,7 +394,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'unpair',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'unpair',
         helpDescription: 'Remove directory pairing',
@@ -405,7 +405,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'clearPairMark',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'Esc',
         description: 'clear mark',
         helpDescription: 'Clear pending pair mark',
@@ -416,7 +416,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'refresh',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'r',
         description: 'refresh',
         helpDescription: 'Refresh directory comparison',
@@ -427,7 +427,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'preferences',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: ',',
         description: 'preferences',
         helpDescription: 'Open preferences',
@@ -436,6 +436,20 @@ export const defaultKeymap: Shortcut[] = [
         match: (input) => input === ',',
         effect: { type: 'dispatch', action: { type: 'TOGGLE_PREFERENCES' } },
     },
+
+    // File diff
+    {
+        id: 'closeFileDiff',
+        mode: 'fileDiff',
+        keyLabel: 'q',
+        description: 'close',
+        helpDescription: 'Close file diff view',
+        keyDef: ['q', 'escape'],
+        helpKey: 'q/Esc',
+        match: (input, key) => key.escape || input === 'q',
+        effect: { type: 'dispatch', action: { type: 'HIDE_FILE_DIFF' } },
+    },
+
     {
         id: 'showHelp',
         mode: 'universal',
@@ -449,7 +463,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'ignorePatterns',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'I',
         description: 'ignore patterns',
         helpDescription: 'Manage ignore patterns',
@@ -460,7 +474,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'toggleIgnore',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'toggle ignore',
         helpDescription: 'Toggle ignore filtering',
@@ -472,7 +486,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'sortMenu',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 's',
         description: 'sort',
         helpDescription: 'Open sort options',
@@ -483,7 +497,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'reverseSortDirection',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: 'S',
         description: 'reverse sort',
         helpDescription: 'Reverse sort direction',
@@ -497,7 +511,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'swapPanels',
-        mode: 'browser',
+        mode: 'directoryDiff',
         keyLabel: '',
         description: 'swap panels',
         helpDescription: 'Swap left and right panels',

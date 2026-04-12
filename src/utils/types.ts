@@ -27,7 +27,7 @@ export type ScanResult = Map<string, FileEntry>
 
 export type PanelSide = 'left' | 'right'
 
-export type ViewType = 'browser' | 'diffView'
+export type ViewType = 'directoryDiff' | 'fileDiff'
 
 export type DialogType =
     | 'preferences'
@@ -55,7 +55,7 @@ export type Action =
       }
     | { type: 'SWITCH_PANEL' }
     | { type: 'NAVIGATE_INTO' }
-    | { type: 'OPEN_DIFF' }
+    | { type: 'OPEN_FILE_DIFF' }
     | { type: 'COLLAPSE_PARENT' }
     | { type: 'REDRAW' }
     | { type: 'TOGGLE_PREFERENCES' }
@@ -100,8 +100,8 @@ export type Action =
     | { type: 'SET_IGNORE_PATTERNS'; global: string[]; pair: string[] }
     | { type: 'SHOW_HELP' }
     | { type: 'HIDE_HELP' }
-    | { type: 'SHOW_DIFF_VIEW'; entryIndex: number }
-    | { type: 'HIDE_DIFF_VIEW' }
+    | { type: 'SHOW_FILE_DIFF'; entryIndex: number }
+    | { type: 'HIDE_FILE_DIFF' }
     | { type: 'SHOW_KEYBINDINGS_EDITOR' }
     | { type: 'HIDE_KEYBINDINGS_EDITOR' }
     | { type: 'KEYBINDINGS_UPDATED' }
@@ -136,7 +136,7 @@ export interface AppState {
     ignoreEnabled: boolean
     globalIgnorePatterns: string[]
     pairIgnorePatterns: string[]
-    diffViewEntryIndex: number | null
+    fileDiffEntryIndex: number | null
     keybindingVersion: number
     searchQuery: string
     searchInputActive: boolean

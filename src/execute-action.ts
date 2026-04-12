@@ -89,8 +89,8 @@ export function executeAction(
         return
     }
 
-    // Intercept OPEN_DIFF for files: use external diff command or built-in viewer
-    if (action.type === 'OPEN_DIFF') {
+    // Intercept OPEN_FILE_DIFF for files: use external diff command or built-in viewer
+    if (action.type === 'OPEN_FILE_DIFF') {
         const entry = state.entries[state.cursorIndex]
         if (entry && !entry.isDirectory) {
             const diffCmd = state.config.diffCommand?.trim()
@@ -102,7 +102,7 @@ export function executeAction(
                 return
             }
             dispatch({
-                type: 'SHOW_DIFF_VIEW',
+                type: 'SHOW_FILE_DIFF',
                 entryIndex: state.cursorIndex,
             })
             return

@@ -187,7 +187,11 @@ export function matchShortcut(
 
     // Check for sequence matches first
     for (const shortcut of keymap) {
-        if (shortcut.mode !== 'browser' && shortcut.mode !== 'universal')
+        if (
+            shortcut.mode !== 'directoryDiff'
+            && shortcut.mode !== 'fileDiff'
+            && shortcut.mode !== 'universal'
+        )
             continue
         if (!shortcut.sequence) continue
         if (pending === shortcut.sequence) {
@@ -204,7 +208,11 @@ export function matchShortcut(
 
     // No sequence match — check normal shortcuts
     for (const shortcut of keymap) {
-        if (shortcut.mode !== 'browser' && shortcut.mode !== 'universal')
+        if (
+            shortcut.mode !== 'directoryDiff'
+            && shortcut.mode !== 'fileDiff'
+            && shortcut.mode !== 'universal'
+        )
             continue
         if (shortcut.sequence) continue
         if (SCROLL_CONFIG[shortcut.id]) continue

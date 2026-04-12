@@ -7,7 +7,7 @@ export function createInitialState(init: {
     ignoreEnabled: boolean
 }): AppState {
     return {
-        view: 'browser',
+        view: 'directoryDiff',
         focusedPanel: 'left',
         expandedDirs: new Set(),
         cursorIndex: 0,
@@ -23,7 +23,7 @@ export function createInitialState(init: {
         ignoreEnabled: init.ignoreEnabled,
         globalIgnorePatterns: [],
         pairIgnorePatterns: [],
-        diffViewEntryIndex: null,
+        fileDiffEntryIndex: null,
         keybindingVersion: 0,
         searchQuery: '',
         searchInputActive: false,
@@ -208,7 +208,7 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'FOCUS_PANEL':
             return { ...state, focusedPanel: action.panel }
         case 'NAVIGATE_INTO':
-        case 'OPEN_DIFF':
+        case 'OPEN_FILE_DIFF':
             return toggleExpandDir(state)
         case 'COLLAPSE_PARENT': {
             const entry = state.entries[state.cursorIndex]
@@ -472,18 +472,18 @@ export function reducer(state: AppState, action: Action): AppState {
             return { ...state }
         case 'SHOW_HELP':
             return { ...state, dialog: 'help' }
-        case 'SHOW_DIFF_VIEW':
+        case 'SHOW_FILE_DIFF':
             return {
                 ...state,
-                view: 'diffView',
-                diffViewEntryIndex: action.entryIndex,
+                view: 'fileDiff',
+                fileDiffEntryIndex: action.entryIndex,
             }
-        case 'HIDE_DIFF_VIEW':
+        case 'HIDE_FILE_DIFF':
             return {
                 ...state,
-                view: 'browser',
+                view: 'directoryDiff',
                 dialog: null,
-                diffViewEntryIndex: null,
+                fileDiffEntryIndex: null,
             }
         case 'TOGGLE_PREFERENCES':
             return {

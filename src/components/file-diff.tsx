@@ -3,15 +3,15 @@ import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { structuredPatch } from 'diff'
 import { Box, Text, useInput } from 'ink'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { Action, CompareEntry } from '~/utils/types'
 import { KeyboardHints } from '~/components/keyboard-hints'
-import { useScrollNavigation, useUniversalShortcuts } from '~/hooks'
+import { useUniversalShortcuts } from '~/hooks'
 import { isBinary } from '~/utils/binary'
 
-interface DiffViewProps {
+interface FileDiffProps {
     entry: CompareEntry
     leftDir: string
     rightDir: string
@@ -30,6 +30,7 @@ interface DiffLine {
     leftLineNum: number | null
     rightLineNum: number | null
     content: string
+    hunkIndex: number
 }
 
 const MAX_DIFF_SIZE = 1_000_000
@@ -51,9 +52,10 @@ function computeDiffLines(
     )
 
     const lines: DiffLine[] = []
-    for (const hunk of patch.hunks) {
+    patch.hunks.forEach((hunk, hunkIndex) => {
         lines.push({
             type: 'hunk-header',
+            hunkIndex,
             leftLineNum: null,
             rightLineNum: null,
             content: `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`,
@@ -67,6 +69,7 @@ function computeDiffLines(
             if (prefix === '-') {
                 lines.push({
                     type: 'removed',
+                    hunkIndex,
                     leftLineNum: leftNum++,
                     rightLineNum: null,
                     content,
@@ -74,6 +77,7 @@ function computeDiffLines(
             } else if (prefix === '+') {
                 lines.push({
                     type: 'added',
+                    hunkIndex,
                     leftLineNum: null,
                     rightLineNum: rightNum++,
                     content,
@@ -81,17 +85,18 @@ function computeDiffLines(
             } else {
                 lines.push({
                     type: 'context',
+                    hunkIndex,
                     leftLineNum: leftNum++,
                     rightLineNum: rightNum++,
                     content,
                 })
             }
         }
-    }
+    })
     return lines
 }
 
-export function DiffView({
+export function FileDiff({
     entry,
     leftDir,
     rightDir,
@@ -103,29 +108,57 @@ export function DiffView({
     keymap,
     dialogOpen,
     showHints,
-}: DiffViewProps) {
+}: FileDiffProps) {
     const [lines, setLines] = useState<DiffLine[] | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const [focusedHunk, setFocusedHunk] = useState(0)
+    const [scrollOffset, setScrollOffset] = useState(0)
+    const pendingGRef = useRef(false)
 
     // header (1) + footer (1) + optional hints (1) reserved rows
     const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
 
-    const { scrollOffset, handleInput: handleNav } = useScrollNavigation({
-        totalLines: lines?.length ?? 0,
-        maxVisibleLines: contentHeight,
-        useDoubleG: false,
-    })
+    const hunkRanges = useMemo(() => {
+        if (!lines || lines.length === 0) return []
+        const ranges: Array<{ start: number; end: number }> = []
+        let currentHunk = lines[0].hunkIndex
+        let start = 0
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].hunkIndex !== currentHunk) {
+                ranges.push({ start, end: i - 1 })
+                currentHunk = lines[i].hunkIndex
+                start = i
+            }
+        }
+        ranges.push({ start, end: lines.length - 1 })
+        return ranges
+    }, [lines])
+
+    useEffect(() => {
+        const range = hunkRanges[focusedHunk]
+        if (!range) return
+        const total = lines?.length ?? 0
+        const maxScroll = Math.max(0, total - contentHeight)
+        setScrollOffset((prev) => {
+            if (range.start < prev) return range.start
+            if (range.end >= prev + contentHeight) {
+                return Math.min(range.start, maxScroll)
+            }
+            return prev
+        })
+    }, [focusedHunk, hunkRanges, contentHeight, lines])
 
     const isActive = !(dialogOpen ?? false)
 
-    useUniversalShortcuts(keymap ?? [], dispatch, isActive)
+    useUniversalShortcuts(keymap ?? [], dispatch, isActive, 'fileDiff')
 
-    const hintItems = [
-        { key: 'q', label: 'close' },
-        ...(keymap ?? [])
-            .filter((s) => s.mode === 'universal' && s.keyLabel !== '')
-            .map((s) => ({ key: s.keyLabel, label: s.description })),
-    ]
+    const hintItems = (keymap ?? [])
+        .filter(
+            (s) =>
+                (s.mode === 'universal' || s.mode === 'fileDiff')
+                && s.keyLabel !== '',
+        )
+        .map((s) => ({ key: s.keyLabel, label: s.description }))
 
     useEffect(() => {
         let cancelled = false
@@ -201,14 +234,28 @@ export function DiffView({
 
     useInput(
         (input, key) => {
-            if (key.escape || input === 'q') {
-                dispatch({ type: 'HIDE_DIFF_VIEW' })
-                return
+            if (!lines || hunkRanges.length === 0) return
+            if (input === 'j' || key.downArrow) {
+                setFocusedHunk((prev) =>
+                    Math.min(hunkRanges.length - 1, prev + 1),
+                )
+                pendingGRef.current = false
+            } else if (input === 'k' || key.upArrow) {
+                setFocusedHunk((prev) => Math.max(0, prev - 1))
+                pendingGRef.current = false
+            } else if (input === 'G') {
+                setFocusedHunk(hunkRanges.length - 1)
+                pendingGRef.current = false
+            } else if (input === 'g') {
+                if (pendingGRef.current) {
+                    setFocusedHunk(0)
+                    pendingGRef.current = false
+                } else {
+                    pendingGRef.current = true
+                }
+            } else {
+                pendingGRef.current = false
             }
-
-            if (!lines) return
-
-            handleNav(input, key)
         },
         { isActive },
     )
@@ -280,6 +327,7 @@ export function DiffView({
                 >
                     {visibleLines!.map((line, i) => {
                         const idx = scrollOffset + i
+                        const isFocused = line.hunkIndex === focusedHunk
                         const leftGutter =
                             line.leftLineNum !== null ?
                                 String(line.leftLineNum).padStart(gutterWidth)
@@ -309,18 +357,26 @@ export function DiffView({
                             0,
                             columns - gutterTotal,
                         )
-                        const displayContent = line.content.slice(
-                            0,
-                            maxContentWidth,
-                        )
+                        const displayContent = line.content
+                            .slice(0, maxContentWidth)
+                            .padEnd(maxContentWidth)
+
+                        const bg = isFocused ? 'blackBright' : undefined
 
                         return (
                             <Text
                                 key={idx}
                                 color={color}
-                                dimColor={line.type === 'hunk-header'}
+                                dimColor={
+                                    line.type === 'hunk-header' && !isFocused
+                                }
+                                bold={isFocused && line.type === 'hunk-header'}
+                                backgroundColor={bg}
                             >
-                                <Text dimColor>
+                                <Text
+                                    dimColor={!isFocused}
+                                    backgroundColor={bg}
+                                >
                                     {leftGutter}
                                     {'\u2502'}
                                     {rightGutter}
@@ -335,8 +391,8 @@ export function DiffView({
             {/* Footer */}
             <Box>
                 <Text dimColor>
-                    {lines ?
-                        ` ${scrollOffset + 1}-${Math.min(scrollOffset + contentHeight, lines.length)} of ${lines.length} lines`
+                    {lines && hunkRanges.length > 0 ?
+                        ` hunk ${focusedHunk + 1} of ${hunkRanges.length}`
                     :   ''}
                 </Text>
             </Box>
