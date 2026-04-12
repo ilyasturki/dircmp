@@ -44,6 +44,20 @@ export function executeAction(
         return
     }
 
+    // Intercept OPEN_IN_EDITOR: launch $EDITOR on the focused entry
+    if (action.type === 'OPEN_IN_EDITOR') {
+        const entry = state.entries[state.cursorIndex]
+        if (!entry || !onShellOut) return
+        const editor = process.env.EDITOR || process.env.VISUAL
+        if (!editor) return
+        const side = state.focusedPanel
+        const baseDir = side === 'left' ? leftDir : rightDir
+        const fullPath = path.join(baseDir, entry.relativePath)
+        const parts = editor.split(/\s+/)
+        onShellOut(parts[0]!, [...parts.slice(1), fullPath])
+        return
+    }
+
     // Intercept COPY_TO_RIGHT / COPY_TO_LEFT
     if (action.type === 'COPY_TO_RIGHT' || action.type === 'COPY_TO_LEFT') {
         const entry = state.entries[state.cursorIndex]

@@ -305,6 +305,17 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'YANK_PATH' } },
     },
     {
+        id: 'openInEditor',
+        mode: 'directoryDiff',
+        keyLabel: 'e',
+        description: 'edit',
+        helpDescription: 'Open focused entry in $EDITOR',
+        keyDef: 'e',
+        helpKey: 'e',
+        match: (input) => input === 'e',
+        effect: { type: 'dispatch', action: { type: 'OPEN_IN_EDITOR' } },
+    },
+    {
         id: 'search',
         mode: 'directoryDiff',
         keyLabel: '/',
