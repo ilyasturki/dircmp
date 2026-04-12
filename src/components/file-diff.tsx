@@ -38,6 +38,11 @@ type DiffRow =
     | { kind: 'split'; left: DiffCell; right: DiffCell }
     | { kind: 'hunk-header'; content: string }
 
+interface HunkRange {
+    start: number
+    end: number
+}
+
 const MAX_DIFF_SIZE = 1_000_000
 const BLANK_CELL: DiffCell = { type: 'blank', lineNum: null, content: '' }
 
@@ -72,36 +77,20 @@ function computeDiffRows(
             if (prefix === '-') {
                 rows.push({
                     kind: 'split',
-                    left: {
-                        type: 'removed',
-                        lineNum: leftNum++,
-                        content,
-                    },
+                    left: { type: 'removed', lineNum: leftNum++, content },
                     right: BLANK_CELL,
                 })
             } else if (prefix === '+') {
                 rows.push({
                     kind: 'split',
                     left: BLANK_CELL,
-                    right: {
-                        type: 'added',
-                        lineNum: rightNum++,
-                        content,
-                    },
+                    right: { type: 'added', lineNum: rightNum++, content },
                 })
             } else {
                 rows.push({
                     kind: 'split',
-                    left: {
-                        type: 'context',
-                        lineNum: leftNum++,
-                        content,
-                    },
-                    right: {
-                        type: 'context',
-                        lineNum: rightNum++,
-                        content,
-                    },
+                    left: { type: 'context', lineNum: leftNum++, content },
+                    right: { type: 'context', lineNum: rightNum++, content },
                 })
             }
         }
@@ -119,129 +108,90 @@ function isChangeRow(row: DiffRow): boolean {
     )
 }
 
-export function FileDiff({
-    entry,
-    leftDir,
-    rightDir,
-    leftFilePath,
-    rightFilePath,
-    dispatch,
-    columns,
-    rows,
-    keymap,
-    dialogOpen,
-    showHints,
-    focusedSide = 'left',
-}: FileDiffProps) {
+function computeHunkRanges(diffRows: DiffRow[] | null): HunkRange[] {
+    if (!diffRows || diffRows.length === 0) return []
+    const ranges: HunkRange[] = []
+    let blockStart = -1
+    for (let i = 0; i < diffRows.length; i++) {
+        if (isChangeRow(diffRows[i])) {
+            if (blockStart === -1) blockStart = i
+        } else if (blockStart !== -1) {
+            ranges.push({ start: blockStart, end: i - 1 })
+            blockStart = -1
+        }
+    }
+    if (blockStart !== -1) {
+        ranges.push({ start: blockStart, end: diffRows.length - 1 })
+    }
+    return ranges
+}
+
+function colorFor(type: CellType): string | undefined {
+    if (type === 'added' || type === 'removed') return 'yellow'
+    return undefined
+}
+
+async function readFileForDiff(
+    filePath: string,
+): Promise<{ content: string } | { error: string }> {
+    const buf = await fsp.readFile(filePath)
+    if (buf.length > MAX_DIFF_SIZE) {
+        return { error: 'File too large to diff inline' }
+    }
+    if (isBinary(buf)) {
+        return { error: 'Binary file — cannot display diff' }
+    }
+    return { content: buf.toString('utf-8') }
+}
+
+function useDiffRows(
+    entry: CompareEntry,
+    leftPath: string,
+    rightPath: string,
+): { diffRows: DiffRow[] | null; error: string | null } {
     const [diffRows, setDiffRows] = useState<DiffRow[] | null>(null)
     const [error, setError] = useState<string | null>(null)
-    const [focusedHunk, setFocusedHunk] = useState(0)
-    const [scrollOffset, setScrollOffset] = useState(0)
-    const pendingGRef = useRef(false)
-
-    // header (1) + footer (1) + optional hints (1) reserved rows
-    const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
-
-    const hunkRanges = useMemo(() => {
-        if (!diffRows || diffRows.length === 0) return []
-        const ranges: Array<{ start: number; end: number }> = []
-        let blockStart = -1
-        for (let i = 0; i < diffRows.length; i++) {
-            if (isChangeRow(diffRows[i])) {
-                if (blockStart === -1) blockStart = i
-            } else if (blockStart !== -1) {
-                ranges.push({ start: blockStart, end: i - 1 })
-                blockStart = -1
-            }
-        }
-        if (blockStart !== -1) {
-            ranges.push({ start: blockStart, end: diffRows.length - 1 })
-        }
-        return ranges
-    }, [diffRows])
-
-    useEffect(() => {
-        const range = hunkRanges[focusedHunk]
-        if (!range) return
-        const total = diffRows?.length ?? 0
-        const maxScroll = Math.max(0, total - contentHeight)
-        setScrollOffset((prev) => {
-            if (range.start < prev) return range.start
-            if (range.end >= prev + contentHeight) {
-                return Math.min(range.start, maxScroll)
-            }
-            return prev
-        })
-    }, [focusedHunk, hunkRanges, contentHeight, diffRows])
-
-    const isActive = !(dialogOpen ?? false)
-
-    useUniversalShortcuts(keymap ?? [], dispatch, isActive, 'fileDiff')
-
-    const hintItems = (keymap ?? [])
-        .filter(
-            (s) =>
-                (s.mode === 'universal' || s.mode === 'fileDiff')
-                && s.keyLabel !== '',
-        )
-        .map((s) => ({ key: s.keyLabel, label: s.description }))
 
     useEffect(() => {
         let cancelled = false
 
         async function load() {
             try {
-                const leftPath =
-                    leftFilePath ?? path.join(leftDir, entry.relativePath)
-                const rightPath =
-                    rightFilePath ?? path.join(rightDir, entry.relativePath)
-
                 let leftContent = ''
                 let rightContent = ''
 
                 if (entry.status !== 'only-right') {
-                    const buf = await fsp.readFile(leftPath)
-                    if (buf.length > MAX_DIFF_SIZE) {
-                        if (!cancelled)
-                            setError('File too large to diff inline')
+                    const result = await readFileForDiff(leftPath)
+                    if (cancelled) return
+                    if ('error' in result) {
+                        setError(result.error)
                         return
                     }
-                    if (isBinary(buf)) {
-                        if (!cancelled)
-                            setError('Binary file — cannot display diff')
-                        return
-                    }
-                    leftContent = buf.toString('utf-8')
+                    leftContent = result.content
                 }
 
                 if (entry.status !== 'only-left') {
-                    const buf = await fsp.readFile(rightPath)
-                    if (buf.length > MAX_DIFF_SIZE) {
-                        if (!cancelled)
-                            setError('File too large to diff inline')
+                    const result = await readFileForDiff(rightPath)
+                    if (cancelled) return
+                    if ('error' in result) {
+                        setError(result.error)
                         return
                     }
-                    if (isBinary(buf)) {
-                        if (!cancelled)
-                            setError('Binary file — cannot display diff')
-                        return
-                    }
-                    rightContent = buf.toString('utf-8')
+                    rightContent = result.content
                 }
 
-                const rows = computeDiffRows(
+                const computed = computeDiffRows(
                     leftContent,
                     rightContent,
                     entry.relativePath,
                     entry.relativePath,
                 )
 
-                if (!cancelled) {
-                    if (rows.length === 0) {
-                        setError('Files are identical')
-                    } else {
-                        setDiffRows(rows)
-                    }
+                if (cancelled) return
+                if (computed.length === 0) {
+                    setError('Files are identical')
+                } else {
+                    setDiffRows(computed)
                 }
             } catch (e) {
                 if (!cancelled) {
@@ -256,11 +206,18 @@ export function FileDiff({
         return () => {
             cancelled = true
         }
-    }, [entry, leftDir, rightDir])
+    }, [entry, leftPath, rightPath])
+
+    return { diffRows, error }
+}
+
+function useHunkNavigation(hunkRanges: HunkRange[], isActive: boolean): number {
+    const [focusedHunk, setFocusedHunk] = useState(0)
+    const pendingGRef = useRef(false)
 
     useInput(
         (input, key) => {
-            if (!diffRows || hunkRanges.length === 0) return
+            if (hunkRanges.length === 0) return
             if (input === 'j' || key.downArrow) {
                 setFocusedHunk((prev) =>
                     Math.min(hunkRanges.length - 1, prev + 1),
@@ -286,25 +243,84 @@ export function FileDiff({
         { isActive },
     )
 
-    const visibleRows = diffRows?.slice(
-        scrollOffset,
-        scrollOffset + contentHeight,
+    return focusedHunk
+}
+
+function useAutoScroll(
+    focusedRange: HunkRange | undefined,
+    totalRows: number,
+    contentHeight: number,
+): number {
+    const [scrollOffset, setScrollOffset] = useState(0)
+    useEffect(() => {
+        if (!focusedRange) return
+        const maxScroll = Math.max(0, totalRows - contentHeight)
+        setScrollOffset((prev) => {
+            if (focusedRange.start < prev) return focusedRange.start
+            if (focusedRange.end >= prev + contentHeight) {
+                return Math.min(focusedRange.start, maxScroll)
+            }
+            return prev
+        })
+    }, [focusedRange, totalRows, contentHeight])
+    return scrollOffset
+}
+
+function computeGutterWidth(diffRows: DiffRow[] | null): number {
+    if (!diffRows) return 3
+    let max = 1
+    for (const row of diffRows) {
+        if (row.kind !== 'split') continue
+        if (row.left.lineNum !== null && row.left.lineNum > max)
+            max = row.left.lineNum
+        if (row.right.lineNum !== null && row.right.lineNum > max)
+            max = row.right.lineNum
+    }
+    return max.toString().length
+}
+
+export function FileDiff({
+    entry,
+    leftDir,
+    rightDir,
+    leftFilePath,
+    rightFilePath,
+    dispatch,
+    columns,
+    rows,
+    keymap,
+    dialogOpen,
+    showHints,
+    focusedSide = 'left',
+}: FileDiffProps) {
+    const leftPath = leftFilePath ?? path.join(leftDir, entry.relativePath)
+    const rightPath = rightFilePath ?? path.join(rightDir, entry.relativePath)
+
+    const { diffRows, error } = useDiffRows(entry, leftPath, rightPath)
+    const hunkRanges = useMemo(() => computeHunkRanges(diffRows), [diffRows])
+
+    const isActive = !(dialogOpen ?? false)
+    useUniversalShortcuts(keymap ?? [], dispatch, isActive, 'fileDiff')
+    const focusedHunk = useHunkNavigation(hunkRanges, isActive)
+
+    // header (1) + footer (1) + optional hints (1) reserved rows
+    const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
+    const scrollOffset = useAutoScroll(
+        hunkRanges[focusedHunk],
+        diffRows?.length ?? 0,
+        contentHeight,
     )
 
-    // Gutter width: max line number length across both sides.
-    const gutterWidth =
-        diffRows ?
-            Math.max(
-                1,
-                ...diffRows.flatMap((r) =>
-                    r.kind === 'split' ?
-                        [r.left.lineNum ?? 0, r.right.lineNum ?? 0]
-                    :   [0],
-                ),
-            ).toString().length
-        :   3
+    const hintItems = (keymap ?? [])
+        .filter(
+            (s) =>
+                (s.mode === 'universal' || s.mode === 'fileDiff')
+                && s.keyLabel !== '',
+        )
+        .map((s) => ({ key: s.keyLabel, label: s.description }))
 
-    // Per half: gutter + '│' + ' ' + content  = gutter + 2 + content
+    const gutterWidth = computeGutterWidth(diffRows)
+    // Per half: gutter + '│' + ' ' + content = gutter + 2 + content
     // Plus a middle ' │ ' separator (3 chars) between halves.
     const halfOverhead = gutterWidth + 2
     const contentWidth = Math.max(
@@ -312,10 +328,10 @@ export function FileDiff({
         Math.floor((columns - 3 - 2 * halfOverhead) / 2),
     )
 
-    function colorFor(type: CellType): string | undefined {
-        if (type === 'added' || type === 'removed') return 'yellow'
-        return undefined
-    }
+    const visibleRows = diffRows?.slice(
+        scrollOffset,
+        scrollOffset + contentHeight,
+    )
 
     function renderHalf(
         cell: DiffCell,
@@ -327,13 +343,11 @@ export function FileDiff({
                 String(cell.lineNum).padStart(gutterWidth)
             :   ' '.repeat(gutterWidth)
         const content = cell.content.slice(0, contentWidth).padEnd(contentWidth)
-        const color = colorFor(cell.type)
         const isSelected = inFocusedBlock && isFocusedSide
-        const isDimSelected = inFocusedBlock && !isFocusedSide
-        const bg = isDimSelected ? 'white' : undefined
+        const bg = inFocusedBlock && !isFocusedSide ? 'white' : undefined
         return (
             <Text
-                color={color}
+                color={colorFor(cell.type)}
                 backgroundColor={bg}
                 inverse={isSelected}
             >
