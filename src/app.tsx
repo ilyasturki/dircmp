@@ -114,7 +114,9 @@ export function App({
         effectiveLeftDir,
         effectiveRightDir,
         dispatch,
-        state.dialog === null && !state.searchInputActive,
+        state.view === 'browser'
+            && state.dialog === null
+            && !state.searchInputActive,
         refresh,
         contentHeight,
         handleShellOut,
@@ -186,7 +188,9 @@ export function App({
                             cursorIndex={state.cursorIndex}
                             focusedPanel={state.focusedPanel}
                             dialogOpen={
-                                state.dialog !== null || state.searchInputActive
+                                state.view !== 'browser'
+                                || state.dialog !== null
+                                || state.searchInputActive
                             }
                             visibleHeight={contentHeight}
                             scrollOffset={scrollOffset}
@@ -219,6 +223,20 @@ export function App({
                 sortMode={state.sortMode}
                 sortDirection={state.sortDirection}
             />
+            {state.view === 'diffView'
+                && state.diffViewEntryIndex !== null
+                && state.entries[state.diffViewEntryIndex] && (
+                    <DiffView
+                        entry={state.entries[state.diffViewEntryIndex]!}
+                        leftDir={effectiveLeftDir}
+                        rightDir={effectiveRightDir}
+                        dispatch={dispatch}
+                        columns={columns}
+                        rows={rows}
+                        keymap={keymap}
+                        dialogOpen={state.dialog !== null}
+                    />
+                )}
             {state.dialog === 'preferences' && (
                 <PreferencesDialog
                     config={state.config}
@@ -313,18 +331,6 @@ export function App({
                     rows={rows}
                 />
             )}
-            {state.dialog === 'diffView'
-                && state.diffViewEntryIndex !== null
-                && state.entries[state.diffViewEntryIndex] && (
-                    <DiffView
-                        entry={state.entries[state.diffViewEntryIndex]!}
-                        leftDir={effectiveLeftDir}
-                        rightDir={effectiveRightDir}
-                        dispatch={dispatch}
-                        columns={columns}
-                        rows={rows}
-                    />
-                )}
         </Box>
     )
 }

@@ -7,6 +7,7 @@ export function createInitialState(init: {
     ignoreEnabled: boolean
 }): AppState {
     return {
+        view: 'browser',
         focusedPanel: 'left',
         expandedDirs: new Set(),
         cursorIndex: 0,
@@ -474,11 +475,16 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'SHOW_DIFF_VIEW':
             return {
                 ...state,
-                dialog: 'diffView',
+                view: 'diffView',
                 diffViewEntryIndex: action.entryIndex,
             }
         case 'HIDE_DIFF_VIEW':
-            return { ...state, dialog: null, diffViewEntryIndex: null }
+            return {
+                ...state,
+                view: 'browser',
+                dialog: null,
+                diffViewEntryIndex: null,
+            }
         case 'TOGGLE_PREFERENCES':
             return {
                 ...state,

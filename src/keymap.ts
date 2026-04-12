@@ -8,7 +8,7 @@ type ShortcutEffect = { type: 'dispatch'; action: Action } | { type: 'exit' }
 
 export interface Shortcut {
     id: string
-    mode: 'browser' | 'global'
+    mode: 'browser' | 'global' | 'universal'
     keyLabel: string
     description: string
     helpDescription: string
@@ -440,7 +440,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'showHelp',
-        mode: 'browser',
+        mode: 'universal',
         keyLabel: '?',
         description: 'keybindings',
         helpDescription: 'Show all keybindings',
@@ -511,7 +511,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'editKeybindings',
-        mode: 'browser',
+        mode: 'universal',
         keyLabel: 'K',
         description: 'edit keybindings',
         helpDescription: 'Open keybindings editor',
@@ -525,7 +525,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'releaseNotes',
-        mode: 'browser',
+        mode: 'universal',
         keyLabel: 'n',
         description: 'release notes',
         helpDescription: 'Show release notes',

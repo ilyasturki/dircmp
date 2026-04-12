@@ -5,8 +5,9 @@ import { structuredPatch } from 'diff'
 import { Box, Text, useInput } from 'ink'
 import { useEffect, useState } from 'react'
 
+import type { Shortcut } from '~/keymap'
 import type { Action, CompareEntry } from '~/utils/types'
-import { useScrollNavigation } from '~/hooks'
+import { useScrollNavigation, useUniversalShortcuts } from '~/hooks'
 import { isBinary } from '~/utils/binary'
 
 interface DiffViewProps {
@@ -18,6 +19,8 @@ interface DiffViewProps {
     dispatch: Dispatch<Action>
     columns: number
     rows: number
+    keymap?: Shortcut[]
+    dialogOpen?: boolean
 }
 
 interface DiffLine {
@@ -95,6 +98,8 @@ export function DiffView({
     dispatch,
     columns,
     rows,
+    keymap,
+    dialogOpen,
 }: DiffViewProps) {
     const [lines, setLines] = useState<DiffLine[] | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -107,6 +112,10 @@ export function DiffView({
         maxVisibleLines: contentHeight,
         useDoubleG: false,
     })
+
+    const isActive = !(dialogOpen ?? false)
+
+    useUniversalShortcuts(keymap ?? [], dispatch, isActive)
 
     useEffect(() => {
         let cancelled = false
@@ -180,16 +189,19 @@ export function DiffView({
         }
     }, [entry, leftDir, rightDir])
 
-    useInput((input, key) => {
-        if (key.escape || input === 'q') {
-            dispatch({ type: 'HIDE_DIFF_VIEW' })
-            return
-        }
+    useInput(
+        (input, key) => {
+            if (key.escape || input === 'q') {
+                dispatch({ type: 'HIDE_DIFF_VIEW' })
+                return
+            }
 
-        if (!lines) return
+            if (!lines) return
 
-        handleNav(input, key)
-    })
+            handleNav(input, key)
+        },
+        { isActive },
+    )
 
     const visibleLines = lines?.slice(
         scrollOffset,

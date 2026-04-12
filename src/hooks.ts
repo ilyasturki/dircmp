@@ -12,6 +12,7 @@ import { scanDirectory } from '~/utils/scanner'
 
 export { useListNavigation } from '~/hooks/use-list-navigation'
 export { useScrollNavigation } from '~/hooks/use-scroll-navigation'
+export { useUniversalShortcuts } from '~/hooks/use-universal-shortcuts'
 
 export function useTerminalDimensions(stdout: WriteStream | undefined) {
     const [dimensions, setDimensions] = useState({
@@ -186,7 +187,12 @@ export function matchShortcut(
 
     // Check for sequence matches first
     for (const shortcut of keymap) {
-        if (shortcut.mode !== 'global' && shortcut.mode !== 'browser') continue
+        if (
+            shortcut.mode !== 'global'
+            && shortcut.mode !== 'browser'
+            && shortcut.mode !== 'universal'
+        )
+            continue
         if (!shortcut.sequence) continue
         if (pending === shortcut.sequence) {
             return { type: 'matched', shortcut }
@@ -202,7 +208,12 @@ export function matchShortcut(
 
     // No sequence match — check normal shortcuts
     for (const shortcut of keymap) {
-        if (shortcut.mode !== 'global' && shortcut.mode !== 'browser') continue
+        if (
+            shortcut.mode !== 'global'
+            && shortcut.mode !== 'browser'
+            && shortcut.mode !== 'universal'
+        )
+            continue
         if (shortcut.sequence) continue
         if (SCROLL_CONFIG[shortcut.id]) continue
         if (!shortcut.match(input, key)) continue

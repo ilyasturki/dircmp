@@ -27,6 +27,8 @@ export type ScanResult = Map<string, FileEntry>
 
 export type PanelSide = 'left' | 'right'
 
+export type ViewType = 'browser' | 'diffView'
+
 export type DialogType =
     | 'preferences'
     | 'deleteConfirm'
@@ -34,7 +36,6 @@ export type DialogType =
     | 'ignoreDialog'
     | 'quickIgnore'
     | 'help'
-    | 'diffView'
     | 'keybindingsEditor'
     | 'releaseNotes'
     | 'sortMenu'
@@ -119,6 +120,7 @@ export type Action =
     | { type: 'TOGGLE_SORT_DIRECTION' }
 
 export interface AppState {
+    view: ViewType
     focusedPanel: PanelSide
     expandedDirs: Set<string>
     cursorIndex: number
