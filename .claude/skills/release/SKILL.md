@@ -22,6 +22,12 @@ Current CHANGELOG.md:
 
 !`cat CHANGELOG.md 2>/dev/null || echo "(empty)"`
 
+## Refresh Nix hash
+
+Update `flake.nix` outputHash before CI so the `nix-build` job doesn't fail on a stale hash. The `version` hook re-runs this later; it's idempotent.
+
+!`./scripts/update-nix-hash.sh 2>&1 | tail -5`
+
 ## CI gate
 
 Run CI locally before proceeding. If it fails, stop and report the error.
