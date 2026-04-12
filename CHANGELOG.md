@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0]
+
+### Added
+
+- Direct file-to-file comparison via CLI args (works in TUI, `diff`, and `check` subcommands)
+- Status bar shows file size, relative path, and colored `+N -M` line diff stats for the focused entry
+- `[m]` indicator next to directories marked for pairing
+- Cancel a pending pair mark by pressing `m` again, `u`, or `Escape`
+
+### Changed
+
+- Delete confirmation dialog now uses selectable confirm/cancel options instead of inline key hints
+
 ## [1.1.0]
 
 ### Added

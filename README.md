@@ -84,6 +84,7 @@ bun run build
 
 ```sh
 dircmp <left-dir> <right-dir>
+dircmp <left-file> <right-file>    # direct file-to-file diff
 ```
 
 ### CLI subcommands
@@ -240,7 +241,7 @@ When a directory has been renamed on one side, it shows up as two unmatched entr
 2. Switch to the other panel (`Tab`) and navigate to the corresponding renamed directory.
 3. Press `m` again — the pairing is created and the two directories are compared as one entry.
 
-Both directories must share the same parent directory. To remove a pairing later press `u` on the paired entry, or restart the app.
+Both directories must share the same parent directory. To cancel a pending mark before pairing, press `m` on the marked directory, `u`, or `Escape`. To remove an existing pairing, press `u` on the paired entry or restart the app.
 
 ## Color coding
 
