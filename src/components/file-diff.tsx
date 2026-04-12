@@ -6,7 +6,7 @@ import { Box, Text, useInput } from 'ink'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
-import type { Action, CompareEntry } from '~/utils/types'
+import type { Action, CompareEntry, PanelSide } from '~/utils/types'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { useUniversalShortcuts } from '~/hooks'
 import { isBinary } from '~/utils/binary'
@@ -23,23 +23,30 @@ interface FileDiffProps {
     keymap?: Shortcut[]
     dialogOpen?: boolean
     showHints?: boolean
+    focusedSide?: PanelSide
 }
 
-interface DiffLine {
-    type: 'context' | 'added' | 'removed' | 'hunk-header'
-    leftLineNum: number | null
-    rightLineNum: number | null
+type CellType = 'context' | 'added' | 'removed' | 'blank'
+
+interface DiffCell {
+    type: CellType
+    lineNum: number | null
     content: string
 }
 
-const MAX_DIFF_SIZE = 1_000_000
+type DiffRow =
+    | { kind: 'split'; left: DiffCell; right: DiffCell }
+    | { kind: 'hunk-header'; content: string }
 
-function computeDiffLines(
+const MAX_DIFF_SIZE = 1_000_000
+const BLANK_CELL: DiffCell = { type: 'blank', lineNum: null, content: '' }
+
+function computeDiffRows(
     leftContent: string,
     rightContent: string,
     leftName: string,
     rightName: string,
-): DiffLine[] {
+): DiffRow[] {
     const patch = structuredPatch(
         leftName,
         rightName,
@@ -50,12 +57,10 @@ function computeDiffLines(
         { context: 3 },
     )
 
-    const lines: DiffLine[] = []
+    const rows: DiffRow[] = []
     for (const hunk of patch.hunks) {
-        lines.push({
-            type: 'hunk-header',
-            leftLineNum: null,
-            rightLineNum: null,
+        rows.push({
+            kind: 'hunk-header',
             content: `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`,
         })
 
@@ -65,30 +70,53 @@ function computeDiffLines(
             const prefix = line[0]
             const content = line.slice(1)
             if (prefix === '-') {
-                lines.push({
-                    type: 'removed',
-                    leftLineNum: leftNum++,
-                    rightLineNum: null,
-                    content,
+                rows.push({
+                    kind: 'split',
+                    left: {
+                        type: 'removed',
+                        lineNum: leftNum++,
+                        content,
+                    },
+                    right: BLANK_CELL,
                 })
             } else if (prefix === '+') {
-                lines.push({
-                    type: 'added',
-                    leftLineNum: null,
-                    rightLineNum: rightNum++,
-                    content,
+                rows.push({
+                    kind: 'split',
+                    left: BLANK_CELL,
+                    right: {
+                        type: 'added',
+                        lineNum: rightNum++,
+                        content,
+                    },
                 })
             } else {
-                lines.push({
-                    type: 'context',
-                    leftLineNum: leftNum++,
-                    rightLineNum: rightNum++,
-                    content,
+                rows.push({
+                    kind: 'split',
+                    left: {
+                        type: 'context',
+                        lineNum: leftNum++,
+                        content,
+                    },
+                    right: {
+                        type: 'context',
+                        lineNum: rightNum++,
+                        content,
+                    },
                 })
             }
         }
     }
-    return lines
+    return rows
+}
+
+function isChangeRow(row: DiffRow): boolean {
+    if (row.kind !== 'split') return false
+    return (
+        row.left.type === 'added'
+        || row.left.type === 'removed'
+        || row.right.type === 'added'
+        || row.right.type === 'removed'
+    )
 }
 
 export function FileDiff({
@@ -103,8 +131,9 @@ export function FileDiff({
     keymap,
     dialogOpen,
     showHints,
+    focusedSide = 'left',
 }: FileDiffProps) {
-    const [lines, setLines] = useState<DiffLine[] | null>(null)
+    const [diffRows, setDiffRows] = useState<DiffRow[] | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [focusedHunk, setFocusedHunk] = useState(0)
     const [scrollOffset, setScrollOffset] = useState(0)
@@ -114,13 +143,11 @@ export function FileDiff({
     const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
 
     const hunkRanges = useMemo(() => {
-        if (!lines || lines.length === 0) return []
+        if (!diffRows || diffRows.length === 0) return []
         const ranges: Array<{ start: number; end: number }> = []
         let blockStart = -1
-        for (let i = 0; i < lines.length; i++) {
-            const isChange =
-                lines[i].type === 'added' || lines[i].type === 'removed'
-            if (isChange) {
+        for (let i = 0; i < diffRows.length; i++) {
+            if (isChangeRow(diffRows[i])) {
                 if (blockStart === -1) blockStart = i
             } else if (blockStart !== -1) {
                 ranges.push({ start: blockStart, end: i - 1 })
@@ -128,15 +155,15 @@ export function FileDiff({
             }
         }
         if (blockStart !== -1) {
-            ranges.push({ start: blockStart, end: lines.length - 1 })
+            ranges.push({ start: blockStart, end: diffRows.length - 1 })
         }
         return ranges
-    }, [lines])
+    }, [diffRows])
 
     useEffect(() => {
         const range = hunkRanges[focusedHunk]
         if (!range) return
-        const total = lines?.length ?? 0
+        const total = diffRows?.length ?? 0
         const maxScroll = Math.max(0, total - contentHeight)
         setScrollOffset((prev) => {
             if (range.start < prev) return range.start
@@ -145,7 +172,7 @@ export function FileDiff({
             }
             return prev
         })
-    }, [focusedHunk, hunkRanges, contentHeight, lines])
+    }, [focusedHunk, hunkRanges, contentHeight, diffRows])
 
     const isActive = !(dialogOpen ?? false)
 
@@ -202,7 +229,7 @@ export function FileDiff({
                     rightContent = buf.toString('utf-8')
                 }
 
-                const diffLines = computeDiffLines(
+                const rows = computeDiffRows(
                     leftContent,
                     rightContent,
                     entry.relativePath,
@@ -210,10 +237,10 @@ export function FileDiff({
                 )
 
                 if (!cancelled) {
-                    if (diffLines.length === 0) {
+                    if (rows.length === 0) {
                         setError('Files are identical')
                     } else {
-                        setLines(diffLines)
+                        setDiffRows(rows)
                     }
                 }
             } catch (e) {
@@ -233,7 +260,7 @@ export function FileDiff({
 
     useInput(
         (input, key) => {
-            if (!lines || hunkRanges.length === 0) return
+            if (!diffRows || hunkRanges.length === 0) return
             if (input === 'j' || key.downArrow) {
                 setFocusedHunk((prev) =>
                     Math.min(hunkRanges.length - 1, prev + 1),
@@ -259,21 +286,70 @@ export function FileDiff({
         { isActive },
     )
 
-    const visibleLines = lines?.slice(
+    const visibleRows = diffRows?.slice(
         scrollOffset,
         scrollOffset + contentHeight,
     )
 
-    // Compute gutter width from max line number
+    // Gutter width: max line number length across both sides.
     const gutterWidth =
-        lines ?
+        diffRows ?
             Math.max(
-                ...lines.map((l) => l.leftLineNum ?? 0),
-                ...lines.map((l) => l.rightLineNum ?? 0),
+                1,
+                ...diffRows.flatMap((r) =>
+                    r.kind === 'split' ?
+                        [r.left.lineNum ?? 0, r.right.lineNum ?? 0]
+                    :   [0],
+                ),
             ).toString().length
         :   3
-    // left gutter + separator + right gutter + separator + prefix + space
-    const gutterTotal = gutterWidth + 1 + gutterWidth + 1 + 1 + 1
+
+    // Per half: gutter + '│' + ' ' + content  = gutter + 2 + content
+    // Plus a middle ' │ ' separator (3 chars) between halves.
+    const halfOverhead = gutterWidth + 2
+    const contentWidth = Math.max(
+        0,
+        Math.floor((columns - 3 - 2 * halfOverhead) / 2),
+    )
+
+    function colorFor(type: CellType): string | undefined {
+        if (type === 'added' || type === 'removed') return 'yellow'
+        return undefined
+    }
+
+    function renderHalf(
+        cell: DiffCell,
+        inFocusedBlock: boolean,
+        isFocusedSide: boolean,
+    ): React.ReactNode {
+        const gutter =
+            cell.lineNum !== null ?
+                String(cell.lineNum).padStart(gutterWidth)
+            :   ' '.repeat(gutterWidth)
+        const content = cell.content.slice(0, contentWidth).padEnd(contentWidth)
+        const color = colorFor(cell.type)
+        const isSelected = inFocusedBlock && isFocusedSide
+        const isDimSelected = inFocusedBlock && !isFocusedSide
+        const bg = isDimSelected ? 'white' : undefined
+        return (
+            <Text
+                color={color}
+                backgroundColor={bg}
+                inverse={isSelected}
+            >
+                <Text
+                    color={isFocusedSide ? 'cyan' : undefined}
+                    dimColor={!isFocusedSide}
+                    backgroundColor={bg}
+                    inverse={isSelected}
+                >
+                    {gutter}
+                    {'\u2502'}
+                </Text>{' '}
+                {content}
+            </Text>
+        )
+    }
 
     return (
         <Box
@@ -312,7 +388,7 @@ export function FileDiff({
                 >
                     <Text color='yellow'>{error}</Text>
                 </Box>
-            : !lines ?
+            : !diffRows ?
                 <Box
                     flexGrow={1}
                     justifyContent='center'
@@ -324,65 +400,45 @@ export function FileDiff({
                     flexDirection='column'
                     flexGrow={1}
                 >
-                    {visibleLines!.map((line, i) => {
+                    {visibleRows!.map((row, i) => {
                         const idx = scrollOffset + i
                         const focusedRange = hunkRanges[focusedHunk]
                         const isFocused =
                             focusedRange !== undefined
                             && idx >= focusedRange.start
                             && idx <= focusedRange.end
-                        const leftGutter =
-                            line.leftLineNum !== null ?
-                                String(line.leftLineNum).padStart(gutterWidth)
-                            :   ' '.repeat(gutterWidth)
-                        const rightGutter =
-                            line.rightLineNum !== null ?
-                                String(line.rightLineNum).padStart(gutterWidth)
-                            :   ' '.repeat(gutterWidth)
 
-                        let prefix: string
-                        let color: string | undefined
-                        if (line.type === 'added') {
-                            prefix = '+'
-                            color = 'green'
-                        } else if (line.type === 'removed') {
-                            prefix = '-'
-                            color = 'red'
-                        } else if (line.type === 'hunk-header') {
-                            prefix = ' '
-                            color = 'cyan'
-                        } else {
-                            prefix = ' '
-                            color = undefined
+                        if (row.kind === 'hunk-header') {
+                            const totalWidth =
+                                2 * (halfOverhead + contentWidth) + 3
+                            const text = row.content
+                                .slice(0, totalWidth)
+                                .padEnd(totalWidth)
+                            return (
+                                <Text
+                                    key={idx}
+                                    color='cyan'
+                                    dimColor
+                                >
+                                    {text}
+                                </Text>
+                            )
                         }
 
-                        const maxContentWidth = Math.max(
-                            0,
-                            columns - gutterTotal,
-                        )
-                        const displayContent = line.content
-                            .slice(0, maxContentWidth)
-                            .padEnd(maxContentWidth)
-
-                        const bg = isFocused ? 'blackBright' : undefined
-
                         return (
-                            <Text
-                                key={idx}
-                                color={color}
-                                dimColor={line.type === 'hunk-header'}
-                                backgroundColor={bg}
-                            >
-                                <Text
-                                    dimColor={!isFocused}
-                                    backgroundColor={bg}
-                                >
-                                    {leftGutter}
-                                    {'\u2502'}
-                                    {rightGutter}
-                                </Text>{' '}
-                                {prefix} {displayContent}
-                            </Text>
+                            <Box key={idx}>
+                                {renderHalf(
+                                    row.left,
+                                    isFocused,
+                                    focusedSide === 'left',
+                                )}
+                                <Text dimColor={!isFocused}>{' \u2502 '}</Text>
+                                {renderHalf(
+                                    row.right,
+                                    isFocused,
+                                    focusedSide === 'right',
+                                )}
+                            </Box>
                         )
                     })}
                 </Box>
@@ -391,7 +447,7 @@ export function FileDiff({
             {/* Footer */}
             <Box>
                 <Text dimColor>
-                    {lines && hunkRanges.length > 0 ?
+                    {diffRows && hunkRanges.length > 0 ?
                         ` hunk ${focusedHunk + 1} of ${hunkRanges.length}`
                     :   ''}
                 </Text>

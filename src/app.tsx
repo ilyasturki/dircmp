@@ -236,6 +236,7 @@ export function App({
                         keymap={keymap}
                         dialogOpen={state.dialog !== null}
                         showHints={state.config.showHints}
+                        focusedSide={state.focusedPanel}
                     />
                 )}
             {state.dialog === 'preferences' && (
