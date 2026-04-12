@@ -1,0 +1,104 @@
+{
+  "users": [
+    { "id": "u1", "name": "Alice Johnson", "email": "alice@example.com", "role": "admin" },
+    { "id": "u2", "name": "Bob Smith", "email": "bob@example.com", "role": "user" },
+    { "id": "u3", "name": "Carol White", "email": "carol@example.com", "role": "moderator" },
+    { "id": "u4", "name": "Dave Brown", "email": "dave@example.com", "role": "user" },
+    { "id": "u5", "name": "Eve Davis", "email": "eve@example.com", "role": "moderator" },
+    { "id": "u6", "name": "Frank Miller", "email": "frank@example.com", "role": "user" },
+    { "id": "u7", "name": "Grace Lee", "email": "grace@example.com", "role": "admin" }
+  ],
+  "posts": [
+    {
+      "id": "p1",
+      "title": "Getting Started with TypeScript",
+      "body": "TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.",
+      "authorId": "u1",
+      "tags": ["typescript", "tutorial", "beginner"],
+      "published": true,
+      "featured": true
+    },
+    {
+      "id": "p2",
+      "title": "Understanding React Hooks",
+      "body": "Hooks let you use state and other React features without writing a class.",
+      "authorId": "u2",
+      "tags": ["react", "hooks"],
+      "published": true,
+      "featured": false
+    },
+    {
+      "id": "p3",
+      "title": "Node.js Best Practices",
+      "body": "A collection of best practices for building Node.js applications.",
+      "authorId": "u1",
+      "tags": ["nodejs", "backend", "production"],
+      "published": true,
+      "featured": false
+    },
+    {
+      "id": "p4",
+      "title": "CSS Grid Layout Guide",
+      "body": "CSS Grid Layout is a two-dimensional layout system for the web.",
+      "authorId": "u3",
+      "tags": ["css", "layout"],
+      "published": true,
+      "featured": false
+    },
+    {
+      "id": "p5",
+      "title": "Testing with Vitest",
+      "body": "Vitest is a blazing fast unit test framework powered by Vite.",
+      "authorId": "u4",
+      "tags": ["testing", "vitest", "vite"],
+      "published": true,
+      "featured": true
+    },
+    {
+      "id": "p6",
+      "title": "Building REST APIs with Hono",
+      "body": "Hono is an ultrafast web framework for the Edge.",
+      "authorId": "u6",
+      "tags": ["hono", "api", "backend"],
+      "published": false,
+      "featured": false
+    }
+  ],
+  "comments": [
+    { "id": "c1", "postId": "p1", "authorId": "u2", "text": "Great introduction!" },
+    { "id": "c2", "postId": "p1", "authorId": "u3", "text": "Very helpful, thanks." },
+    { "id": "c3", "postId": "p2", "authorId": "u1", "text": "Hooks changed everything." },
+    { "id": "c5", "postId": "p3", "authorId": "u5", "text": "Glad this is finally published!" },
+    { "id": "c6", "postId": "p4", "authorId": "u2", "text": "Grid is amazing for layouts." },
+    { "id": "c7", "postId": "p5", "authorId": "u1", "text": "Vitest + Testing Library is my go-to." },
+    { "id": "c8", "postId": "p5", "authorId": "u3", "text": "Snapshot testing is underrated." },
+    { "id": "c9", "postId": "p6", "authorId": "u7", "text": "Looking forward to trying Hono." }
+  ],
+  "errors": {
+    "AUTH_FAILED": "Authentication failed. Please check your credentials.",
+    "NOT_FOUND": "The requested resource was not found.",
+    "FORBIDDEN": "You do not have permission to access this resource.",
+    "RATE_LIMITED": "Too many requests. Please try again in {retryAfter} seconds.",
+    "SERVER_ERROR": "An internal server error occurred. Request ID: {requestId}",
+    "NETWORK_ERROR": "Unable to connect to the server. Check your connection.",
+    "VALIDATION_ERROR": "The provided data is invalid. See details below.",
+    "TIMEOUT": "The request timed out after {timeout}ms. Please try again.",
+    "CONFLICT": "A conflict occurred. The resource was modified by another user."
+  },
+  "routes": [
+    { "path": "/", "component": "Home", "exact": true },
+    { "path": "/login", "component": "Login", "exact": true },
+    { "path": "/signup", "component": "Signup", "exact": true },
+    { "path": "/dashboard", "component": "Dashboard", "exact": true },
+    { "path": "/users", "component": "UserList", "exact": true },
+    { "path": "/users/:id", "component": "UserDetail", "exact": false },
+    { "path": "/users/:id/edit", "component": "UserEdit", "exact": false },
+    { "path": "/posts", "component": "PostList", "exact": true },
+    { "path": "/posts/new", "component": "PostCreate", "exact": true },
+    { "path": "/posts/:id", "component": "PostDetail", "exact": false },
+    { "path": "/posts/:id/edit", "component": "PostEdit", "exact": false },
+    { "path": "/settings", "component": "Settings", "exact": true },
+    { "path": "/settings/profile", "component": "ProfileSettings", "exact": true },
+    { "path": "*", "component": "NotFound", "exact": false }
+  ]
+}

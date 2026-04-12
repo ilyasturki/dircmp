@@ -1,0 +1,2 @@
+tests/fixtures/** linguist-vendored
+tests/fixtures/right/edge-cases/line-ending-diff.md -text

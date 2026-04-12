@@ -1,0 +1,21 @@
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+}
+
+export interface Post {
+  id: string;
+  title: string;
+  body: string;
+  authorId: string;
+  createdAt: Date;
+}
+
+export interface Comment {
+  id: string;
+  postId: string;
+  authorId: string;
+  text: string;
+}

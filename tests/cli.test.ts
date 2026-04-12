@@ -2,8 +2,8 @@ import path from 'node:path'
 import { describe, expect, test } from 'bun:test'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const DATA_LEFT = path.join(ROOT, 'data', 'left')
-const DATA_RIGHT = path.join(ROOT, 'data', 'right')
+const DATA_LEFT = path.join(ROOT, 'tests', 'fixtures', 'left')
+const DATA_RIGHT = path.join(ROOT, 'tests', 'fixtures', 'right')
 const FILE_LEFT = path.join(DATA_LEFT, 'edge-cases', 'large-diff.json')
 const FILE_RIGHT = path.join(DATA_RIGHT, 'edge-cases', 'large-diff.json')
 const FILE_IDENTICAL_L = path.join(DATA_LEFT, 'edge-cases', 'empty-file.txt')

@@ -1,0 +1,82 @@
+{
+  "users": [
+    { "id": "u1", "name": "Alice Johnson", "email": "alice@example.com", "role": "admin" },
+    { "id": "u2", "name": "Bob Smith", "email": "bob@example.com", "role": "user" },
+    { "id": "u3", "name": "Carol White", "email": "carol@example.com", "role": "user" },
+    { "id": "u4", "name": "Dave Brown", "email": "dave@example.com", "role": "user" },
+    { "id": "u5", "name": "Eve Davis", "email": "eve@example.com", "role": "moderator" }
+  ],
+  "posts": [
+    {
+      "id": "p1",
+      "title": "Getting Started with TypeScript",
+      "body": "TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.",
+      "authorId": "u1",
+      "tags": ["typescript", "tutorial"],
+      "published": true
+    },
+    {
+      "id": "p2",
+      "title": "Understanding React Hooks",
+      "body": "Hooks let you use state and other React features without writing a class.",
+      "authorId": "u2",
+      "tags": ["react", "hooks"],
+      "published": true
+    },
+    {
+      "id": "p3",
+      "title": "Node.js Best Practices",
+      "body": "A collection of best practices for building Node.js applications.",
+      "authorId": "u1",
+      "tags": ["nodejs", "backend"],
+      "published": false
+    },
+    {
+      "id": "p4",
+      "title": "CSS Grid Layout Guide",
+      "body": "CSS Grid Layout is a two-dimensional layout system for the web.",
+      "authorId": "u3",
+      "tags": ["css", "layout"],
+      "published": true
+    },
+    {
+      "id": "p5",
+      "title": "Testing with Jest",
+      "body": "Jest is a delightful JavaScript Testing Framework with a focus on simplicity.",
+      "authorId": "u4",
+      "tags": ["testing", "jest"],
+      "published": true
+    }
+  ],
+  "comments": [
+    { "id": "c1", "postId": "p1", "authorId": "u2", "text": "Great introduction!" },
+    { "id": "c2", "postId": "p1", "authorId": "u3", "text": "Very helpful, thanks." },
+    { "id": "c3", "postId": "p2", "authorId": "u1", "text": "Hooks changed everything." },
+    { "id": "c4", "postId": "p2", "authorId": "u4", "text": "I prefer class components." },
+    { "id": "c5", "postId": "p3", "authorId": "u5", "text": "When will this be published?" },
+    { "id": "c6", "postId": "p4", "authorId": "u2", "text": "Grid is amazing for layouts." },
+    { "id": "c7", "postId": "p5", "authorId": "u1", "text": "Jest + React Testing Library is my go-to." },
+    { "id": "c8", "postId": "p5", "authorId": "u3", "text": "Snapshot testing is underrated." }
+  ],
+  "errors": {
+    "AUTH_FAILED": "Authentication failed. Please check your credentials.",
+    "NOT_FOUND": "The requested resource was not found.",
+    "FORBIDDEN": "You do not have permission to access this resource.",
+    "RATE_LIMITED": "Too many requests. Please try again later.",
+    "SERVER_ERROR": "An internal server error occurred.",
+    "NETWORK_ERROR": "Unable to connect to the server.",
+    "VALIDATION_ERROR": "The provided data is invalid.",
+    "TIMEOUT": "The request timed out. Please try again."
+  },
+  "routes": [
+    { "path": "/", "component": "Home", "exact": true },
+    { "path": "/login", "component": "Login", "exact": true },
+    { "path": "/dashboard", "component": "Dashboard", "exact": true },
+    { "path": "/users", "component": "UserList", "exact": true },
+    { "path": "/users/:id", "component": "UserDetail", "exact": false },
+    { "path": "/posts", "component": "PostList", "exact": true },
+    { "path": "/posts/:id", "component": "PostDetail", "exact": false },
+    { "path": "/settings", "component": "Settings", "exact": true },
+    { "path": "/404", "component": "NotFound", "exact": true }
+  ]
+}
