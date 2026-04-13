@@ -1,0 +1,3 @@
+export function normal(): string {
+  return "I am a regular file, not a symlink";
+}
