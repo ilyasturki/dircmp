@@ -302,18 +302,21 @@ if (fileMode && subcommand === 'diff') {
 
     let instance: { waitUntilExit: () => Promise<unknown> }
 
+    const { loadConfig } = await import('~/utils/config')
+    const config = loadConfig()
+
     if (fileMode) {
         const { FileDiffApp } = await import('~/file-diff-app')
         instance = render(
             <FileDiffApp
                 leftFile={leftDir}
                 rightFile={rightDir}
+                initialConfig={config}
+                changelog={changelogText}
             />,
         )
     } else {
         const { App } = await import('~/app')
-        const { loadConfig } = await import('~/utils/config')
-        const config = loadConfig()
 
         instance = render(
             <App

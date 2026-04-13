@@ -5,20 +5,15 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
 import type { Action, ScanResult } from '~/utils/types'
+import { AppShell } from '~/app-shell'
 import { ContextMenu } from '~/components/context-menu'
 import { ConfirmDeleteDialog } from '~/components/dialogs/confirm-delete-dialog'
-import { HelpDialog } from '~/components/dialogs/help-dialog'
 import { IgnoreDialog } from '~/components/dialogs/ignore-dialog'
-import { KeybindingsDialog } from '~/components/dialogs/keybindings-dialog'
-import { PreferencesDialog } from '~/components/dialogs/preferences-dialog'
 import { QuickIgnoreDialog } from '~/components/dialogs/quick-ignore-dialog'
-import { ReleaseNotesDialog } from '~/components/dialogs/release-notes-dialog'
 import { SortDialog } from '~/components/dialogs/sort-dialog'
 import { FileDiff } from '~/components/file-diff'
 import { DirectoryDiff } from '~/components/panels/directory-diff'
 import { StatusBar } from '~/components/status-bar'
-import { DateLocaleProvider } from '~/context/date-locale'
-import { NerdFontProvider } from '~/context/nerd-font'
 import { executeAction } from '~/execute-action'
 import {
     useDirectoryScan,
@@ -172,9 +167,15 @@ export function App({
     }
 
     return (
-        <Box
-            flexDirection='column'
-            height={rows}
+        <AppShell
+            state={state}
+            dispatch={dispatch}
+            keymap={keymap}
+            columns={columns}
+            rows={rows}
+            changelog={changelog}
+            onExit={exit}
+            onExecuteAction={onExecuteAction}
         >
             {isLoading ?
                 <Box
@@ -184,28 +185,24 @@ export function App({
                 >
                     <Text color='yellow'>Scanning directories...</Text>
                 </Box>
-            :   <DateLocaleProvider value={state.config.dateLocale}>
-                    <NerdFontProvider value={state.config.nerdFont}>
-                        <DirectoryDiff
-                            leftDir={effectiveLeftDir}
-                            rightDir={effectiveRightDir}
-                            leftLabel={effectiveLeftLabel}
-                            rightLabel={effectiveRightLabel}
-                            entries={state.entries}
-                            cursorIndex={state.cursorIndex}
-                            focusedPanel={state.focusedPanel}
-                            dialogOpen={
-                                state.view !== 'directoryDiff'
-                                || state.dialog !== null
-                                || state.searchInputActive
-                            }
-                            visibleHeight={contentHeight}
-                            scrollOffset={scrollOffset}
-                            searchQuery={state.searchQuery}
-                            pendingPairMark={state.pendingPairMark}
-                        />
-                    </NerdFontProvider>
-                </DateLocaleProvider>
+            :   <DirectoryDiff
+                    leftDir={effectiveLeftDir}
+                    rightDir={effectiveRightDir}
+                    leftLabel={effectiveLeftLabel}
+                    rightLabel={effectiveRightLabel}
+                    entries={state.entries}
+                    cursorIndex={state.cursorIndex}
+                    focusedPanel={state.focusedPanel}
+                    dialogOpen={
+                        state.view !== 'directoryDiff'
+                        || state.dialog !== null
+                        || state.searchInputActive
+                    }
+                    visibleHeight={contentHeight}
+                    scrollOffset={scrollOffset}
+                    searchQuery={state.searchQuery}
+                    pendingPairMark={state.pendingPairMark}
+                />
             }
             <StatusBar
                 isLoading={isLoading}
@@ -246,14 +243,6 @@ export function App({
                         focusedSide={state.focusedPanel}
                     />
                 )}
-            {state.dialog === 'preferences' && (
-                <PreferencesDialog
-                    config={state.config}
-                    dispatch={dispatch}
-                    columns={columns}
-                    rows={rows}
-                />
-            )}
             {state.dialog === 'deleteConfirm'
                 && state.entries[state.cursorIndex] && (
                     <ConfirmDeleteDialog
@@ -304,24 +293,6 @@ export function App({
                         rows={rows}
                     />
                 )}
-            {state.dialog === 'help' && (
-                <HelpDialog
-                    keymap={keymap}
-                    dispatch={dispatch}
-                    onExecuteAction={onExecuteAction}
-                    onExit={exit}
-                    columns={columns}
-                    rows={rows}
-                />
-            )}
-            {state.dialog === 'keybindingsEditor' && (
-                <KeybindingsDialog
-                    defaults={defaultKeymap}
-                    dispatch={dispatch}
-                    columns={columns}
-                    rows={rows}
-                />
-            )}
             {state.dialog === 'sortMenu' && (
                 <SortDialog
                     currentMode={state.sortMode}
@@ -332,14 +303,6 @@ export function App({
                     rows={rows}
                 />
             )}
-            {state.dialog === 'releaseNotes' && (
-                <ReleaseNotesDialog
-                    changelog={changelog}
-                    dispatch={dispatch}
-                    columns={columns}
-                    rows={rows}
-                />
-            )}
-        </Box>
+        </AppShell>
     )
 }
