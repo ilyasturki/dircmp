@@ -1,9 +1,9 @@
 import type { Key } from 'ink'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 
 import type { Shortcut } from '~/keymap'
+import { getConfigDir } from './paths'
 
 export type KeyDef = string | string[] | null
 
@@ -135,7 +135,7 @@ export function validateKeyDef(def: string | string[]): string | null {
 }
 
 function getKeybindingsPath(): string {
-    return path.join(os.homedir(), '.config', 'dircmp', 'keybindings.json')
+    return path.join(getConfigDir(), 'keybindings.json')
 }
 
 export function loadKeybindings(): KeybindingOverrides {

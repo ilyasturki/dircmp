@@ -1,6 +1,7 @@
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
+
+import { getConfigDir } from './paths'
 
 export interface AppConfig {
     dateLocale: string | undefined
@@ -23,7 +24,7 @@ export const defaultConfig: AppConfig = {
 }
 
 function getConfigPath(): string {
-    return path.join(os.homedir(), '.config', 'dircmp', 'config.json')
+    return path.join(getConfigDir(), 'config.json')
 }
 
 export function loadConfig(): AppConfig {

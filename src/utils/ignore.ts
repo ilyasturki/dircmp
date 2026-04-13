@@ -1,14 +1,11 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import ignore from 'ignore'
 
-const DEFAULT_IGNORE_PATTERNS = ['.git', 'node_modules', '.DS_Store']
+import { getDataDir } from './paths'
 
-function getDataDir(): string {
-    return path.join(os.homedir(), '.local', 'share', 'dircmp')
-}
+const DEFAULT_IGNORE_PATTERNS = ['.git', 'node_modules', '.DS_Store']
 
 function getGlobalIgnoreFilePath(): string {
     return path.join(getDataDir(), 'ignore')

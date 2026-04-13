@@ -33,8 +33,8 @@
         "node": ">=18"
     },
     "scripts": {
-        "dev": "tsx src/index.tsx",
-        "dev:watch": "tsx --watch src/index.tsx",
+        "dev": "XDG_CONFIG_HOME=./.dev/config XDG_DATA_HOME=./.dev/data tsx src/index.tsx",
+        "dev:watch": "XDG_CONFIG_HOME=./.dev/config XDG_DATA_HOME=./.dev/data tsx --watch src/index.tsx",
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "build": "bun build src/index.tsx --compile --outfile dircmp",
