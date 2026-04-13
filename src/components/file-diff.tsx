@@ -1,7 +1,7 @@
 import type { Dispatch } from 'react'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
-import { structuredPatch } from 'diff'
+import { diffWordsWithSpace, structuredPatch } from 'diff'
 import { Box, Text, useInput } from 'ink'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -26,12 +26,18 @@ interface FileDiffProps {
     focusedSide?: PanelSide
 }
 
-type CellType = 'context' | 'added' | 'removed' | 'blank'
+type CellType = 'context' | 'added' | 'removed' | 'blank' | 'changed'
+
+interface Segment {
+    text: string
+    changed: boolean
+}
 
 interface DiffCell {
     type: CellType
     lineNum: number | null
     content: string
+    segments?: Segment[]
 }
 
 type DiffRow =
@@ -44,7 +50,113 @@ interface HunkRange {
 }
 
 const MAX_DIFF_SIZE = 1_000_000
+const PAIR_SIMILARITY_THRESHOLD = 0.4
 const BLANK_CELL: DiffCell = { type: 'blank', lineNum: null, content: '' }
+
+function buildPairedSegments(
+    left: string,
+    right: string,
+): { leftSegs: Segment[]; rightSegs: Segment[]; similarity: number } {
+    const parts = diffWordsWithSpace(left, right)
+    const leftSegs: Segment[] = []
+    const rightSegs: Segment[] = []
+    let commonChars = 0
+    let leftChars = 0
+    let rightChars = 0
+    for (const p of parts) {
+        const len = p.value.length
+        if (p.added) {
+            rightSegs.push({ text: p.value, changed: true })
+            rightChars += len
+        } else if (p.removed) {
+            leftSegs.push({ text: p.value, changed: true })
+            leftChars += len
+        } else {
+            leftSegs.push({ text: p.value, changed: false })
+            rightSegs.push({ text: p.value, changed: false })
+            commonChars += len
+            leftChars += len
+            rightChars += len
+        }
+    }
+    const denom = Math.max(leftChars, rightChars)
+    const similarity = denom === 0 ? 1 : commonChars / denom
+    return { leftSegs, rightSegs, similarity }
+}
+
+function flushChangeBlock(
+    removed: { lineNum: number; content: string }[],
+    added: { lineNum: number; content: string }[],
+    rows: DiffRow[],
+): void {
+    const paired = Math.min(removed.length, added.length)
+    for (let i = 0; i < paired; i++) {
+        const r = removed[i]
+        const a = added[i]
+        const { leftSegs, rightSegs, similarity } = buildPairedSegments(
+            r.content,
+            a.content,
+        )
+        if (similarity >= PAIR_SIMILARITY_THRESHOLD) {
+            rows.push({
+                kind: 'split',
+                left: {
+                    type: 'changed',
+                    lineNum: r.lineNum,
+                    content: r.content,
+                    segments: leftSegs,
+                },
+                right: {
+                    type: 'changed',
+                    lineNum: a.lineNum,
+                    content: a.content,
+                    segments: rightSegs,
+                },
+            })
+        } else {
+            rows.push({
+                kind: 'split',
+                left: {
+                    type: 'removed',
+                    lineNum: r.lineNum,
+                    content: r.content,
+                },
+                right: BLANK_CELL,
+            })
+            rows.push({
+                kind: 'split',
+                left: BLANK_CELL,
+                right: {
+                    type: 'added',
+                    lineNum: a.lineNum,
+                    content: a.content,
+                },
+            })
+        }
+    }
+    for (let i = paired; i < removed.length; i++) {
+        rows.push({
+            kind: 'split',
+            left: {
+                type: 'removed',
+                lineNum: removed[i].lineNum,
+                content: removed[i].content,
+            },
+            right: BLANK_CELL,
+        })
+    }
+    for (let i = paired; i < added.length; i++) {
+        rows.push({
+            kind: 'split',
+            left: BLANK_CELL,
+            right: {
+                type: 'added',
+                lineNum: added[i].lineNum,
+                content: added[i].content,
+            },
+        })
+    }
+}
 
 function computeDiffRows(
     leftContent: string,
@@ -71,22 +183,24 @@ function computeDiffRows(
 
         let leftNum = hunk.oldStart
         let rightNum = hunk.newStart
+        let removedBuf: { lineNum: number; content: string }[] = []
+        let addedBuf: { lineNum: number; content: string }[] = []
+        const flush = () => {
+            if (removedBuf.length || addedBuf.length) {
+                flushChangeBlock(removedBuf, addedBuf, rows)
+                removedBuf = []
+                addedBuf = []
+            }
+        }
         for (const line of hunk.lines) {
             const prefix = line[0]
             const content = line.slice(1)
             if (prefix === '-') {
-                rows.push({
-                    kind: 'split',
-                    left: { type: 'removed', lineNum: leftNum++, content },
-                    right: BLANK_CELL,
-                })
+                removedBuf.push({ lineNum: leftNum++, content })
             } else if (prefix === '+') {
-                rows.push({
-                    kind: 'split',
-                    left: BLANK_CELL,
-                    right: { type: 'added', lineNum: rightNum++, content },
-                })
+                addedBuf.push({ lineNum: rightNum++, content })
             } else {
+                flush()
                 rows.push({
                     kind: 'split',
                     left: { type: 'context', lineNum: leftNum++, content },
@@ -94,6 +208,7 @@ function computeDiffRows(
                 })
             }
         }
+        flush()
     }
     return rows
 }
@@ -103,8 +218,10 @@ function isChangeRow(row: DiffRow): boolean {
     return (
         row.left.type === 'added'
         || row.left.type === 'removed'
+        || row.left.type === 'changed'
         || row.right.type === 'added'
         || row.right.type === 'removed'
+        || row.right.type === 'changed'
     )
 }
 
@@ -127,7 +244,8 @@ function computeHunkRanges(diffRows: DiffRow[] | null): HunkRange[] {
 }
 
 function colorFor(type: CellType): string | undefined {
-    if (type === 'added' || type === 'removed') return 'yellow'
+    if (type === 'added' || type === 'removed' || type === 'changed')
+        return 'yellow'
     return undefined
 }
 
@@ -333,7 +451,7 @@ export function FileDiff({
         scrollOffset + contentHeight,
     )
 
-    function renderHalf(
+    function renderCell(
         cell: DiffCell,
         inFocusedBlock: boolean,
         isFocusedSide: boolean,
@@ -342,9 +460,57 @@ export function FileDiff({
             cell.lineNum !== null ?
                 String(cell.lineNum).padStart(gutterWidth)
             :   ' '.repeat(gutterWidth)
-        const content = cell.content.slice(0, contentWidth).padEnd(contentWidth)
         const isSelected = inFocusedBlock && isFocusedSide
         const bg = inFocusedBlock && !isFocusedSide ? 'white' : undefined
+
+        let body: React.ReactNode
+        if (cell.segments) {
+            const nodes: React.ReactNode[] = []
+            let remaining = contentWidth
+            let key = 0
+            for (const seg of cell.segments) {
+                if (remaining <= 0) break
+                const text = seg.text.slice(0, remaining)
+                remaining -= text.length
+                if (seg.changed) {
+                    nodes.push(
+                        <Text
+                            key={key++}
+                            color='yellow'
+                            backgroundColor='red'
+                            inverse={false}
+                        >
+                            {text}
+                        </Text>,
+                    )
+                } else {
+                    nodes.push(
+                        <Text
+                            key={key++}
+                            backgroundColor={bg}
+                            inverse={isSelected}
+                        >
+                            {text}
+                        </Text>,
+                    )
+                }
+            }
+            if (remaining > 0) {
+                nodes.push(
+                    <Text
+                        key={key++}
+                        backgroundColor={bg}
+                        inverse={isSelected}
+                    >
+                        {' '.repeat(remaining)}
+                    </Text>,
+                )
+            }
+            body = nodes
+        } else {
+            body = cell.content.slice(0, contentWidth).padEnd(contentWidth)
+        }
+
         return (
             <Text
                 color={colorFor(cell.type)}
@@ -360,7 +526,7 @@ export function FileDiff({
                     {gutter}
                     {'\u2502'}
                 </Text>{' '}
-                {content}
+                {body}
             </Text>
         )
     }
@@ -441,13 +607,13 @@ export function FileDiff({
 
                         return (
                             <Box key={idx}>
-                                {renderHalf(
+                                {renderCell(
                                     row.left,
                                     isFocused,
                                     focusedSide === 'left',
                                 )}
                                 <Text dimColor={!isFocused}>{' \u2502 '}</Text>
-                                {renderHalf(
+                                {renderCell(
                                     row.right,
                                     isFocused,
                                     focusedSide === 'right',
