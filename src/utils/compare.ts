@@ -103,10 +103,23 @@ function isFileDifferent(
     return false
 }
 
+const descendantFilesCache = new WeakMap<
+    ScanResult,
+    Map<string, Map<string, FileEntry>>
+>()
+
 function collectDescendantFiles(
     scan: ScanResult,
     dirPath: string,
 ): Map<string, FileEntry> {
+    let scanCache = descendantFilesCache.get(scan)
+    if (!scanCache) {
+        scanCache = new Map()
+        descendantFilesCache.set(scan, scanCache)
+    }
+    const cached = scanCache.get(dirPath)
+    if (cached) return cached
+
     const prefix = dirPath === '' ? '' : dirPath + path.sep
     const bySuffix = new Map<string, FileEntry>()
     for (const [relPath, entry] of scan) {
@@ -114,6 +127,7 @@ function collectDescendantFiles(
             bySuffix.set(relPath.slice(prefix.length), entry)
         }
     }
+    scanCache.set(dirPath, bySuffix)
     return bySuffix
 }
 
@@ -140,6 +154,11 @@ function hasDescendantDiff(
     return false
 }
 
+const diffCountCache = new WeakMap<
+    ScanResult,
+    WeakMap<ScanResult, Map<string, number>>
+>()
+
 export function countDescendantDiffs(
     leftScan: ScanResult,
     rightScan: ScanResult,
@@ -147,6 +166,20 @@ export function countDescendantDiffs(
     rightDirPath: string,
     options: CompareOptions,
 ): number {
+    let outer = diffCountCache.get(leftScan)
+    if (!outer) {
+        outer = new WeakMap()
+        diffCountCache.set(leftScan, outer)
+    }
+    let inner = outer.get(rightScan)
+    if (!inner) {
+        inner = new Map()
+        outer.set(rightScan, inner)
+    }
+    const key = `${leftDirPath}\0${rightDirPath}\0${options.compareDates ? '1' : '0'}${options.compareContents ? '1' : '0'}`
+    const cached = inner.get(key)
+    if (cached !== undefined) return cached
+
     const leftFiles = collectDescendantFiles(leftScan, leftDirPath)
     const rightFiles = collectDescendantFiles(rightScan, rightDirPath)
     let count = 0
@@ -162,6 +195,7 @@ export function countDescendantDiffs(
         if (!leftFiles.has(suffix)) count++
     }
 
+    inner.set(key, count)
     return count
 }
 

@@ -143,6 +143,67 @@ function useLineDiff(
     return result
 }
 
+type DirDiffResult = { type: 'loading' } | { type: 'count'; count: number }
+
+function useDirDiffCount(
+    entry: CompareEntry | undefined,
+    leftScan: ScanResult | null,
+    rightScan: ScanResult | null,
+    compareDates: boolean,
+    compareContents: boolean,
+): DirDiffResult | null {
+    const [result, setResult] = useState<DirDiffResult | null>(null)
+
+    useEffect(() => {
+        if (!entry || !entry.isDirectory || !leftScan || !rightScan) {
+            setResult(null)
+            return
+        }
+
+        const isPaired =
+            entry.pairedLeftPath != null && entry.pairedRightPath != null
+        if (!isPaired && entry.status !== 'modified') {
+            setResult(null)
+            return
+        }
+
+        const leftPath = entry.pairedLeftPath ?? entry.relativePath
+        const rightPath = entry.pairedRightPath ?? entry.relativePath
+
+        setResult({ type: 'loading' })
+
+        let cancelled = false
+        const handle = setTimeout(() => {
+            if (cancelled) return
+            const count = countDescendantDiffs(
+                leftScan,
+                rightScan,
+                leftPath,
+                rightPath,
+                { compareDates, compareContents },
+            )
+            if (!cancelled) setResult({ type: 'count', count })
+        }, 0)
+
+        return () => {
+            cancelled = true
+            clearTimeout(handle)
+        }
+    }, [
+        entry?.relativePath,
+        entry?.isDirectory,
+        entry?.status,
+        entry?.pairedLeftPath,
+        entry?.pairedRightPath,
+        leftScan,
+        rightScan,
+        compareDates,
+        compareContents,
+    ])
+
+    return result
+}
+
 function sizeInfo(entry: CompareEntry): string {
     if (entry.isDirectory) return ''
     const leftSize = entry.left?.size
@@ -164,11 +225,8 @@ function joinTextParts(parts: string[]): string {
 
 function getEntryInfo(
     entry: CompareEntry | undefined,
-    leftScan: ScanResult | null,
-    rightScan: ScanResult | null,
+    dirDiff: DirDiffResult | null,
     lineDiff: LineDiffResult | null,
-    compareDates: boolean,
-    compareContents: boolean,
     dateFormatter: Intl.DateTimeFormat,
 ): ReactNode | null {
     if (!entry) return null
@@ -177,24 +235,17 @@ function getEntryInfo(
 
     // Paired directory info
     if (entry.pairedLeftPath && entry.pairedRightPath) {
-        if (!leftScan || !rightScan) return 'paired'
-        const count = countDescendantDiffs(
-            leftScan,
-            rightScan,
-            entry.pairedLeftPath,
-            entry.pairedRightPath,
-            { compareDates, compareContents },
-        )
         const leftName = path.basename(entry.pairedLeftPath)
         const rightName = path.basename(entry.pairedRightPath)
+        const pairedLabel = `paired: ${leftName}/ → ${rightName}/`
+        if (!dirDiff || dirDiff.type === 'loading') {
+            return joinTextParts([pathPrefix, `${pairedLabel} (...)`])
+        }
         const diffInfo =
-            count > 0 ?
-                `${count} different file${count !== 1 ? 's' : ''}`
+            dirDiff.count > 0 ?
+                `${dirDiff.count} different file${dirDiff.count !== 1 ? 's' : ''}`
             :   'identical'
-        return joinTextParts([
-            pathPrefix,
-            `paired: ${leftName}/ → ${rightName}/ (${diffInfo})`,
-        ])
+        return joinTextParts([pathPrefix, `${pairedLabel} (${diffInfo})`])
     }
 
     switch (entry.status) {
@@ -206,17 +257,11 @@ function getEntryInfo(
             return joinTextParts([pathPrefix, 'only in right', sizeInfo(entry)])
         case 'modified': {
             if (entry.isDirectory) {
-                if (!leftScan || !rightScan) return joinTextParts([pathPrefix])
-                const count = countDescendantDiffs(
-                    leftScan,
-                    rightScan,
-                    entry.relativePath,
-                    entry.relativePath,
-                    { compareDates, compareContents },
-                )
+                if (!dirDiff || dirDiff.type === 'loading')
+                    return joinTextParts([pathPrefix, '...'])
                 return joinTextParts([
                     pathPrefix,
-                    `${count} different file${count !== 1 ? 's' : ''}`,
+                    `${dirDiff.count} different file${dirDiff.count !== 1 ? 's' : ''}`,
                 ])
             }
             if (!lineDiff || lineDiff.type === 'loading')
@@ -283,6 +328,13 @@ export function StatusBar({
     sortDirection,
 }: StatusBarProps) {
     const lineDiff = useLineDiff(focusedEntry, leftDir, rightDir)
+    const dirDiff = useDirDiffCount(
+        focusedEntry,
+        leftScan,
+        rightScan,
+        compareDates,
+        compareContents,
+    )
     const dateFormatter = useMemo(
         () =>
             new Intl.DateTimeFormat(undefined, {
@@ -299,27 +351,15 @@ export function StatusBar({
     )
 
     const entryInfo = useMemo(
-        () =>
-            getEntryInfo(
-                focusedEntry,
-                leftScan,
-                rightScan,
-                lineDiff,
-                compareDates,
-                compareContents,
-                dateFormatter,
-            ),
+        () => getEntryInfo(focusedEntry, dirDiff, lineDiff, dateFormatter),
         [
             focusedEntry?.relativePath,
             focusedEntry?.status,
             focusedEntry?.isDirectory,
             focusedEntry?.pairedLeftPath,
             focusedEntry?.pairedRightPath,
-            leftScan,
-            rightScan,
+            dirDiff,
             lineDiff,
-            compareDates,
-            compareContents,
             dateFormatter,
         ],
     )
