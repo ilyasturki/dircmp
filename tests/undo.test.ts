@@ -2,16 +2,8 @@ import { describe, expect, test } from 'bun:test'
 
 import type { AppState, FileEntry, UndoEntry } from '~/utils/types'
 import { createInitialState, reducer } from '~/reducer'
-
-const defaultConfig = {
-    showHints: true,
-    nerdFont: false,
-    dateLocale: 'en-US',
-    compareDates: true,
-    compareContents: true,
-    dirsFirst: true,
-    diffCommand: '',
-} as any
+import { defaultConfig } from '~/utils/config'
+import { pushUndo, UNDO_STACK_LIMIT } from '~/utils/undo'
 
 function freshState(): AppState {
     return createInitialState({
@@ -20,121 +12,201 @@ function freshState(): AppState {
     })
 }
 
-function fileEntry(relativePath: string): FileEntry {
+function fileEntry(relativePath: string, isDirectory = false): FileEntry {
     return {
         name: relativePath,
         relativePath,
-        isDirectory: false,
+        isDirectory,
         size: 0,
         modifiedTime: new Date(0),
-        contentHash: 'abc',
+        contentHash: isDirectory ? null : 'abc',
     }
 }
 
-describe('undo stack push semantics', () => {
-    test('COPY_COMPLETE pushes exactly one undo entry', () => {
-        const state = freshState()
-        // seed empty scans so reducer doesn't short-circuit
-        const seeded = reducer(state, {
+function copyUndo(
+    overrides: Partial<Extract<UndoEntry, { kind: 'copy' }>> = {},
+): UndoEntry {
+    return {
+        kind: 'copy',
+        sourceAbsPath: '/L/a.txt',
+        destAbsPath: '/R/a.txt',
+        destSide: 'right',
+        isDirectory: false,
+        backupTrashPath: null,
+        ...overrides,
+    }
+}
+
+function deleteUndo(
+    overrides: Partial<Extract<UndoEntry, { kind: 'delete' }>> = {},
+): UndoEntry {
+    return {
+        kind: 'delete',
+        originalAbsPath: '/L/a.txt',
+        side: 'left',
+        trashPath: '/tmp/trash/1/a.txt',
+        isDirectory: false,
+        ...overrides,
+    }
+}
+
+describe('reducer: undo stack push semantics', () => {
+    test('COPY_COMPLETE pushes exactly one entry and clears redo', () => {
+        const seeded = reducer(freshState(), {
             type: 'SCAN_COMPLETE',
             leftScan: new Map(),
             rightScan: new Map([['a.txt', fileEntry('a.txt')]]),
         })
-        const undo: UndoEntry = {
-            kind: 'copy',
-            sourceAbsPath: '/L/a.txt',
-            destAbsPath: '/R/a.txt',
-            destSide: 'right',
-            isDirectory: false,
-            backupTrashPath: null,
-        }
-        const next = reducer(seeded, {
+        // Seed a redoStack to verify it's cleared
+        const primed = { ...seeded, redoStack: [deleteUndo()] as UndoEntry[] }
+        const next = reducer(primed, {
             type: 'COPY_COMPLETE',
             entries: [fileEntry('a.txt')],
             side: 'right',
-            undo,
+            undo: copyUndo(),
         })
-        expect(next.undoStack.length).toBe(1)
-        expect(next.redoStack.length).toBe(0)
+        expect(next.undoStack).toHaveLength(1)
+        expect(next.redoStack).toHaveLength(0)
     })
 
-    test('DELETE_COMPLETE pushes exactly one undo entry', () => {
-        const state = freshState()
-        const undo: UndoEntry = {
-            kind: 'delete',
-            originalAbsPath: '/L/a.txt',
-            side: 'left',
-            trashPath: '/tmp/trash/1/a.txt',
-            isDirectory: false,
+    test('DELETE_COMPLETE pushes exactly one entry and clears redo', () => {
+        const primed = {
+            ...freshState(),
+            redoStack: [copyUndo()] as UndoEntry[],
         }
-        const next = reducer(state, { type: 'DELETE_COMPLETE', undo })
-        expect(next.undoStack.length).toBe(1)
-    })
-
-    test('UNDO_COMPLETE pops one entry and pushes to redo', () => {
-        const state = freshState()
-        const undo: UndoEntry = {
-            kind: 'delete',
-            originalAbsPath: '/L/a.txt',
-            side: 'left',
-            trashPath: '/tmp/trash/1/a.txt',
-            isDirectory: false,
-        }
-        const withUndo = reducer(state, { type: 'DELETE_COMPLETE', undo })
-        expect(withUndo.undoStack.length).toBe(1)
-        const undone = reducer(withUndo, {
-            type: 'UNDO_COMPLETE',
-            entry: withUndo.undoStack[0]!,
+        const next = reducer(primed, {
+            type: 'DELETE_COMPLETE',
+            undo: deleteUndo(),
         })
-        expect(undone.undoStack.length).toBe(0)
-        expect(undone.redoStack.length).toBe(1)
+        expect(next.undoStack).toHaveLength(1)
+        expect(next.redoStack).toHaveLength(0)
     })
 
-    test('pair completion pushes exactly one undo entry', () => {
-        const state = freshState()
-        const scan: Map<string, FileEntry> = new Map([
-            [
-                'dirA',
-                {
-                    name: 'dirA',
-                    relativePath: 'dirA',
-                    isDirectory: true,
-                    size: 0,
-                    modifiedTime: new Date(0),
-                    contentHash: null,
-                },
-            ],
-        ])
-        const scan2: Map<string, FileEntry> = new Map([
-            [
-                'dirB',
-                {
-                    name: 'dirB',
-                    relativePath: 'dirB',
-                    isDirectory: true,
-                    size: 0,
-                    modifiedTime: new Date(0),
-                    contentHash: null,
-                },
-            ],
-        ])
-        const seeded = reducer(state, {
+    test('DELETE_COMPLETE without undo payload leaves stacks untouched', () => {
+        const primed = {
+            ...freshState(),
+            undoStack: [copyUndo()] as UndoEntry[],
+            redoStack: [deleteUndo()] as UndoEntry[],
+        }
+        const next = reducer(primed, { type: 'DELETE_COMPLETE' })
+        expect(next.undoStack).toHaveLength(1)
+        expect(next.redoStack).toHaveLength(1)
+    })
+})
+
+describe('reducer: UNDO_COMPLETE / REDO_COMPLETE', () => {
+    test('UNDO_COMPLETE pops from undo and pushes to redo', () => {
+        const entry = deleteUndo()
+        const withUndo = reducer(freshState(), {
+            type: 'DELETE_COMPLETE',
+            undo: entry,
+        })
+        const undone = reducer(withUndo, { type: 'UNDO_COMPLETE', entry })
+        expect(undone.undoStack).toHaveLength(0)
+        expect(undone.redoStack).toHaveLength(1)
+        expect(undone.redoStack[0]).toBe(entry)
+    })
+
+    test('REDO_COMPLETE pops from redo and pushes to undo', () => {
+        const entry = deleteUndo()
+        const primed = {
+            ...freshState(),
+            redoStack: [entry] as UndoEntry[],
+        }
+        const redone = reducer(primed, { type: 'REDO_COMPLETE', entry })
+        expect(redone.redoStack).toHaveLength(0)
+        expect(redone.undoStack).toHaveLength(1)
+    })
+
+    test('UNDO_COMPLETE for pair restores prior manualPairings', () => {
+        const before = new Map<string, string>()
+        const after = new Map([['dirA', 'dirB']])
+        const entry: UndoEntry = {
+            kind: 'pair',
+            beforePairings: before,
+            afterPairings: after,
+            beforeExpandedDirs: new Set(),
+            afterExpandedDirs: new Set(),
+        }
+        const primed = {
+            ...freshState(),
+            manualPairings: new Map(after),
+            undoStack: [entry] as UndoEntry[],
+        }
+        const undone = reducer(primed, { type: 'UNDO_COMPLETE', entry })
+        expect(undone.manualPairings.size).toBe(0)
+    })
+
+    test('REDO_COMPLETE for pair reapplies afterPairings', () => {
+        const before = new Map<string, string>()
+        const after = new Map([['dirA', 'dirB']])
+        const entry: UndoEntry = {
+            kind: 'pair',
+            beforePairings: before,
+            afterPairings: after,
+            beforeExpandedDirs: new Set(),
+            afterExpandedDirs: new Set(),
+        }
+        const primed = {
+            ...freshState(),
+            manualPairings: new Map(before),
+            redoStack: [entry] as UndoEntry[],
+        }
+        const redone = reducer(primed, { type: 'REDO_COMPLETE', entry })
+        expect(redone.manualPairings.get('dirA')).toBe('dirB')
+    })
+})
+
+describe('reducer: MARK_PAIR / UNPAIR push only on real mutation', () => {
+    test('first MARK_PAIR sets pending but pushes no undo', () => {
+        const seeded = reducer(freshState(), {
             type: 'SCAN_COMPLETE',
-            leftScan: scan,
-            rightScan: scan2,
+            leftScan: new Map([['dirA', fileEntry('dirA', true)]]),
+            rightScan: new Map([['dirB', fileEntry('dirB', true)]]),
         })
-        // Cursor on first only-left entry; first MARK_PAIR sets pending
+        const marked = reducer(seeded, { type: 'MARK_PAIR' })
+        expect(marked.pendingPairMark).not.toBeNull()
+        expect(marked.undoStack).toHaveLength(0)
+    })
+
+    test('completing pair pushes exactly one undo entry', () => {
+        const seeded = reducer(freshState(), {
+            type: 'SCAN_COMPLETE',
+            leftScan: new Map([['dirA', fileEntry('dirA', true)]]),
+            rightScan: new Map([['dirB', fileEntry('dirB', true)]]),
+        })
         const firstMark = reducer(seeded, { type: 'MARK_PAIR' })
-        expect(firstMark.undoStack.length).toBe(0)
-        expect(firstMark.pendingPairMark).not.toBeNull()
-        // Move cursor to the other side entry
-        const atSecond = {
-            ...firstMark,
-            cursorIndex: 1,
-            focusedPanel: 'right' as const,
-        }
+        const atSecond = { ...firstMark, cursorIndex: 1 }
         const secondMark = reducer(atSecond, { type: 'MARK_PAIR' })
-        expect(secondMark.undoStack.length).toBe(1)
+        expect(secondMark.undoStack).toHaveLength(1)
         expect(secondMark.manualPairings.size).toBe(1)
+    })
+
+    test('toggle-off of pending mark does not push undo', () => {
+        const seeded = reducer(freshState(), {
+            type: 'SCAN_COMPLETE',
+            leftScan: new Map([['dirA', fileEntry('dirA', true)]]),
+            rightScan: new Map([['dirB', fileEntry('dirB', true)]]),
+        })
+        const marked = reducer(seeded, { type: 'MARK_PAIR' })
+        const toggled = reducer(marked, { type: 'MARK_PAIR' })
+        expect(toggled.pendingPairMark).toBeNull()
+        expect(toggled.undoStack).toHaveLength(0)
+    })
+})
+
+describe('pushUndo helper', () => {
+    test('caps stack at UNDO_STACK_LIMIT, dropping oldest', () => {
+        let stack: UndoEntry[] = []
+        for (let i = 0; i < UNDO_STACK_LIMIT + 5; i++) {
+            stack = pushUndo(stack, deleteUndo({ trashPath: `/t/${i}` }))
+        }
+        expect(stack).toHaveLength(UNDO_STACK_LIMIT)
+        // oldest 5 entries dropped; first remaining is index 5
+        const first = stack[0]
+        expect(first?.kind).toBe('delete')
+        if (first?.kind === 'delete') {
+            expect(first.trashPath).toBe('/t/5')
+        }
     })
 })
