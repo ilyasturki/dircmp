@@ -1,10 +1,10 @@
 import type { Dispatch } from 'react'
-import fs from 'node:fs'
 import path from 'node:path'
 import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
-import type { Action, CompareEntry, PanelSide } from '~/utils/types'
+import type { Action, CompareEntry, PanelSide, UndoEntry } from '~/utils/types'
+import { moveToTrash } from '~/utils/trash'
 import { Dialog } from '../dialog'
 
 interface ConfirmDeleteDialogProps {
@@ -32,12 +32,22 @@ export function ConfirmDeleteDialog({
     const fullPath = path.join(dir, entry.relativePath)
     const [selectedIndex, setSelectedIndex] = useState(1)
 
+    const performDelete = () => {
+        const trashPath = moveToTrash(fullPath)
+        const undo: UndoEntry = {
+            kind: 'delete',
+            originalAbsPath: fullPath,
+            side,
+            trashPath,
+            isDirectory: entry.isDirectory,
+        }
+        dispatch({ type: 'DELETE_COMPLETE', undo })
+        refresh()
+    }
+
     useInput((input, key) => {
         if (input === 'y') {
-            fs.rm(fullPath, { recursive: true, force: true }, () => {
-                dispatch({ type: 'DELETE_COMPLETE' })
-                refresh()
-            })
+            performDelete()
             return
         }
         if (key.escape || input === 'n' || input === 'q') {
@@ -54,10 +64,7 @@ export function ConfirmDeleteDialog({
         }
         if (key.return) {
             if (selectedIndex === 0) {
-                fs.rm(fullPath, { recursive: true, force: true }, () => {
-                    dispatch({ type: 'DELETE_COMPLETE' })
-                    refresh()
-                })
+                performDelete()
             } else {
                 dispatch({ type: 'CANCEL_DELETE' })
             }

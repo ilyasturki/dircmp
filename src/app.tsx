@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { Box, Text, useApp, useStdout } from 'ink'
-import { useCallback, useMemo, useReducer, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
@@ -29,6 +29,7 @@ import {
 import { defaultKeymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
 import { loadKeybindings, resolveKeymap } from '~/utils/keybindings'
+import { initTrashSession } from '~/utils/trash'
 
 interface AppProps {
     leftDir: string
@@ -62,6 +63,9 @@ export function App({
         { config: initialConfig, ignoreEnabled: !ignoreOptions?.noIgnore },
         createInitialState,
     )
+    useEffect(() => {
+        initTrashSession()
+    }, [])
     const { stdout } = useStdout()
 
     const { columns, rows } = useTerminalDimensions(stdout)
@@ -120,6 +124,7 @@ export function App({
         refresh,
         contentHeight,
         handleShellOut,
+        showToast,
     )
 
     const onExecuteAction = useCallback(
@@ -133,6 +138,7 @@ export function App({
                 exit,
                 refresh,
                 handleShellOut,
+                showToast,
             )
         },
         [
@@ -143,6 +149,7 @@ export function App({
             exit,
             refresh,
             handleShellOut,
+            showToast,
         ],
     )
 

@@ -45,6 +45,30 @@ export type FilterMode = 'all' | 'diff-only'
 export type SortMode = 'name' | 'size' | 'date' | 'status'
 export type SortDirection = 'asc' | 'desc'
 
+export type UndoEntry =
+    | {
+          kind: 'copy'
+          sourceAbsPath: string
+          destAbsPath: string
+          destSide: PanelSide
+          isDirectory: boolean
+          backupTrashPath: string | null
+      }
+    | {
+          kind: 'delete'
+          originalAbsPath: string
+          side: PanelSide
+          trashPath: string
+          isDirectory: boolean
+      }
+    | {
+          kind: 'pair' | 'unpair'
+          beforePairings: ReadonlyMap<string, string>
+          afterPairings: ReadonlyMap<string, string>
+          beforeExpandedDirs: ReadonlySet<string>
+          afterExpandedDirs: ReadonlySet<string>
+      }
+
 export type Action =
     | { type: 'SCAN_COMPLETE'; leftScan: ScanResult; rightScan: ScanResult }
     | { type: 'SCAN_ERROR'; error: string }
@@ -68,13 +92,22 @@ export type Action =
     | { type: 'TOGGLE_FILTER' }
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
-    | { type: 'COPY_COMPLETE'; entries: FileEntry[]; side: PanelSide }
+    | {
+          type: 'COPY_COMPLETE'
+          entries: FileEntry[]
+          side: PanelSide
+          undo?: UndoEntry
+      }
     | { type: 'JUMP_TO_DIFF'; direction: 'next' | 'prev' }
     | { type: 'YANK_PATH' }
     | { type: 'OPEN_IN_EDITOR' }
     | { type: 'CONFIRM_DELETE' }
     | { type: 'CANCEL_DELETE' }
-    | { type: 'DELETE_COMPLETE' }
+    | { type: 'DELETE_COMPLETE'; undo?: UndoEntry }
+    | { type: 'UNDO' }
+    | { type: 'REDO' }
+    | { type: 'UNDO_COMPLETE'; entry: UndoEntry }
+    | { type: 'REDO_COMPLETE'; entry: UndoEntry }
     | { type: 'SHOW_CONTEXT_MENU' }
     | { type: 'HIDE_CONTEXT_MENU' }
     | { type: 'TOGGLE_IGNORE' }
@@ -145,4 +178,6 @@ export interface AppState {
     manualPairings: Map<string, string>
     sortMode: SortMode
     sortDirection: SortDirection
+    undoStack: UndoEntry[]
+    redoStack: UndoEntry[]
 }

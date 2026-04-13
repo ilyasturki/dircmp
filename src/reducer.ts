@@ -1,6 +1,7 @@
 import type { AppConfig } from '~/utils/config'
 import type { Action, AppState, CompareEntry, PanelSide } from '~/utils/types'
 import { buildVisibleTree } from '~/utils/compare'
+import { pushUndo } from '~/utils/undo'
 
 export function createInitialState(init: {
     config: AppConfig
@@ -31,6 +32,8 @@ export function createInitialState(init: {
         manualPairings: new Map(),
         sortMode: 'name',
         sortDirection: 'asc',
+        undoStack: [],
+        redoStack: [],
     }
 }
 
@@ -296,7 +299,12 @@ export function reducer(state: AppState, action: Action): AppState {
             for (const fe of action.entries) {
                 patched.set(fe.relativePath, fe)
             }
-            return withRecompute(state, { [destKey]: patched })
+            const updates: Partial<AppState> = { [destKey]: patched }
+            if (action.undo) {
+                updates.undoStack = pushUndo(state.undoStack, action.undo)
+                updates.redoStack = []
+            }
+            return withRecompute(state, updates)
         }
         case 'JUMP_TO_DIFF': {
             if (!state.leftScan || !state.rightScan) return state
@@ -375,7 +383,43 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'YANK_PATH':
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
+        case 'UNDO':
+        case 'REDO':
             return state
+        case 'UNDO_COMPLETE': {
+            const undoStack = state.undoStack.slice(0, -1)
+            const redoStack = [...state.redoStack, action.entry]
+            if (
+                action.entry.kind === 'pair'
+                || action.entry.kind === 'unpair'
+            ) {
+                return withRecompute(state, {
+                    undoStack,
+                    redoStack,
+                    manualPairings: new Map(action.entry.beforePairings),
+                    expandedDirs: new Set(action.entry.beforeExpandedDirs),
+                    pendingPairMark: null,
+                })
+            }
+            return { ...state, undoStack, redoStack }
+        }
+        case 'REDO_COMPLETE': {
+            const redoStack = state.redoStack.slice(0, -1)
+            const undoStack = pushUndo(state.undoStack, action.entry)
+            if (
+                action.entry.kind === 'pair'
+                || action.entry.kind === 'unpair'
+            ) {
+                return withRecompute(state, {
+                    undoStack,
+                    redoStack,
+                    manualPairings: new Map(action.entry.afterPairings),
+                    expandedDirs: new Set(action.entry.afterExpandedDirs),
+                    pendingPairMark: null,
+                })
+            }
+            return { ...state, undoStack, redoStack }
+        }
         case 'CONFIRM_DELETE': {
             const entry = state.entries[state.cursorIndex]
             if (!entry) return state
@@ -400,6 +444,11 @@ export function reducer(state: AppState, action: Action): AppState {
                 leftScan: null,
                 rightScan: null,
                 entries: [],
+                undoStack:
+                    action.undo ?
+                        pushUndo(state.undoStack, action.undo)
+                    :   state.undoStack,
+                redoStack: action.undo ? [] : state.redoStack,
             }
         case 'SHOW_CONTEXT_MENU': {
             const entry = state.entries[state.cursorIndex]
@@ -574,9 +623,18 @@ export function reducer(state: AppState, action: Action): AppState {
 
             const manualPairings = new Map(state.manualPairings)
             manualPairings.set(leftPath, rightPath)
+            const pairUndoEntry = {
+                kind: 'pair' as const,
+                beforePairings: state.manualPairings,
+                afterPairings: manualPairings,
+                beforeExpandedDirs: state.expandedDirs,
+                afterExpandedDirs: state.expandedDirs,
+            }
             return withRecompute(state, {
                 pendingPairMark: null,
                 manualPairings,
+                undoStack: pushUndo(state.undoStack, pairUndoEntry),
+                redoStack: [],
             })
         }
         case 'CLEAR_PAIR_MARK':
@@ -600,7 +658,19 @@ export function reducer(state: AppState, action: Action): AppState {
                 if (p.startsWith(prefix)) expandedDirs.delete(p)
             }
 
-            return withRecompute(state, { manualPairings, expandedDirs })
+            const unpairUndoEntry = {
+                kind: 'unpair' as const,
+                beforePairings: state.manualPairings,
+                afterPairings: manualPairings,
+                beforeExpandedDirs: state.expandedDirs,
+                afterExpandedDirs: expandedDirs,
+            }
+            return withRecompute(state, {
+                manualPairings,
+                expandedDirs,
+                undoStack: pushUndo(state.undoStack, unpairUndoEntry),
+                redoStack: [],
+            })
         }
         case 'SHOW_SORT_MENU':
             return { ...state, dialog: 'sortMenu' }

@@ -185,24 +185,30 @@ export function matchShortcut(
 
     const pending = pendingKeys + input
 
+    // Modifier-held keys (Ctrl/Meta) cannot participate in multi-key sequences
+    const isModifierHeld = key.ctrl || key.meta
+    const canSequence = !isModifierHeld
+
     // Check for sequence matches first
-    for (const shortcut of keymap) {
-        if (
-            shortcut.mode !== 'directoryDiff'
-            && shortcut.mode !== 'fileDiff'
-            && shortcut.mode !== 'universal'
-        )
-            continue
-        if (!shortcut.sequence) continue
-        if (pending === shortcut.sequence) {
-            return { type: 'matched', shortcut }
-        }
-        if (
-            pending.length > 0
-            && shortcut.sequence.startsWith(pending)
-            && pending.length < shortcut.sequence.length
-        ) {
-            return { type: 'sequence-partial' }
+    if (canSequence) {
+        for (const shortcut of keymap) {
+            if (
+                shortcut.mode !== 'directoryDiff'
+                && shortcut.mode !== 'fileDiff'
+                && shortcut.mode !== 'universal'
+            )
+                continue
+            if (!shortcut.sequence) continue
+            if (pending === shortcut.sequence) {
+                return { type: 'matched', shortcut }
+            }
+            if (
+                pending.length > 0
+                && shortcut.sequence.startsWith(pending)
+                && pending.length < shortcut.sequence.length
+            ) {
+                return { type: 'sequence-partial' }
+            }
         }
     }
 
@@ -233,6 +239,7 @@ export function useKeymap(
     onRefresh?: () => void,
     contentHeight: number = 20,
     onShellOut?: (command: string, args: string[]) => void,
+    onToast?: (message: string) => void,
 ) {
     const { exit } = useApp()
     const pendingKeyRef = useRef('')
@@ -298,6 +305,7 @@ export function useKeymap(
                 exit,
                 onRefresh,
                 onShellOut,
+                onToast,
             )
         },
         { isActive },

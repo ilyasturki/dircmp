@@ -1,9 +1,32 @@
 import type { Dispatch } from 'react'
 import { spawnSync } from 'node:child_process'
+import fs from 'node:fs'
 import path from 'node:path'
 
-import type { Action, AppState, FileEntry, PanelSide } from '~/utils/types'
+import type {
+    Action,
+    AppState,
+    FileEntry,
+    PanelSide,
+    UndoEntry,
+} from '~/utils/types'
 import { copyEntry } from '~/utils/copy'
+import { moveToTrash, restoreFromTrash } from '~/utils/trash'
+
+function isInside(absPath: string, dir: string): boolean {
+    const rel = path.relative(dir, absPath)
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))
+}
+
+function sideOfPath(
+    absPath: string,
+    leftDir: string,
+    rightDir: string,
+): PanelSide | null {
+    if (isInside(absPath, leftDir)) return 'left'
+    if (isInside(absPath, rightDir)) return 'right'
+    return null
+}
 
 export function executeAction(
     action: Action,
@@ -14,6 +37,7 @@ export function executeAction(
     exit: () => void,
     onRefresh?: () => void,
     onShellOut?: (command: string, args: string[]) => void,
+    onToast?: (message: string) => void,
 ): void {
     // Intercept REFRESH: dispatch to clear state, then trigger re-scan
     if (action.type === 'REFRESH') {
@@ -80,6 +104,11 @@ export function executeAction(
             sourceRelPath,
         )
         const destPath = path.join(copyRight ? rightDir : leftDir, destRelPath)
+
+        let backupTrashPath: string | null = null
+        if (fs.existsSync(destPath)) {
+            backupTrashPath = moveToTrash(destPath)
+        }
         copyEntry(sourcePath, destPath, entry.isDirectory)
 
         const destSide: PanelSide = copyRight ? 'right' : 'left'
@@ -95,11 +124,97 @@ export function executeAction(
                 }
             }
         }
+        const undo: UndoEntry = {
+            kind: 'copy',
+            sourceAbsPath: sourcePath,
+            destAbsPath: destPath,
+            destSide,
+            isDirectory: entry.isDirectory,
+            backupTrashPath,
+        }
         dispatch({
             type: 'COPY_COMPLETE',
             entries: patchEntries,
             side: destSide,
+            undo,
         })
+        return
+    }
+
+    // Intercept UNDO
+    if (action.type === 'UNDO') {
+        const top = state.undoStack[state.undoStack.length - 1]
+        if (!top) {
+            onToast?.('Nothing to undo')
+            return
+        }
+        if (top.kind === 'copy') {
+            if (!sideOfPath(top.destAbsPath, leftDir, rightDir)) {
+                onToast?.('Cannot undo: directories changed')
+                return
+            }
+            fs.rmSync(top.destAbsPath, { recursive: true, force: true })
+            if (top.backupTrashPath) {
+                restoreFromTrash(top.backupTrashPath, top.destAbsPath)
+            }
+            dispatch({ type: 'UNDO_COMPLETE', entry: top })
+            onRefresh?.()
+            return
+        }
+        if (top.kind === 'delete') {
+            if (!sideOfPath(top.originalAbsPath, leftDir, rightDir)) {
+                onToast?.('Cannot undo: directories changed')
+                return
+            }
+            restoreFromTrash(top.trashPath, top.originalAbsPath)
+            dispatch({ type: 'UNDO_COMPLETE', entry: top })
+            onRefresh?.()
+            return
+        }
+        // pair / unpair
+        dispatch({ type: 'UNDO_COMPLETE', entry: top })
+        return
+    }
+
+    // Intercept REDO
+    if (action.type === 'REDO') {
+        const top = state.redoStack[state.redoStack.length - 1]
+        if (!top) {
+            onToast?.('Nothing to redo')
+            return
+        }
+        if (top.kind === 'copy') {
+            if (!sideOfPath(top.destAbsPath, leftDir, rightDir)) {
+                onToast?.('Cannot redo: directories changed')
+                return
+            }
+            let backupTrashPath: string | null = null
+            if (fs.existsSync(top.destAbsPath)) {
+                backupTrashPath = moveToTrash(top.destAbsPath)
+            }
+            copyEntry(top.sourceAbsPath, top.destAbsPath, top.isDirectory)
+            dispatch({
+                type: 'REDO_COMPLETE',
+                entry: { ...top, backupTrashPath },
+            })
+            onRefresh?.()
+            return
+        }
+        if (top.kind === 'delete') {
+            if (!sideOfPath(top.originalAbsPath, leftDir, rightDir)) {
+                onToast?.('Cannot redo: directories changed')
+                return
+            }
+            const trashPath = moveToTrash(top.originalAbsPath)
+            dispatch({
+                type: 'REDO_COMPLETE',
+                entry: { ...top, trashPath },
+            })
+            onRefresh?.()
+            return
+        }
+        // pair / unpair
+        dispatch({ type: 'REDO_COMPLETE', entry: top })
         return
     }
 
