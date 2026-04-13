@@ -149,11 +149,19 @@ export function KeybindingsDialog({
         }
     })
 
-    const dialogWidth = Math.min(55, columns - 4)
-    const contentWidth = dialogWidth - 6 // border (2) + paddingX (4)
     const maxDescWidth = Math.max(
         ...defaults.map((s) => s.helpDescription.length),
     )
+    const maxKeyWidth = Math.max(
+        ...defaults.map((s) => getEditableLabel(s, overrides).length),
+    )
+    // Each row: marker(1) + desc + gap(>=1) + key + trailing(1)
+    const requiredContentWidth = 3 + maxDescWidth + maxKeyWidth
+    const dialogWidth = Math.min(
+        Math.max(55, requiredContentWidth + 6),
+        columns - 4,
+    )
+    const contentWidth = dialogWidth - 6 // border (2) + paddingX (4)
 
     return (
         <Dialog
