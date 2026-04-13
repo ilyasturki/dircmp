@@ -296,8 +296,13 @@ export function useKeymap(
                 return
             }
 
+            let action = result.shortcut.effect.action
+            if (action.type === 'SCROLL_VIEWPORT') {
+                action = { ...action, viewHeight: contentHeight }
+            }
+
             executeAction(
-                result.shortcut.effect.action,
+                action,
                 state,
                 leftDir,
                 rightDir,

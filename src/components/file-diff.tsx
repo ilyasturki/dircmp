@@ -1,12 +1,19 @@
 import type { Dispatch } from 'react'
+import fs from 'node:fs'
 import path from 'node:path'
 import { Box, Text } from 'ink'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
-import type { Action, CompareEntry, PanelSide } from '~/utils/types'
+import type {
+    Action,
+    CompareEntry,
+    HunkUndoEntry,
+    PanelSide,
+} from '~/utils/types'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { useUniversalShortcuts } from '~/hooks'
+import { moveToTrash, restoreFromTrash } from '~/utils/trash'
 import { DiffCell } from './file-diff/diff-cell'
 import {
     applyHunkToContent,
@@ -17,6 +24,7 @@ import {
     useAutoScroll,
     useDiffRows,
     useHunkNavigation,
+    useViewportShortcuts,
 } from './file-diff/hooks'
 
 interface FileDiffProps {
@@ -26,13 +34,26 @@ interface FileDiffProps {
     leftFilePath?: string
     rightFilePath?: string
     dispatch: Dispatch<Action>
-    onExecuteAction?: (action: Action) => void
+    onToast?: (message: string) => void
     columns: number
     rows: number
     keymap?: Shortcut[]
     dialogOpen?: boolean
     showHints?: boolean
     focusedSide?: PanelSide
+}
+
+function writeFileWithBackup(
+    destAbsPath: string,
+    newContent: string,
+): string | null {
+    let backupTrashPath: string | null = null
+    if (fs.existsSync(destAbsPath)) {
+        backupTrashPath = moveToTrash(destAbsPath)
+    }
+    fs.mkdirSync(path.dirname(destAbsPath), { recursive: true })
+    fs.writeFileSync(destAbsPath, newContent)
+    return backupTrashPath
 }
 
 export function FileDiff({
@@ -42,7 +63,7 @@ export function FileDiff({
     leftFilePath,
     rightFilePath,
     dispatch,
-    onExecuteAction,
+    onToast,
     columns,
     rows,
     keymap,
@@ -53,10 +74,15 @@ export function FileDiff({
     const leftPath = leftFilePath ?? path.join(leftDir, entry.relativePath)
     const rightPath = rightFilePath ?? path.join(rightDir, entry.relativePath)
 
+    const [reloadKey, setReloadKey] = useState(0)
+    const [undoStack, setUndoStack] = useState<HunkUndoEntry[]>([])
+    const [redoStack, setRedoStack] = useState<HunkUndoEntry[]>([])
+
     const { diffRows, error, leftContent, rightContent } = useDiffRows(
         entry,
         leftPath,
         rightPath,
+        reloadKey,
     )
     const hunkRanges = useMemo(() => computeHunkRanges(diffRows), [diffRows])
 
@@ -70,7 +96,7 @@ export function FileDiff({
                 || action.type === 'COPY_HUNK_TO_RIGHT'
                 || action.type === 'COPY_HUNK_FROM_FOCUSED'
             ) {
-                if (!diffRows || !onExecuteAction) return
+                if (!diffRows) return
                 const range = hunkRanges[focusedHunk]
                 if (!range) return
                 const toRight =
@@ -86,19 +112,52 @@ export function FileDiff({
                     targetContent,
                     toRight ? 'toRight' : 'toLeft',
                 )
-                onExecuteAction({
-                    type: 'APPLY_HUNK',
+                const backupTrashPath = writeFileWithBackup(
                     destAbsPath,
-                    destSide,
                     newContent,
-                })
+                )
+                setUndoStack((prev) => [
+                    ...prev,
+                    { destAbsPath, destSide, backupTrashPath, newContent },
+                ])
+                setRedoStack([])
+                setReloadKey((k) => k + 1)
+                return
+            }
+            if (action.type === 'UNDO') {
+                const top = undoStack[undoStack.length - 1]
+                if (!top) {
+                    onToast?.('Nothing to undo')
+                    return
+                }
+                fs.rmSync(top.destAbsPath, { force: true })
+                if (top.backupTrashPath) {
+                    restoreFromTrash(top.backupTrashPath, top.destAbsPath)
+                }
+                setUndoStack((prev) => prev.slice(0, -1))
+                setRedoStack((prev) => [...prev, top])
+                setReloadKey((k) => k + 1)
+                return
+            }
+            if (action.type === 'REDO') {
+                const top = redoStack[redoStack.length - 1]
+                if (!top) {
+                    onToast?.('Nothing to redo')
+                    return
+                }
+                const backupTrashPath = writeFileWithBackup(
+                    top.destAbsPath,
+                    top.newContent,
+                )
+                setRedoStack((prev) => prev.slice(0, -1))
+                setUndoStack((prev) => [...prev, { ...top, backupTrashPath }])
+                setReloadKey((k) => k + 1)
                 return
             }
             dispatch(action)
         },
         [
             dispatch,
-            onExecuteAction,
             diffRows,
             hunkRanges,
             focusedHunk,
@@ -107,6 +166,9 @@ export function FileDiff({
             leftContent,
             rightContent,
             focusedSide,
+            undoStack,
+            redoStack,
+            onToast,
         ],
     )
 
@@ -114,10 +176,16 @@ export function FileDiff({
 
     // header (1) + footer (1) + optional hints (1) reserved rows
     const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
-    const scrollOffset = useAutoScroll(
+    const { scrollOffset, setScrollOffset } = useAutoScroll(
         hunkRanges[focusedHunk],
         diffRows?.length ?? 0,
         contentHeight,
+    )
+    useViewportShortcuts(
+        hunkRanges[focusedHunk]?.start,
+        contentHeight,
+        setScrollOffset,
+        isActive,
     )
 
     const hintItems = (keymap ?? [])

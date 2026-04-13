@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { useInput } from 'ink'
 import { useEffect, useRef, useState } from 'react'
 
@@ -10,6 +11,7 @@ export function useDiffRows(
     entry: CompareEntry,
     leftPath: string,
     rightPath: string,
+    reloadKey: number = 0,
 ): {
     diffRows: DiffRow[] | null
     error: string | null
@@ -23,13 +25,20 @@ export function useDiffRows(
 
     useEffect(() => {
         let cancelled = false
+        setError(null)
+        setDiffRows(null)
 
         async function load() {
             try {
                 let leftText = ''
                 let rightText = ''
 
-                if (entry.status !== 'only-right') {
+                const leftExists =
+                    entry.status !== 'only-right' && fs.existsSync(leftPath)
+                const rightExists =
+                    entry.status !== 'only-left' && fs.existsSync(rightPath)
+
+                if (leftExists) {
                     const result = await readFileForDiff(leftPath)
                     if (cancelled) return
                     if ('error' in result) {
@@ -39,7 +48,7 @@ export function useDiffRows(
                     leftText = result.content
                 }
 
-                if (entry.status !== 'only-left') {
+                if (rightExists) {
                     const result = await readFileForDiff(rightPath)
                     if (cancelled) return
                     if ('error' in result) {
@@ -77,7 +86,7 @@ export function useDiffRows(
         return () => {
             cancelled = true
         }
-    }, [entry, leftPath, rightPath])
+    }, [entry, leftPath, rightPath, reloadKey])
 
     return { diffRows, error, leftContent, rightContent }
 }
@@ -124,7 +133,10 @@ export function useAutoScroll(
     focusedRange: HunkRange | undefined,
     totalRows: number,
     contentHeight: number,
-): number {
+): {
+    scrollOffset: number
+    setScrollOffset: React.Dispatch<React.SetStateAction<number>>
+} {
     const [scrollOffset, setScrollOffset] = useState(0)
     useEffect(() => {
         if (!focusedRange) return
@@ -137,5 +149,39 @@ export function useAutoScroll(
             return prev
         })
     }, [focusedRange, totalRows, contentHeight])
-    return scrollOffset
+    return { scrollOffset, setScrollOffset }
+}
+
+export function useViewportShortcuts(
+    referenceLine: number | undefined,
+    contentHeight: number,
+    setScrollOffset: React.Dispatch<React.SetStateAction<number>>,
+    isActive: boolean,
+): void {
+    const pendingZRef = useRef(false)
+    useInput(
+        (input, key) => {
+            if (key.ctrl || key.meta) {
+                pendingZRef.current = false
+                return
+            }
+            if (pendingZRef.current) {
+                pendingZRef.current = false
+                if (referenceLine === undefined) return
+                const h = Math.max(1, contentHeight)
+                if (input === 'z') {
+                    setScrollOffset(
+                        Math.max(0, referenceLine - Math.floor(h / 2)),
+                    )
+                } else if (input === 't') {
+                    setScrollOffset(Math.max(0, referenceLine))
+                } else if (input === 'b') {
+                    setScrollOffset(Math.max(0, referenceLine - h + 1))
+                }
+            } else if (input === 'z') {
+                pendingZRef.current = true
+            }
+        },
+        { isActive },
+    )
 }

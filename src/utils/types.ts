@@ -62,19 +62,19 @@ export type UndoEntry =
           isDirectory: boolean
       }
     | {
-          kind: 'hunk-apply'
-          destAbsPath: string
-          destSide: PanelSide
-          backupTrashPath: string
-          newContent: string
-      }
-    | {
           kind: 'pair' | 'unpair'
           beforePairings: ReadonlyMap<string, string>
           afterPairings: ReadonlyMap<string, string>
           beforeExpandedDirs: ReadonlySet<string>
           afterExpandedDirs: ReadonlySet<string>
       }
+
+export interface HunkUndoEntry {
+    destAbsPath: string
+    destSide: PanelSide
+    backupTrashPath: string | null
+    newContent: string
+}
 
 export type Action =
     | { type: 'SCAN_COMPLETE'; leftScan: ScanResult; rightScan: ScanResult }
@@ -83,6 +83,11 @@ export type Action =
           type: 'MOVE_CURSOR'
           direction: 'up' | 'down' | 'top' | 'bottom'
           count?: number
+      }
+    | {
+          type: 'SCROLL_VIEWPORT'
+          position: 'center' | 'top' | 'bottom'
+          viewHeight: number
       }
     | { type: 'SWITCH_PANEL' }
     | { type: 'NAVIGATE_INTO' }
@@ -102,13 +107,6 @@ export type Action =
     | { type: 'COPY_HUNK_TO_LEFT' }
     | { type: 'COPY_HUNK_TO_RIGHT' }
     | { type: 'COPY_HUNK_FROM_FOCUSED' }
-    | {
-          type: 'APPLY_HUNK'
-          destAbsPath: string
-          destSide: PanelSide
-          newContent: string
-      }
-    | { type: 'APPLY_HUNK_COMPLETE'; undo?: UndoEntry }
     | {
           type: 'COPY_COMPLETE'
           entries: FileEntry[]

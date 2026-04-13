@@ -141,30 +141,6 @@ export function executeAction(
         return
     }
 
-    // Intercept APPLY_HUNK: write target file with the new content from hunk apply
-    if (action.type === 'APPLY_HUNK') {
-        let backupTrashPath: string | null = null
-        if (fs.existsSync(action.destAbsPath)) {
-            backupTrashPath = moveToTrash(action.destAbsPath)
-        }
-        fs.mkdirSync(path.dirname(action.destAbsPath), { recursive: true })
-        fs.writeFileSync(action.destAbsPath, action.newContent)
-
-        const undo: UndoEntry | undefined =
-            backupTrashPath !== null ?
-                {
-                    kind: 'hunk-apply',
-                    destAbsPath: action.destAbsPath,
-                    destSide: action.destSide,
-                    backupTrashPath,
-                    newContent: action.newContent,
-                }
-            :   undefined
-        dispatch({ type: 'APPLY_HUNK_COMPLETE', undo })
-        onRefresh?.()
-        return
-    }
-
     // Intercept UNDO
     if (action.type === 'UNDO') {
         const top = state.undoStack[state.undoStack.length - 1]
@@ -191,17 +167,6 @@ export function executeAction(
                 return
             }
             restoreFromTrash(top.trashPath, top.originalAbsPath)
-            dispatch({ type: 'UNDO_COMPLETE', entry: top })
-            onRefresh?.()
-            return
-        }
-        if (top.kind === 'hunk-apply') {
-            if (!sideOfPath(top.destAbsPath, leftDir, rightDir)) {
-                onToast?.('Cannot undo: directories changed')
-                return
-            }
-            fs.rmSync(top.destAbsPath, { force: true })
-            restoreFromTrash(top.backupTrashPath, top.destAbsPath)
             dispatch({ type: 'UNDO_COMPLETE', entry: top })
             onRefresh?.()
             return
@@ -244,20 +209,6 @@ export function executeAction(
             dispatch({
                 type: 'REDO_COMPLETE',
                 entry: { ...top, trashPath },
-            })
-            onRefresh?.()
-            return
-        }
-        if (top.kind === 'hunk-apply') {
-            if (!sideOfPath(top.destAbsPath, leftDir, rightDir)) {
-                onToast?.('Cannot redo: directories changed')
-                return
-            }
-            const backupTrashPath = moveToTrash(top.destAbsPath)
-            fs.writeFileSync(top.destAbsPath, top.newContent)
-            dispatch({
-                type: 'REDO_COMPLETE',
-                entry: { ...top, backupTrashPath },
             })
             onRefresh?.()
             return

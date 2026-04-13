@@ -235,7 +235,7 @@ export function App({
                         leftDir={effectiveLeftDir}
                         rightDir={effectiveRightDir}
                         dispatch={dispatch}
-                        onExecuteAction={onExecuteAction}
+                        onToast={showToast}
                         columns={columns}
                         rows={rows}
                         keymap={keymap}

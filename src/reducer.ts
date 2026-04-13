@@ -203,6 +203,20 @@ export function reducer(state: AppState, action: Action): AppState {
             }
             return { ...state, cursorIndex: newIndex }
         }
+        case 'SCROLL_VIEWPORT': {
+            if (state.entries.length === 0) return state
+            const h = Math.max(1, action.viewHeight)
+            let scrollOffset = state.scrollOffset
+            if (action.position === 'center') {
+                scrollOffset = state.cursorIndex - Math.floor(h / 2)
+            } else if (action.position === 'top') {
+                scrollOffset = state.cursorIndex
+            } else {
+                scrollOffset = state.cursorIndex - h + 1
+            }
+            scrollOffset = Math.max(0, scrollOffset)
+            return { ...state, scrollOffset }
+        }
         case 'SWITCH_PANEL':
             return {
                 ...state,
@@ -386,18 +400,9 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'COPY_HUNK_TO_LEFT':
         case 'COPY_HUNK_TO_RIGHT':
         case 'COPY_HUNK_FROM_FOCUSED':
-        case 'APPLY_HUNK':
         case 'UNDO':
         case 'REDO':
             return state
-        case 'APPLY_HUNK_COMPLETE': {
-            if (!action.undo) return state
-            return {
-                ...state,
-                undoStack: pushUndo(state.undoStack, action.undo),
-                redoStack: [],
-            }
-        }
         case 'UNDO_COMPLETE': {
             const undoStack = state.undoStack.slice(0, -1)
             const redoStack = [...state.redoStack, action.entry]
