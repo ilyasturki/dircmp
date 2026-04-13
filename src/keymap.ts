@@ -484,10 +484,10 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'refresh',
-        mode: 'directoryDiff',
+        mode: 'universal',
         keyLabel: 'r',
         description: 'refresh',
-        helpDescription: 'Refresh directory comparison',
+        helpDescription: 'Refresh comparison',
         keyDef: 'r',
         helpKey: 'r',
         match: (input, key) => input === 'r' && !key.ctrl,

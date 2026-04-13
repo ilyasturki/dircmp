@@ -139,6 +139,10 @@ export function FileDiff({
                 setReloadKey((k) => k + 1)
                 return
             }
+            if (action.type === 'REFRESH') {
+                setReloadKey((k) => k + 1)
+                return
+            }
             if (action.type === 'REDO') {
                 const top = redoStack[redoStack.length - 1]
                 if (!top) {
