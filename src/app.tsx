@@ -235,6 +235,7 @@ export function App({
                         leftDir={effectiveLeftDir}
                         rightDir={effectiveRightDir}
                         dispatch={dispatch}
+                        onExecuteAction={onExecuteAction}
                         columns={columns}
                         rows={rows}
                         keymap={keymap}

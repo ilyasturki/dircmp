@@ -1,14 +1,18 @@
 import type { Dispatch } from 'react'
 import path from 'node:path'
 import { Box, Text } from 'ink'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type { Action, CompareEntry, PanelSide } from '~/utils/types'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { useUniversalShortcuts } from '~/hooks'
 import { DiffCell } from './file-diff/diff-cell'
-import { computeGutterWidth, computeHunkRanges } from './file-diff/diff-compute'
+import {
+    applyHunkToContent,
+    computeGutterWidth,
+    computeHunkRanges,
+} from './file-diff/diff-compute'
 import {
     useAutoScroll,
     useDiffRows,
@@ -22,6 +26,7 @@ interface FileDiffProps {
     leftFilePath?: string
     rightFilePath?: string
     dispatch: Dispatch<Action>
+    onExecuteAction?: (action: Action) => void
     columns: number
     rows: number
     keymap?: Shortcut[]
@@ -37,6 +42,7 @@ export function FileDiff({
     leftFilePath,
     rightFilePath,
     dispatch,
+    onExecuteAction,
     columns,
     rows,
     keymap,
@@ -47,12 +53,59 @@ export function FileDiff({
     const leftPath = leftFilePath ?? path.join(leftDir, entry.relativePath)
     const rightPath = rightFilePath ?? path.join(rightDir, entry.relativePath)
 
-    const { diffRows, error } = useDiffRows(entry, leftPath, rightPath)
+    const { diffRows, error, leftContent, rightContent } = useDiffRows(
+        entry,
+        leftPath,
+        rightPath,
+    )
     const hunkRanges = useMemo(() => computeHunkRanges(diffRows), [diffRows])
 
     const isActive = !(dialogOpen ?? false)
-    useUniversalShortcuts(keymap ?? [], dispatch, isActive, 'fileDiff')
     const focusedHunk = useHunkNavigation(hunkRanges, isActive)
+
+    const handleDispatch = useCallback(
+        (action: Action) => {
+            if (
+                action.type === 'COPY_HUNK_TO_LEFT'
+                || action.type === 'COPY_HUNK_TO_RIGHT'
+            ) {
+                if (!diffRows || !onExecuteAction) return
+                const range = hunkRanges[focusedHunk]
+                if (!range) return
+                const toRight = action.type === 'COPY_HUNK_TO_RIGHT'
+                const destSide: PanelSide = toRight ? 'right' : 'left'
+                const destAbsPath = toRight ? rightPath : leftPath
+                const targetContent = toRight ? rightContent : leftContent
+                const newContent = applyHunkToContent(
+                    diffRows,
+                    range,
+                    targetContent,
+                    toRight ? 'toRight' : 'toLeft',
+                )
+                onExecuteAction({
+                    type: 'APPLY_HUNK',
+                    destAbsPath,
+                    destSide,
+                    newContent,
+                })
+                return
+            }
+            dispatch(action)
+        },
+        [
+            dispatch,
+            onExecuteAction,
+            diffRows,
+            hunkRanges,
+            focusedHunk,
+            leftPath,
+            rightPath,
+            leftContent,
+            rightContent,
+        ],
+    )
+
+    useUniversalShortcuts(keymap ?? [], handleDispatch, isActive, 'fileDiff')
 
     // header (1) + footer (1) + optional hints (1) reserved rows
     const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))

@@ -383,9 +383,20 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'YANK_PATH':
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
+        case 'COPY_HUNK_TO_LEFT':
+        case 'COPY_HUNK_TO_RIGHT':
+        case 'APPLY_HUNK':
         case 'UNDO':
         case 'REDO':
             return state
+        case 'APPLY_HUNK_COMPLETE': {
+            if (!action.undo) return state
+            return {
+                ...state,
+                undoStack: pushUndo(state.undoStack, action.undo),
+                redoStack: [],
+            }
+        }
         case 'UNDO_COMPLETE': {
             const undoStack = state.undoStack.slice(0, -1)
             const redoStack = [...state.redoStack, action.entry]

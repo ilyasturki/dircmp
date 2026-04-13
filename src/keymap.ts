@@ -521,6 +521,28 @@ export const defaultKeymap: Shortcut[] = [
         match: (_input, key) => key.tab,
         effect: { type: 'dispatch', action: { type: 'SWITCH_PANEL' } },
     },
+    {
+        id: 'fileDiffCopyHunkToRight',
+        mode: 'fileDiff',
+        keyLabel: '>/<',
+        description: 'copy hunk',
+        helpDescription: 'Copy focused hunk to right side',
+        keyDef: '>',
+        helpKey: '>',
+        match: (input) => input === '>',
+        effect: { type: 'dispatch', action: { type: 'COPY_HUNK_TO_RIGHT' } },
+    },
+    {
+        id: 'fileDiffCopyHunkToLeft',
+        mode: 'fileDiff',
+        keyLabel: '',
+        description: 'copy hunk to left',
+        helpDescription: 'Copy focused hunk to left side',
+        keyDef: '<',
+        helpKey: '<',
+        match: (input) => input === '<',
+        effect: { type: 'dispatch', action: { type: 'COPY_HUNK_TO_LEFT' } },
+    },
 
     {
         id: 'showHelp',

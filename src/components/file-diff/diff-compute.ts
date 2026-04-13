@@ -221,6 +221,58 @@ export function computeHunkRanges(diffRows: DiffRow[] | null): HunkRange[] {
     return ranges
 }
 
+export function applyHunkToContent(
+    diffRows: DiffRow[],
+    hunkRange: HunkRange,
+    targetContent: string,
+    direction: 'toLeft' | 'toRight',
+): string {
+    const sourceKey = direction === 'toRight' ? 'left' : 'right'
+    const targetKey = direction === 'toRight' ? 'right' : 'left'
+
+    const sourceLines: string[] = []
+    let targetMin: number | null = null
+    let targetMax: number | null = null
+    for (let i = hunkRange.start; i <= hunkRange.end; i++) {
+        const row = diffRows[i]
+        if (!row || row.kind !== 'split') continue
+        const src = row[sourceKey]
+        const tgt = row[targetKey]
+        if (src.type !== 'blank') sourceLines.push(src.content)
+        if (tgt.type !== 'blank' && tgt.lineNum !== null) {
+            if (targetMin === null || tgt.lineNum < targetMin)
+                targetMin = tgt.lineNum
+            if (targetMax === null || tgt.lineNum > targetMax)
+                targetMax = tgt.lineNum
+        }
+    }
+
+    const targetLines = targetContent.split('\n')
+    let insertIdx: number
+    let deleteCount: number
+    if (targetMin !== null && targetMax !== null) {
+        insertIdx = targetMin - 1
+        deleteCount = targetMax - targetMin + 1
+    } else {
+        // Pure insertion — find the closest prior context row to anchor position
+        let insertAfterLineNum: number | null = null
+        for (let i = hunkRange.start - 1; i >= 0; i--) {
+            const row = diffRows[i]
+            if (!row || row.kind !== 'split') continue
+            const tgt = row[targetKey]
+            if (tgt.type !== 'blank' && tgt.lineNum !== null) {
+                insertAfterLineNum = tgt.lineNum
+                break
+            }
+        }
+        insertIdx = insertAfterLineNum ?? 0
+        deleteCount = 0
+    }
+
+    targetLines.splice(insertIdx, deleteCount, ...sourceLines)
+    return targetLines.join('\n')
+}
+
 export function computeGutterWidth(diffRows: DiffRow[] | null): number {
     if (!diffRows) return 3
     let max = 1

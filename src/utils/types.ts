@@ -62,6 +62,13 @@ export type UndoEntry =
           isDirectory: boolean
       }
     | {
+          kind: 'hunk-apply'
+          destAbsPath: string
+          destSide: PanelSide
+          backupTrashPath: string
+          newContent: string
+      }
+    | {
           kind: 'pair' | 'unpair'
           beforePairings: ReadonlyMap<string, string>
           afterPairings: ReadonlyMap<string, string>
@@ -92,6 +99,15 @@ export type Action =
     | { type: 'TOGGLE_FILTER' }
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
+    | { type: 'COPY_HUNK_TO_LEFT' }
+    | { type: 'COPY_HUNK_TO_RIGHT' }
+    | {
+          type: 'APPLY_HUNK'
+          destAbsPath: string
+          destSide: PanelSide
+          newContent: string
+      }
+    | { type: 'APPLY_HUNK_COMPLETE'; undo?: UndoEntry }
     | {
           type: 'COPY_COMPLETE'
           entries: FileEntry[]

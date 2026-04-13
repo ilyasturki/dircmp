@@ -10,17 +10,24 @@ export function useDiffRows(
     entry: CompareEntry,
     leftPath: string,
     rightPath: string,
-): { diffRows: DiffRow[] | null; error: string | null } {
+): {
+    diffRows: DiffRow[] | null
+    error: string | null
+    leftContent: string
+    rightContent: string
+} {
     const [diffRows, setDiffRows] = useState<DiffRow[] | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const [leftContent, setLeftContent] = useState('')
+    const [rightContent, setRightContent] = useState('')
 
     useEffect(() => {
         let cancelled = false
 
         async function load() {
             try {
-                let leftContent = ''
-                let rightContent = ''
+                let leftText = ''
+                let rightText = ''
 
                 if (entry.status !== 'only-right') {
                     const result = await readFileForDiff(leftPath)
@@ -29,7 +36,7 @@ export function useDiffRows(
                         setError(result.error)
                         return
                     }
-                    leftContent = result.content
+                    leftText = result.content
                 }
 
                 if (entry.status !== 'only-left') {
@@ -39,17 +46,19 @@ export function useDiffRows(
                         setError(result.error)
                         return
                     }
-                    rightContent = result.content
+                    rightText = result.content
                 }
 
                 const computed = computeDiffRows(
-                    leftContent,
-                    rightContent,
+                    leftText,
+                    rightText,
                     entry.relativePath,
                     entry.relativePath,
                 )
 
                 if (cancelled) return
+                setLeftContent(leftText)
+                setRightContent(rightText)
                 if (computed.length === 0) {
                     setError('Files are identical')
                 } else {
@@ -70,7 +79,7 @@ export function useDiffRows(
         }
     }, [entry, leftPath, rightPath])
 
-    return { diffRows, error }
+    return { diffRows, error, leftContent, rightContent }
 }
 
 export function useHunkNavigation(
