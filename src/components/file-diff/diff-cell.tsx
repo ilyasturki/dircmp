@@ -28,7 +28,7 @@ export function DiffCell({
             String(cell.lineNum).padStart(gutterWidth)
         :   ' '.repeat(gutterWidth)
     const isSelected = inFocusedBlock && isFocusedSide
-    const bg = inFocusedBlock && !isFocusedSide ? 'white' : undefined
+    const bg = inFocusedBlock && !isFocusedSide ? 'blackBright' : undefined
 
     let body: React.ReactNode
     if (cell.segments) {
@@ -43,9 +43,8 @@ export function DiffCell({
                 nodes.push(
                     <Text
                         key={key++}
-                        color='yellow'
-                        backgroundColor='red'
-                        inverse={false}
+                        color='red'
+                        bold
                     >
                         {text}
                     </Text>,
