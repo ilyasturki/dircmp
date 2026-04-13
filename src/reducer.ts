@@ -203,6 +203,8 @@ export function reducer(state: AppState, action: Action): AppState {
             }
             return { ...state, cursorIndex: newIndex }
         }
+        case 'SET_SCROLL_OFFSET':
+            return { ...state, scrollOffset: action.offset }
         case 'SCROLL_VIEWPORT': {
             if (state.entries.length === 0) return state
             const h = Math.max(1, action.viewHeight)
