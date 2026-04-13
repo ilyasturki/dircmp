@@ -168,10 +168,12 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 | `d` | Delete selected entry       |
 | `y` | Yank file path to clipboard |
 | `r` | Refresh comparison          |
+| `u` | Undo last action            |
+| `U` | Redo last undone action     |
 | `S` | Swap panels                 |
 | `s` | Open sort options           |
 | `m` | Mark/pair renamed directory |
-| `u` | Unpair directory            |
+| `M` | Unpair directory            |
 
 ### Filtering & Config
 
@@ -233,7 +235,7 @@ When a directory has been renamed on one side, it shows up as two unmatched entr
 2. Switch to the other panel (`Tab`) and navigate to the corresponding renamed directory.
 3. Press `m` again — the pairing is created and the two directories are compared as one entry.
 
-Both directories must share the same parent directory. To cancel a pending mark before pairing, press `m` on the marked directory, `u`, or `Escape`. To remove an existing pairing, press `u` on the paired entry or restart the app.
+Both directories must share the same parent directory. To cancel a pending mark before pairing, press `m` on the marked directory, `M`, or `Escape`. To remove an existing pairing, press `M` on the paired entry or restart the app.
 
 ## Color coding
 
