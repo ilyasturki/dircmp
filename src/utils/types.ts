@@ -101,6 +101,7 @@ export type Action =
     | { type: 'COPY_TO_RIGHT' }
     | { type: 'COPY_HUNK_TO_LEFT' }
     | { type: 'COPY_HUNK_TO_RIGHT' }
+    | { type: 'COPY_HUNK_FROM_FOCUSED' }
     | {
           type: 'APPLY_HUNK'
           destAbsPath: string

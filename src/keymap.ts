@@ -543,6 +543,20 @@ export const defaultKeymap: Shortcut[] = [
         match: (input) => input === '<',
         effect: { type: 'dispatch', action: { type: 'COPY_HUNK_TO_LEFT' } },
     },
+    {
+        id: 'fileDiffCopyHunkFromFocused',
+        mode: 'fileDiff',
+        keyLabel: 'space',
+        description: 'push hunk',
+        helpDescription: 'Copy focused hunk from focused side to the other',
+        keyDef: 'space',
+        helpKey: 'Space',
+        match: (input) => input === ' ',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'COPY_HUNK_FROM_FOCUSED' },
+        },
+    },
 
     {
         id: 'showHelp',

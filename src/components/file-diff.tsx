@@ -68,11 +68,15 @@ export function FileDiff({
             if (
                 action.type === 'COPY_HUNK_TO_LEFT'
                 || action.type === 'COPY_HUNK_TO_RIGHT'
+                || action.type === 'COPY_HUNK_FROM_FOCUSED'
             ) {
                 if (!diffRows || !onExecuteAction) return
                 const range = hunkRanges[focusedHunk]
                 if (!range) return
-                const toRight = action.type === 'COPY_HUNK_TO_RIGHT'
+                const toRight =
+                    action.type === 'COPY_HUNK_TO_RIGHT'
+                    || (action.type === 'COPY_HUNK_FROM_FOCUSED'
+                        && focusedSide === 'left')
                 const destSide: PanelSide = toRight ? 'right' : 'left'
                 const destAbsPath = toRight ? rightPath : leftPath
                 const targetContent = toRight ? rightContent : leftContent
@@ -102,6 +106,7 @@ export function FileDiff({
             rightPath,
             leftContent,
             rightContent,
+            focusedSide,
         ],
     )
 
