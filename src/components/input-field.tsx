@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink'
-import TextInput from 'ink-text-input'
+
+import { TextInput } from './text-input'
 
 interface InputFieldProps {
     label: string

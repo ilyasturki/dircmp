@@ -1,9 +1,9 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import TextInput from 'ink-text-input'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
+import { TextInput } from './text-input'
 
 interface SearchInputProps {
     initialQuery: string

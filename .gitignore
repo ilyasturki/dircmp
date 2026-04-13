@@ -4,3 +4,4 @@ dist/
 result
 /dircmp
 .dev/
+.claude/worktrees
