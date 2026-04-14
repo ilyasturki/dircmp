@@ -44,13 +44,21 @@ export function TextInput({
                 if (key.rightArrow) {
                     return { value, cursor: Math.min(value.length, cursor + 1) }
                 }
-                if (key.backspace || key.delete) {
+                if (key.backspace) {
                     if (cursor === 0) return { value, cursor }
                     const next =
                         value.slice(0, cursor - 1) + value.slice(cursor)
                     onChange(next)
                     return { value: next, cursor: cursor - 1 }
                 }
+                if (key.delete) {
+                    if (cursor === value.length) return { value, cursor }
+                    const next =
+                        value.slice(0, cursor) + value.slice(cursor + 1)
+                    onChange(next)
+                    return { value: next, cursor }
+                }
+                if (!input) return { value, cursor }
                 const next =
                     value.slice(0, cursor) + input + value.slice(cursor)
                 onChange(next)
