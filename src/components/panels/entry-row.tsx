@@ -84,6 +84,8 @@ export const EntryRow = memo(function EntryRow({
     const errorIcon = nerdFont ? ERROR_ICON : ERROR_ICON_PLAIN
     const hasError = fileEntry?.error
     const isSymlink = entry.type === 'symlink'
+    const isBrokenLink = isSymlink && fileEntry?.linkBroken === true
+    const showErrorIcon = Boolean(hasError || isBrokenLink)
     const isPaired = !!entry.pairedLeftPath
     const dimColor = !hasError && entry.status === 'identical' && !isPaired
     const color =
@@ -106,7 +108,7 @@ export const EntryRow = memo(function EntryRow({
     const dimSelectedBg = 'blackBright'
     const colorIconOnly = entry.type === 'directory' && color && !isSelected
 
-    const errorSuffix = hasError ? ` ${errorIcon}` : ''
+    const errorSuffix = showErrorIcon ? ` ${errorIcon}` : ''
     const pairMark = isPendingPairMark ? ' [m]' : ''
     const left = `${indent}${icon} ${name}`
     const right = `${size}  ${date}`
@@ -148,7 +150,12 @@ export const EntryRow = memo(function EntryRow({
 
     const restContent = (
         <>
-            {hasError && <Text color='red'> {errorIcon}</Text>}
+            {showErrorIcon && (
+                <>
+                    {' '}
+                    <Text color='red'>{errorIcon}</Text>
+                </>
+            )}
             {' '.repeat(gap)}
             {right}
         </>
