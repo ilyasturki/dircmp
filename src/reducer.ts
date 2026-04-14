@@ -88,20 +88,37 @@ function filterBySearch(
     return entries.filter((e) => keepPaths.has(e.relativePath))
 }
 
+function projectOntoCollapses(
+    entries: CompareEntry[],
+    userExpanded: Set<string>,
+): CompareEntry[] {
+    const result: CompareEntry[] = []
+    // Any entry whose depth > hideDepth lives inside a collapsed ancestor.
+    let hideDepth = Infinity
+    for (const entry of entries) {
+        if (entry.depth > hideDepth) continue
+        hideDepth = Infinity
+        const isExpanded =
+            entry.isDirectory && userExpanded.has(entry.relativePath)
+        result.push({ ...entry, isExpanded })
+        if (entry.isDirectory && !isExpanded) {
+            hideDepth = entry.depth
+        }
+    }
+    return result
+}
+
 function recomputeEntries(state: AppState): CompareEntry[] {
     if (!state.leftScan || !state.rightScan) return []
 
-    // When searching or filtering, expand every directory so unexpanded dirs
-    // still get traversed and their matching descendants surface.
+    // When searching or filtering, walk a fully-expanded tree so matches deep
+    // inside collapsed dirs can still be discovered. We project the result
+    // back onto the user's expandedDirs afterwards so collapses are honored.
+    const filterActive = state.filterMode !== 'all'
+    const fullyExpand = Boolean(state.searchQuery) || filterActive
     let expandedDirs = state.expandedDirs
-    if (state.searchQuery || state.filterMode !== 'all') {
-        expandedDirs = new Set<string>()
-        for (const [, entry] of state.leftScan) {
-            if (entry.isDirectory) expandedDirs.add(entry.relativePath)
-        }
-        for (const [, entry] of state.rightScan) {
-            if (entry.isDirectory) expandedDirs.add(entry.relativePath)
-        }
+    if (fullyExpand) {
+        expandedDirs = collectDirsFromScans(state.leftScan, state.rightScan)
     }
 
     const tree = buildVisibleTree(
@@ -120,7 +137,14 @@ function recomputeEntries(state: AppState): CompareEntry[] {
         state.manualPairings.size > 0 ? state.manualPairings : undefined,
     )
     const filtered = filterByMode(tree, state.filterMode)
-    return filterBySearch(filtered, state.searchQuery)
+    // Search already fully-expands the visible tree; collapses are ignored
+    // there so users can skim results. Under a filter, project matches onto
+    // the user's own expansion state so they can still fold dirs.
+    const projected =
+        filterActive && !state.searchQuery ?
+            projectOntoCollapses(filtered, state.expandedDirs)
+        :   filtered
+    return filterBySearch(projected, state.searchQuery)
 }
 
 function removeDescendants(
@@ -158,14 +182,21 @@ function toggleExpandDir(state: AppState): AppState {
 }
 
 function collectAllDirs(state: AppState): Set<string> {
+    return collectDirsFromScans(state.leftScan, state.rightScan)
+}
+
+function collectDirsFromScans(
+    leftScan: AppState['leftScan'],
+    rightScan: AppState['rightScan'],
+): Set<string> {
     const dirs = new Set<string>()
-    if (state.leftScan) {
-        for (const [, e] of state.leftScan) {
+    if (leftScan) {
+        for (const [, e] of leftScan) {
             if (e.isDirectory) dirs.add(e.relativePath)
         }
     }
-    if (state.rightScan) {
-        for (const [, e] of state.rightScan) {
+    if (rightScan) {
+        for (const [, e] of rightScan) {
             if (e.isDirectory) dirs.add(e.relativePath)
         }
     }
@@ -175,10 +206,17 @@ function collectAllDirs(state: AppState): Set<string> {
 export function reducer(state: AppState, action: Action): AppState {
     switch (action.type) {
         case 'SCAN_COMPLETE': {
-            const result = withRecompute(state, {
+            const updates: Partial<AppState> = {
                 leftScan: action.leftScan,
                 rightScan: action.rightScan,
-            })
+            }
+            if (state.filterMode !== 'all') {
+                updates.expandedDirs = collectDirsFromScans(
+                    action.leftScan,
+                    action.rightScan,
+                )
+            }
+            const result = withRecompute(state, updates)
             result.scrollOffset = Math.min(
                 state.scrollOffset,
                 Math.max(0, result.entries.length - 1),
@@ -323,11 +361,19 @@ export function reducer(state: AppState, action: Action): AppState {
             })
         case 'SHOW_FILTER_MENU':
             return { ...state, dialog: 'filterMenu' }
-        case 'SET_FILTER':
-            return withRecompute(state, {
+        case 'SET_FILTER': {
+            const updates: Partial<AppState> = {
                 filterMode: action.mode,
                 dialog: action.close === false ? state.dialog : null,
-            })
+            }
+            // On filter activation, expand all dirs so matches surface.
+            // Once the filter is active, the user can collapse dirs and the
+            // collapse sticks (we don't re-expand on subsequent recomputes).
+            if (action.mode !== 'all' && state.filterMode === 'all') {
+                updates.expandedDirs = collectAllDirs(state)
+            }
+            return withRecompute(state, updates)
+        }
         case 'COPY_COMPLETE': {
             const destKey = action.side === 'left' ? 'leftScan' : 'rightScan'
             const destScan = state[destKey]
