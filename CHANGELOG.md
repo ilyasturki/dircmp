@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.3.0]
+
+### Added
+
+- Split side-by-side file diff view with switchable side focus
+- Inline word-level diff for paired `-`/`+` lines
+- Copy a focused hunk across sides with `>`/`<`, or push with `Space`
+- Line-by-line selection mode in the file diff view (`a` to toggle)
+- Undo/redo for copy, delete, and pair actions in the directory view
+- Hunk-level undo/redo scoped to the edited file in the file diff view
+- Open focused entry in `$EDITOR` with `e`
+- Adjust diff context size with `{` and `}`
+- Scroll line-by-line with `Ctrl+e` / `Ctrl+y`
+- Honor `XDG_CONFIG_HOME` and `XDG_DATA_HOME` for config, ignore, and data files
+- Navigate per change block instead of full hunks
+- Skipped line count in hunk header banner
+- Full left and right paths in the file diff header
+- Keyboard hints at the bottom of the diff view (respects `showHints`)
+- `r` refresh also works in the file diff view
+
+### Changed
+
+- **Breaking:** require Node.js ≥22 (upgrades Ink to 7 and `diff` to 9)
+- Vim-style `u` / `U` for undo/redo, and `M` to unpair directories
+
+### Fixed
+
+- Re-init trash session when `XDG_CACHE_HOME` changes between calls
+- Keep context lines visible when auto-scrolling to a hunk
+- Keep line-mode active during reload after a copy
+- Keep directory view viewport stable when the cursor moves within it
+- Size the keybindings dialog width to fit the longest description and key
+- Prevent text-input cursor desync during rapid typing
+
+### Performance
+
+- Defer directory diff count and cache descendants for faster status bar
+
 ## [1.2.0]
 
 ### Added

@@ -143,6 +143,8 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 | `Ctrl+u`  | Half page up        |
 | `Ctrl+f`  | Full page down      |
 | `Ctrl+b`  | Full page up        |
+| `Ctrl+e`  | Scroll view down    |
+| `Ctrl+y`  | Scroll view up      |
 | `Tab`     | Switch panel focus  |
 | `H`       | Focus left panel    |
 | `L`       | Focus right panel   |
@@ -161,19 +163,20 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 
 ### Actions
 
-| Key | Action                      |
-| --- | --------------------------- |
-| `>` | Copy entry to right         |
-| `<` | Copy entry to left          |
-| `d` | Delete selected entry       |
-| `y` | Yank file path to clipboard |
-| `r` | Refresh comparison          |
-| `u` | Undo last action            |
-| `U` | Redo last undone action     |
-| `S` | Swap panels                 |
-| `s` | Open sort options           |
-| `m` | Mark/pair renamed directory |
-| `M` | Unpair directory            |
+| Key | Action                          |
+| --- | ------------------------------- |
+| `>` | Copy entry to right             |
+| `<` | Copy entry to left              |
+| `d` | Delete selected entry           |
+| `y` | Yank file path to clipboard     |
+| `e` | Open focused entry in `$EDITOR` |
+| `r` | Refresh comparison              |
+| `u` | Undo last action                |
+| `U` | Redo last undone action         |
+| `S` | Swap panels                     |
+| `s` | Open sort options               |
+| `m` | Mark/pair renamed directory     |
+| `M` | Unpair directory                |
 
 ### Filtering & Config
 
@@ -194,7 +197,7 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 
 ### Preferences
 
-Stored in `~/.config/dircmp/config.json`:
+Stored in `$XDG_CONFIG_HOME/dircmp/config.json` (defaults to `~/.config/dircmp/config.json`):
 
 ```json
 {
@@ -220,10 +223,10 @@ Stored in `~/.config/dircmp/config.json`:
 
 ### Ignore patterns
 
-Patterns use gitignore syntax and are stored in:
+Patterns use gitignore syntax and are stored under `$XDG_DATA_HOME/dircmp/` (defaults to `~/.local/share/dircmp/`):
 
-- **Global:** `~/.local/share/dircmp/ignore`
-- **Per directory pair:** `~/.local/share/dircmp/pairs/<hash>.ignore`
+- **Global:** `ignore`
+- **Per directory pair:** `pairs/<hash>.ignore`
 
 Default ignored: `.git`, `node_modules`, `.DS_Store`.
 
