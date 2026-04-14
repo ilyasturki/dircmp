@@ -44,6 +44,13 @@ interface FileDiffProps {
     focusedSide?: PanelSide
 }
 
+function truncatePathLeft(p: string, maxWidth: number): string {
+    if (maxWidth <= 0) return ''
+    if (p.length <= maxWidth) return p
+    if (maxWidth === 1) return '…'
+    return '…' + p.slice(p.length - (maxWidth - 1))
+}
+
 function writeFileWithBackup(
     destAbsPath: string,
     newContent: string,
@@ -244,15 +251,29 @@ export function FileDiff({
             </Box>
 
             {/* Header */}
-            <Box>
-                <Text
-                    bold
-                    color='cyan'
-                >
-                    {' '}
-                    {entry.relativePath}{' '}
-                </Text>
-            </Box>
+            {(() => {
+                const halfWidth = halfOverhead + contentWidth
+                const innerWidth = Math.max(0, halfWidth - 2)
+                const leftHeader = ` ${truncatePathLeft(leftPath, innerWidth).padEnd(innerWidth)} `
+                const rightHeader = ` ${truncatePathLeft(rightPath, innerWidth).padEnd(innerWidth)} `
+                return (
+                    <Box>
+                        <Text
+                            bold
+                            color='cyan'
+                        >
+                            {leftHeader}
+                        </Text>
+                        <Text dimColor>{' \u2502 '}</Text>
+                        <Text
+                            bold
+                            color='cyan'
+                        >
+                            {rightHeader}
+                        </Text>
+                    </Box>
+                )
+            })()}
 
             {/* Content */}
             {error ?
