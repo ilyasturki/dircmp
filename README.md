@@ -130,27 +130,39 @@ dircmp ./local-dir myremote:path
 
 ## Keybindings
 
-All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the in-app editor (`K`).
+All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the in-app editor (`K`). Press `?` in the app to see the live list grouped by mode.
 
-### Navigation
+### Universal
 
-| Key       | Action              |
-| --------- | ------------------- |
-| `j` / `↓` | Move cursor down    |
-| `k` / `↑` | Move cursor up      |
-| `G`       | Jump to last entry  |
-| `gg`      | Jump to first entry |
-| `Ctrl+d`  | Half page down      |
-| `Ctrl+u`  | Half page up        |
-| `Ctrl+f`  | Full page down      |
-| `Ctrl+b`  | Full page up        |
-| `Ctrl+e`  | Scroll view down    |
-| `Ctrl+y`  | Scroll view up      |
-| `Tab`/`%` | Switch panel focus  |
-| `H`       | Focus left panel    |
-| `L`       | Focus right panel   |
+Works everywhere.
 
-### Tree
+| Key         | Action                  |
+| ----------- | ----------------------- |
+| `Tab` / `%` | Switch panel focus      |
+| `H` / `L`   | Focus left / right side |
+| `r`         | Refresh comparison      |
+| `u` / `U`   | Undo / redo             |
+| `,`         | Open preferences        |
+| `K`         | Open keybindings editor |
+| `?`         | Show all keybindings    |
+| `n`         | Show release notes      |
+
+### Directory view
+
+**Navigation**
+
+| Key            | Action                 |
+| -------------- | ---------------------- |
+| `j` / `↓`      | Move cursor down       |
+| `k` / `↑`      | Move cursor up         |
+| `G` / `gg`     | Jump to last / first   |
+| `Ctrl+d` / `u` | Half page down / up    |
+| `Ctrl+f` / `b` | Full page down / up    |
+| `Ctrl+e` / `y` | Scroll view down / up  |
+| `zz`           | Center cursor in view  |
+| `zt` / `zb`    | Cursor to top / bottom |
+
+**Tree**
 
 | Key       | Action                             |
 | --------- | ---------------------------------- |
@@ -162,38 +174,52 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 | `]c`      | Jump to next difference            |
 | `[c`      | Jump to previous difference        |
 
-### Actions
+**Actions**
 
 | Key     | Action                          |
 | ------- | ------------------------------- |
 | `>`     | Copy entry to right             |
 | `<`     | Copy entry to left              |
-| `Space` | Copy focused side across        |
+| `Space` | Copy entry from focused side    |
 | `d`     | Delete selected entry           |
 | `y`     | Yank file path to clipboard     |
 | `e`     | Open focused entry in `$EDITOR` |
-| `r`     | Refresh comparison              |
-| `u`     | Undo last action                |
-| `U`     | Redo last undone action         |
-| `S`     | Swap panels                     |
-| `s`     | Open sort options               |
 | `m`     | Mark/pair renamed directory     |
 | `M`     | Unpair directory                |
+| `Esc`   | Clear pending pair mark         |
 
-### Filtering & Config
+**Filter, sort & config**
 
 | Key  | Action                    |
 | ---- | ------------------------- |
 | `/`  | Filter entries by name    |
 | `f`  | Open filter menu          |
+| `s`  | Open sort options         |
+| `S`  | Reverse sort direction    |
+| `zs` | Swap left / right panels  |
 | `i`  | Quick-add entry to ignore |
 | `I`  | Manage ignore patterns    |
 | `zi` | Toggle ignore filtering   |
-| `,`  | Open preferences          |
 | `.`  | Open actions menu         |
-| `K`  | Open keybindings editor   |
-| `?`  | Show all keybindings      |
 | `q`  | Quit                      |
+
+### File diff view
+
+| Key            | Action                              |
+| -------------- | ----------------------------------- |
+| `j` / `↓`      | Next change (or line in line mode)  |
+| `k` / `↑`      | Previous change (or line)           |
+| `G` / `gg`     | Jump to last / first change         |
+| `Ctrl+e` / `y` | Scroll view down / up               |
+| `zz`           | Center focused change in view       |
+| `zt` / `zb`    | Focused change to top / bottom      |
+| `>`            | Copy focused hunk to right          |
+| `<`            | Copy focused hunk to left           |
+| `Space`        | Copy focused hunk from focused side |
+| `}` / `{`      | Increase / decrease context lines   |
+| `a`            | Toggle line-by-line selection mode  |
+| `w`            | Toggle soft-wrap for long lines     |
+| `q` / `Esc`    | Close file diff view                |
 
 ## Configuration
 
@@ -244,12 +270,14 @@ Both directories must share the same parent directory. To cancel a pending mark 
 
 ## Color coding
 
-| Color  | Meaning                    |
-| ------ | -------------------------- |
-| Yellow | Modified (content differs) |
-| Green  | Only exists on one side    |
-| Red    | Missing from this side     |
-| Dim    | Identical                  |
+| Color    | Meaning                                   |
+| -------- | ----------------------------------------- |
+| Yellow   | Modified (content or metadata differs)    |
+| Green    | Only exists on one side                   |
+| Cyan     | Symlink                                   |
+| Magenta  | Manually paired directory (or `[m]` mark) |
+| Dim      | Identical                                 |
+| Red icon | Broken symlink or unreadable entry        |
 
 ## License
 
