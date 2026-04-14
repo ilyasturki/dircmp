@@ -91,9 +91,10 @@ function filterBySearch(
 function recomputeEntries(state: AppState): CompareEntry[] {
     if (!state.leftScan || !state.rightScan) return []
 
-    // When searching, expand all directories so the full tree is searchable
+    // When searching or filtering, expand every directory so unexpanded dirs
+    // still get traversed and their matching descendants surface.
     let expandedDirs = state.expandedDirs
-    if (state.searchQuery) {
+    if (state.searchQuery || state.filterMode !== 'all') {
         expandedDirs = new Set<string>()
         for (const [, entry] of state.leftScan) {
             if (entry.isDirectory) expandedDirs.add(entry.relativePath)
