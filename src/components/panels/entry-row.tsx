@@ -46,7 +46,7 @@ export const MissingEntryRow = memo(function MissingEntryRow({
     isDimSelected: boolean
     panelWidth: number
 }) {
-    const dimSelectedBg = 'white'
+    const dimSelectedBg = 'blackBright'
     const content = ''
 
     return (
@@ -103,7 +103,7 @@ export const EntryRow = memo(function EntryRow({
     const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
-    const dimSelectedBg = 'white'
+    const dimSelectedBg = 'blackBright'
     const colorIconOnly = entry.isDirectory && color && !isSelected
 
     const errorSuffix = hasError ? ` ${errorIcon}` : ''

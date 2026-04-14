@@ -3,8 +3,8 @@ import { Text } from 'ink'
 import type { CellType, DiffCell as DiffCellData } from './diff-compute'
 
 function colorFor(type: CellType): string | undefined {
-    if (type === 'added' || type === 'removed' || type === 'changed')
-        return 'yellow'
+    if (type === 'added') return 'green'
+    if (type === 'removed' || type === 'changed') return 'yellow'
     return undefined
 }
 
@@ -77,9 +77,14 @@ export function DiffCell({
         body = cell.content.slice(0, contentWidth).padEnd(contentWidth)
     }
 
+    // Blank cells have no fg color — without one, `inverse` flips the terminal
+    // default (black on light themes) into the background, producing black bars.
+    const outerColor =
+        colorFor(cell.type) ?? (cell.type === 'blank' ? 'red' : undefined)
+
     return (
         <Text
-            color={colorFor(cell.type)}
+            color={outerColor}
             backgroundColor={bg}
             inverse={isSelected}
         >
