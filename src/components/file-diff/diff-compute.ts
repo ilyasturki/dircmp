@@ -136,11 +136,14 @@ function flushChangeBlock(
     }
 }
 
+export const DEFAULT_DIFF_CONTEXT = 3
+
 export function computeDiffRows(
     leftContent: string,
     rightContent: string,
     leftName: string,
     rightName: string,
+    context: number = DEFAULT_DIFF_CONTEXT,
 ): DiffRow[] {
     const patch = structuredPatch(
         leftName,
@@ -149,7 +152,7 @@ export function computeDiffRows(
         rightContent,
         undefined,
         undefined,
-        { context: 3 },
+        { context: Math.max(0, context) },
     )
 
     const rows: DiffRow[] = []

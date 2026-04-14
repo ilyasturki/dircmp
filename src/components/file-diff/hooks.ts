@@ -12,6 +12,7 @@ export function useDiffRows(
     leftPath: string,
     rightPath: string,
     reloadKey: number = 0,
+    context?: number,
 ): {
     diffRows: DiffRow[] | null
     error: string | null
@@ -63,6 +64,7 @@ export function useDiffRows(
                     rightText,
                     entry.relativePath,
                     entry.relativePath,
+                    context,
                 )
 
                 if (cancelled) return
@@ -86,7 +88,7 @@ export function useDiffRows(
         return () => {
             cancelled = true
         }
-    }, [entry, leftPath, rightPath, reloadKey])
+    }, [entry, leftPath, rightPath, reloadKey, context])
 
     return { diffRows, error, leftContent, rightContent }
 }

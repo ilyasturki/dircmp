@@ -652,6 +652,34 @@ export const defaultKeymap: Shortcut[] = [
             action: { type: 'COPY_HUNK_FROM_FOCUSED' },
         },
     },
+    {
+        id: 'fileDiffIncreaseContext',
+        mode: 'fileDiff',
+        keyLabel: '{/}',
+        description: 'context size',
+        helpDescription: 'Increase diff context lines',
+        keyDef: '}',
+        helpKey: '}',
+        match: (input) => input === '}',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'INCREASE_DIFF_CONTEXT' },
+        },
+    },
+    {
+        id: 'fileDiffDecreaseContext',
+        mode: 'fileDiff',
+        keyLabel: '',
+        description: 'less context',
+        helpDescription: 'Decrease diff context lines',
+        keyDef: '{',
+        helpKey: '{',
+        match: (input) => input === '{',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'DECREASE_DIFF_CONTEXT' },
+        },
+    },
 
     {
         id: 'showHelp',

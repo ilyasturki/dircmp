@@ -19,6 +19,7 @@ import {
     applyHunkToContent,
     computeGutterWidth,
     computeHunkRanges,
+    DEFAULT_DIFF_CONTEXT,
 } from './file-diff/diff-compute'
 import {
     useAutoScroll,
@@ -77,12 +78,14 @@ export function FileDiff({
     const [reloadKey, setReloadKey] = useState(0)
     const [undoStack, setUndoStack] = useState<HunkUndoEntry[]>([])
     const [redoStack, setRedoStack] = useState<HunkUndoEntry[]>([])
+    const [contextSize, setContextSize] = useState(DEFAULT_DIFF_CONTEXT)
 
     const { diffRows, error, leftContent, rightContent } = useDiffRows(
         entry,
         leftPath,
         rightPath,
         reloadKey,
+        contextSize,
     )
     const hunkRanges = useMemo(() => computeHunkRanges(diffRows), [diffRows])
 
@@ -141,6 +144,14 @@ export function FileDiff({
             }
             if (action.type === 'REFRESH') {
                 setReloadKey((k) => k + 1)
+                return
+            }
+            if (action.type === 'INCREASE_DIFF_CONTEXT') {
+                setContextSize((c) => c + 1)
+                return
+            }
+            if (action.type === 'DECREASE_DIFF_CONTEXT') {
+                setContextSize((c) => Math.max(0, c - 1))
                 return
             }
             if (action.type === 'REDO') {
@@ -313,12 +324,13 @@ export function FileDiff({
             }
 
             {/* Footer */}
-            <Box>
+            <Box justifyContent='space-between'>
                 <Text dimColor>
                     {diffRows && hunkRanges.length > 0 ?
                         ` hunk ${focusedHunk + 1} of ${hunkRanges.length}`
                     :   ''}
                 </Text>
+                <Text dimColor>{`context ${contextSize} `}</Text>
             </Box>
 
             {/* Keyboard hints */}

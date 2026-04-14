@@ -114,6 +114,8 @@ export type Action =
     | { type: 'COPY_HUNK_TO_LEFT' }
     | { type: 'COPY_HUNK_TO_RIGHT' }
     | { type: 'COPY_HUNK_FROM_FOCUSED' }
+    | { type: 'INCREASE_DIFF_CONTEXT' }
+    | { type: 'DECREASE_DIFF_CONTEXT' }
     | {
           type: 'COPY_COMPLETE'
           entries: FileEntry[]
