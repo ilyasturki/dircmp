@@ -206,6 +206,15 @@ function isChangeRow(row: DiffRow): boolean {
     )
 }
 
+export function computeChangeLineIndices(diffRows: DiffRow[] | null): number[] {
+    if (!diffRows) return []
+    const out: number[] = []
+    for (let i = 0; i < diffRows.length; i++) {
+        if (isChangeRow(diffRows[i])) out.push(i)
+    }
+    return out
+}
+
 export function computeHunkRanges(diffRows: DiffRow[] | null): HunkRange[] {
     if (!diffRows || diffRows.length === 0) return []
     const ranges: HunkRange[] = []

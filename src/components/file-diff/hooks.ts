@@ -93,6 +93,34 @@ export function useDiffRows(
     return { diffRows, error, leftContent, rightContent }
 }
 
+export function useLineNavigation(
+    changeLineIndices: number[],
+    isActive: boolean,
+): {
+    lineCursor: number
+    setLineCursor: React.Dispatch<React.SetStateAction<number>>
+} {
+    const [lineCursor, setLineCursor] = useState(0)
+    useInput(
+        (input, key) => {
+            if (changeLineIndices.length === 0) return
+            if (input === 'j' || key.downArrow) {
+                setLineCursor((prev) =>
+                    Math.min(changeLineIndices.length - 1, prev + 1),
+                )
+            } else if (input === 'k' || key.upArrow) {
+                setLineCursor((prev) => Math.max(0, prev - 1))
+            } else if (input === 'G') {
+                setLineCursor(changeLineIndices.length - 1)
+            } else if (input === 'g') {
+                setLineCursor(0)
+            }
+        },
+        { isActive },
+    )
+    return { lineCursor, setLineCursor }
+}
+
 export function useHunkNavigation(
     hunkRanges: HunkRange[],
     isActive: boolean,

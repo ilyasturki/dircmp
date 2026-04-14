@@ -1,8 +1,8 @@
 import type { Dispatch } from 'react'
 import fs from 'node:fs'
 import path from 'node:path'
-import { Box, Text } from 'ink'
-import { useCallback, useMemo, useState } from 'react'
+import { Box, Text, useInput } from 'ink'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
 import type {
@@ -17,6 +17,7 @@ import { moveToTrash, restoreFromTrash } from '~/utils/trash'
 import { DiffCell } from './file-diff/diff-cell'
 import {
     applyHunkToContent,
+    computeChangeLineIndices,
     computeGutterWidth,
     computeHunkRanges,
     DEFAULT_DIFF_CONTEXT,
@@ -25,6 +26,7 @@ import {
     useAutoScroll,
     useDiffRows,
     useHunkNavigation,
+    useLineNavigation,
     useViewportShortcuts,
 } from './file-diff/hooks'
 
@@ -86,6 +88,7 @@ export function FileDiff({
     const [undoStack, setUndoStack] = useState<HunkUndoEntry[]>([])
     const [redoStack, setRedoStack] = useState<HunkUndoEntry[]>([])
     const [contextSize, setContextSize] = useState(DEFAULT_DIFF_CONTEXT)
+    const [isLineMode, setIsLineMode] = useState(false)
 
     const { diffRows, error, leftContent, rightContent } = useDiffRows(
         entry,
@@ -95,19 +98,68 @@ export function FileDiff({
         contextSize,
     )
     const hunkRanges = useMemo(() => computeHunkRanges(diffRows), [diffRows])
+    const changeLineIndices = useMemo(
+        () => computeChangeLineIndices(diffRows),
+        [diffRows],
+    )
 
     const isActive = !(dialogOpen ?? false)
-    const focusedHunk = useHunkNavigation(hunkRanges, isActive)
+    const focusedHunk = useHunkNavigation(hunkRanges, isActive && !isLineMode)
+    const { lineCursor, setLineCursor } = useLineNavigation(
+        changeLineIndices,
+        isActive && isLineMode,
+    )
+
+    // Exit line mode if no change lines remain (e.g. after reload).
+    useEffect(() => {
+        if (isLineMode && changeLineIndices.length === 0) setIsLineMode(false)
+    }, [isLineMode, changeLineIndices])
+
+    // Clamp cursor within bounds when indices change.
+    useEffect(() => {
+        if (changeLineIndices.length === 0) return
+        setLineCursor((prev) =>
+            Math.min(Math.max(0, prev), changeLineIndices.length - 1),
+        )
+    }, [changeLineIndices, setLineCursor])
+
+    const focusedRowIndex = changeLineIndices[lineCursor]
+    const focusedRange =
+        isLineMode && focusedRowIndex !== undefined ?
+            { start: focusedRowIndex, end: focusedRowIndex }
+        :   hunkRanges[focusedHunk]
+
+    // Esc exits line mode (must run before universal shortcut closes diff).
+    useInput(
+        (_input, key) => {
+            if (key.escape) setIsLineMode(false)
+        },
+        { isActive: isActive && isLineMode },
+    )
 
     const handleDispatch = useCallback(
         (action: Action) => {
+            if (action.type === 'TOGGLE_LINE_MODE') {
+                if (isLineMode) {
+                    setIsLineMode(false)
+                    return
+                }
+                if (changeLineIndices.length === 0) return
+                const hunkStart = hunkRanges[focusedHunk]?.start ?? 0
+                const initial = changeLineIndices.findIndex(
+                    (i) => i >= hunkStart,
+                )
+                setLineCursor(initial === -1 ? 0 : initial)
+                setIsLineMode(true)
+                return
+            }
             if (
                 action.type === 'COPY_HUNK_TO_LEFT'
                 || action.type === 'COPY_HUNK_TO_RIGHT'
                 || action.type === 'COPY_HUNK_FROM_FOCUSED'
             ) {
                 if (!diffRows) return
-                const range = hunkRanges[focusedHunk]
+                const range = focusedRange
                 if (!range) return
                 const toRight =
                     action.type === 'COPY_HUNK_TO_RIGHT'
@@ -181,8 +233,12 @@ export function FileDiff({
         [
             dispatch,
             diffRows,
+            focusedRange,
+            isLineMode,
+            changeLineIndices,
             hunkRanges,
             focusedHunk,
+            setLineCursor,
             leftPath,
             rightPath,
             leftContent,
@@ -194,17 +250,26 @@ export function FileDiff({
         ],
     )
 
-    useUniversalShortcuts(keymap ?? [], handleDispatch, isActive, 'fileDiff')
+    // Suppress closeFileDiff (Esc/q) while in line mode — Esc exits line mode.
+    const activeKeymap = useMemo(
+        () =>
+            isLineMode ?
+                (keymap ?? []).filter((s) => s.id !== 'closeFileDiff')
+            :   (keymap ?? []),
+        [keymap, isLineMode],
+    )
+
+    useUniversalShortcuts(activeKeymap, handleDispatch, isActive, 'fileDiff')
 
     // header (1) + footer (1) + optional hints (1) reserved rows
     const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
     const { scrollOffset, setScrollOffset } = useAutoScroll(
-        hunkRanges[focusedHunk],
+        focusedRange,
         diffRows?.length ?? 0,
         contentHeight,
     )
     useViewportShortcuts(
-        hunkRanges[focusedHunk]?.start,
+        focusedRange?.start,
         contentHeight,
         diffRows?.length ?? 0,
         setScrollOffset,
@@ -298,7 +363,6 @@ export function FileDiff({
                 >
                     {visibleRows!.map((row, i) => {
                         const idx = scrollOffset + i
-                        const focusedRange = hunkRanges[focusedHunk]
                         const isFocused =
                             focusedRange !== undefined
                             && idx >= focusedRange.start
@@ -362,7 +426,11 @@ export function FileDiff({
             {/* Footer */}
             <Box justifyContent='space-between'>
                 <Text dimColor>
-                    {diffRows && hunkRanges.length > 0 ?
+                    {!diffRows ?
+                        ''
+                    : isLineMode && changeLineIndices.length > 0 ?
+                        ` LINE ${lineCursor + 1} of ${changeLineIndices.length}`
+                    : hunkRanges.length > 0 ?
                         ` hunk ${focusedHunk + 1} of ${hunkRanges.length}`
                     :   ''}
                 </Text>

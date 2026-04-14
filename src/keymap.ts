@@ -680,6 +680,17 @@ export const defaultKeymap: Shortcut[] = [
             action: { type: 'DECREASE_DIFF_CONTEXT' },
         },
     },
+    {
+        id: 'fileDiffToggleLineMode',
+        mode: 'fileDiff',
+        keyLabel: 'a',
+        description: 'line mode',
+        helpDescription: 'Toggle line-by-line selection mode',
+        keyDef: 'a',
+        helpKey: 'a',
+        match: (input) => input === 'a',
+        effect: { type: 'dispatch', action: { type: 'TOGGLE_LINE_MODE' } },
+    },
 
     {
         id: 'showHelp',

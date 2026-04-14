@@ -116,6 +116,7 @@ export type Action =
     | { type: 'COPY_HUNK_FROM_FOCUSED' }
     | { type: 'INCREASE_DIFF_CONTEXT' }
     | { type: 'DECREASE_DIFF_CONTEXT' }
+    | { type: 'TOGGLE_LINE_MODE' }
     | {
           type: 'COPY_COMPLETE'
           entries: FileEntry[]
