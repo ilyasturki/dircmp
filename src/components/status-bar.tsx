@@ -372,7 +372,7 @@ export function StatusBar({
     const sortLabel = `[${sortMode} ${sortArrow}]`
 
     const helpItems = keymap
-        .filter((s) => s.keyLabel !== '')
+        .filter((s) => s.keyLabel !== '' && s.mode !== 'fileDiff')
         .map((s) => ({ key: s.keyLabel, label: s.description }))
 
     return (
