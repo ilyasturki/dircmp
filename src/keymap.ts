@@ -19,11 +19,14 @@ export interface Shortcut {
     helpKey?: string
 }
 
+export type ShortcutMode = Shortcut['mode']
+
 export interface HelpItem {
     key: string
     description: string
     helpDescription: string
     effect: ShortcutEffect
+    mode: ShortcutMode
 }
 
 export function getHelpItems(shortcuts: Shortcut[]): HelpItem[] {
@@ -34,7 +37,35 @@ export function getHelpItems(shortcuts: Shortcut[]): HelpItem[] {
             description: s.description,
             helpDescription: s.helpDescription,
             effect: s.effect,
+            mode: s.mode,
         }))
+}
+
+export const MODE_ORDER: readonly ShortcutMode[] = [
+    'universal',
+    'directoryDiff',
+    'fileDiff',
+] as const
+
+export const MODE_LABELS: Record<ShortcutMode, string> = {
+    universal: 'Universal',
+    directoryDiff: 'Directory diff',
+    fileDiff: 'File diff',
+}
+
+export function groupByMode<T extends { mode: ShortcutMode }>(
+    items: T[],
+): Array<{ mode: ShortcutMode; items: T[] }> {
+    const byMode = new Map<ShortcutMode, T[]>()
+    for (const item of items) {
+        const arr = byMode.get(item.mode) ?? []
+        arr.push(item)
+        byMode.set(item.mode, arr)
+    }
+    return MODE_ORDER.filter((m) => byMode.has(m)).map((m) => ({
+        mode: m,
+        items: byMode.get(m)!,
+    }))
 }
 
 export const defaultKeymap: Shortcut[] = [
@@ -109,7 +140,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'focusLeft',
-        mode: 'directoryDiff',
+        mode: 'universal',
         keyLabel: '',
         description: 'focus left panel',
         helpDescription: 'Focus left panel',
@@ -123,7 +154,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'focusRight',
-        mode: 'directoryDiff',
+        mode: 'universal',
         keyLabel: '',
         description: 'focus right panel',
         helpDescription: 'Focus right panel',
@@ -137,7 +168,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'switchPanel',
-        mode: 'directoryDiff',
+        mode: 'universal',
         keyLabel: '',
         description: 'switch panel',
         helpDescription: 'Switch panel focus',
@@ -587,45 +618,6 @@ export const defaultKeymap: Shortcut[] = [
         helpKey: 'q/Esc',
         match: (input, key) => key.escape || input === 'q',
         effect: { type: 'dispatch', action: { type: 'HIDE_FILE_DIFF' } },
-    },
-    {
-        id: 'fileDiffFocusLeft',
-        mode: 'fileDiff',
-        keyLabel: '',
-        description: 'focus left side',
-        helpDescription: 'Focus left side',
-        keyDef: 'H',
-        helpKey: 'H',
-        match: (input) => input === 'H',
-        effect: {
-            type: 'dispatch',
-            action: { type: 'FOCUS_PANEL', panel: 'left' },
-        },
-    },
-    {
-        id: 'fileDiffFocusRight',
-        mode: 'fileDiff',
-        keyLabel: '',
-        description: 'focus right side',
-        helpDescription: 'Focus right side',
-        keyDef: 'L',
-        helpKey: 'L',
-        match: (input) => input === 'L',
-        effect: {
-            type: 'dispatch',
-            action: { type: 'FOCUS_PANEL', panel: 'right' },
-        },
-    },
-    {
-        id: 'fileDiffSwitchPanel',
-        mode: 'fileDiff',
-        keyLabel: '',
-        description: 'switch side',
-        helpDescription: 'Switch side focus',
-        keyDef: 'tab',
-        helpKey: 'Tab',
-        match: (_input, key) => key.tab,
-        effect: { type: 'dispatch', action: { type: 'SWITCH_PANEL' } },
     },
     {
         id: 'fileDiffCopyHunkToRight',

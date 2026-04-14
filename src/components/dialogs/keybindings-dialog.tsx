@@ -6,6 +6,7 @@ import type { Shortcut } from '~/keymap'
 import type { KeybindingOverrides } from '~/utils/keybindings'
 import type { Action } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
+import { groupByMode, MODE_LABELS } from '~/keymap'
 import {
     formatKeyDef,
     loadKeybindings,
@@ -46,9 +47,13 @@ export function KeybindingsDialog({
     const [overrides, setOverrides] =
         useState<KeybindingOverrides>(loadKeybindings)
 
+    const groups = groupByMode(defaults)
+    const orderedDefaults: Shortcut[] = groups.flatMap((g) => g.items)
+
     // Dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + hints (1) + help text (1) = 8
-    const maxRows = Math.max(1, rows - 12)
-    const needsScroll = defaults.length > maxRows
+    // Additional reserve: section header (1) + spacer (1) per group
+    const maxRows = Math.max(1, rows - 12 - groups.length * 2)
+    const needsScroll = orderedDefaults.length > maxRows
     const maxVisibleItems = needsScroll ? maxRows - 1 : maxRows
 
     const {
@@ -57,15 +62,15 @@ export function KeybindingsDialog({
         scrollTo,
         handleInput: handleNav,
     } = useListNavigation({
-        itemCount: defaults.length,
+        itemCount: orderedDefaults.length,
         maxVisibleItems,
     })
 
     const hasArrowUp = needsScroll && scrollOffset > 0
     const hasArrowDown =
-        needsScroll && scrollOffset + maxVisibleItems < defaults.length
+        needsScroll && scrollOffset + maxVisibleItems < orderedDefaults.length
 
-    const visibleItems = defaults.slice(
+    const visibleItems = orderedDefaults.slice(
         scrollOffset,
         scrollOffset + maxVisibleItems,
     )
@@ -92,7 +97,7 @@ export function KeybindingsDialog({
             return
         }
 
-        const shortcut = defaults[selectedIndex]
+        const shortcut = orderedDefaults[selectedIndex]
         if (!shortcut) return
 
         const updated = { ...overrides, [shortcut.id]: keyDef }
@@ -106,7 +111,7 @@ export function KeybindingsDialog({
     }
 
     const handleReset = async () => {
-        const shortcut = defaults[selectedIndex]
+        const shortcut = orderedDefaults[selectedIndex]
         if (!shortcut) return
         if (!(shortcut.id in overrides)) return
 
@@ -127,7 +132,7 @@ export function KeybindingsDialog({
             if (handleNav(input, key)) return
 
             if (key.return) {
-                const shortcut = defaults[selectedIndex]
+                const shortcut = orderedDefaults[selectedIndex]
                 if (!shortcut) return
                 setEditValue(getEditableLabel(shortcut, overrides))
                 setError('')
@@ -181,6 +186,25 @@ export function KeybindingsDialog({
                     const isSelected = absoluteIndex === selectedIndex
                     const isCustomized = shortcut.id in overrides
                     const currentKey = getEditableLabel(shortcut, overrides)
+                    const prevShortcut =
+                        absoluteIndex > 0 ?
+                            orderedDefaults[absoluteIndex - 1]
+                        :   undefined
+                    const showHeader =
+                        !prevShortcut || prevShortcut.mode !== shortcut.mode
+                    const showSpacer = showHeader && i > 0
+
+                    const header = showHeader && (
+                        <>
+                            {showSpacer && <Text> </Text>}
+                            <Text
+                                bold
+                                italic
+                            >
+                                {MODE_LABELS[shortcut.mode]}
+                            </Text>
+                        </>
+                    )
 
                     if (displayMode === 'edit' && isSelected) {
                         return (
@@ -188,6 +212,7 @@ export function KeybindingsDialog({
                                 key={shortcut.id}
                                 flexDirection='column'
                             >
+                                {header}
                                 <InputField
                                     label={shortcut.helpDescription}
                                     value={editValue}
@@ -211,15 +236,18 @@ export function KeybindingsDialog({
                     )
 
                     return (
-                        <Text
+                        <Box
                             key={shortcut.id}
-                            inverse={isSelected}
+                            flexDirection='column'
                         >
-                            {marker}
-                            {desc}
-                            {' '.repeat(gap + (maxDescWidth - desc.length))}
-                            <Text color='cyan'>{keyPart}</Text>{' '}
-                        </Text>
+                            {header}
+                            <Text inverse={isSelected}>
+                                {marker}
+                                {desc}
+                                {' '.repeat(gap + (maxDescWidth - desc.length))}
+                                <Text color='cyan'>{keyPart}</Text>{' '}
+                            </Text>
+                        </Box>
                     )
                 })}
                 {hasArrowDown && (

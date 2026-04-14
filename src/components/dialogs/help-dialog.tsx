@@ -2,10 +2,10 @@ import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
-import type { Shortcut } from '~/keymap'
+import type { HelpItem, Shortcut } from '~/keymap'
 import type { Action } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
-import { getHelpItems } from '~/keymap'
+import { getHelpItems, groupByMode, MODE_LABELS } from '~/keymap'
 import { Dialog } from '../dialog'
 import { TextInput } from '../text-input'
 
@@ -27,22 +27,29 @@ export function HelpDialog({
     rows,
 }: HelpDialogProps) {
     const items = getHelpItems(keymap)
+    const groupedAll = groupByMode(items)
+    const orderedItems: HelpItem[] = groupedAll.flatMap((g) => g.items)
     const [searchActive, setSearchActive] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
 
     const filteredItems =
         searchQuery ?
-            items.filter((item) => {
+            orderedItems.filter((item) => {
                 const q = searchQuery.toLowerCase()
                 return (
                     item.key.toLowerCase().includes(q)
                     || item.helpDescription.toLowerCase().includes(q)
                 )
             })
-        :   items
+        :   orderedItems
 
-    // Reserve rows for dialog chrome: border (2) + paddingY (2) + title (1) + gap (1) + search (1) = 7
-    const maxVisibleItems = Math.min(items.length, Math.max(1, rows - 11))
+    const visibleGroups = groupByMode(filteredItems)
+
+    // Reserve rows for dialog chrome (7) + header (1) + spacer (1) per group
+    const maxVisibleItems = Math.min(
+        orderedItems.length,
+        Math.max(1, rows - 11 - visibleGroups.length * 2),
+    )
 
     const {
         selectedIndex,
@@ -149,15 +156,33 @@ export function HelpDialog({
                         const descPart = ` ${item.helpDescription}`
                         const usedWidth = maxKeyWidth + 1 + descPart.length
                         const pad = Math.max(0, contentWidth - usedWidth)
+                        const prevItem =
+                            absoluteIndex > 0 ?
+                                filteredItems[absoluteIndex - 1]
+                            :   undefined
+                        const showHeader =
+                            !prevItem || prevItem.mode !== item.mode
+                        const showSpacer = showHeader && i > 0
                         return (
-                            <Text
+                            <Box
                                 key={absoluteIndex}
-                                inverse={isSelected}
+                                flexDirection='column'
                             >
-                                <Text color='cyan'>{keyPart}</Text>
-                                {descPart}
-                                {' '.repeat(pad)}
-                            </Text>
+                                {showSpacer && <Text> </Text>}
+                                {showHeader && (
+                                    <Text
+                                        bold
+                                        italic
+                                    >
+                                        {MODE_LABELS[item.mode]}
+                                    </Text>
+                                )}
+                                <Text inverse={isSelected}>
+                                    <Text color='cyan'>{keyPart}</Text>
+                                    {descPart}
+                                    {' '.repeat(pad)}
+                                </Text>
+                            </Box>
                         )
                     })
                 }
