@@ -172,9 +172,9 @@ export const defaultKeymap: Shortcut[] = [
         keyLabel: '',
         description: 'switch panel',
         helpDescription: 'Switch panel focus',
-        keyDef: 'tab',
-        helpKey: 'Tab',
-        match: (_input, key) => key.tab,
+        keyDef: ['tab', '%'],
+        helpKey: 'Tab/%',
+        match: (input, key) => key.tab || input === '%',
         effect: { type: 'dispatch', action: { type: 'SWITCH_PANEL' } },
     },
     {
