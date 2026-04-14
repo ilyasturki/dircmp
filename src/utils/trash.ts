@@ -13,12 +13,13 @@ let entryCounter = 0
 let cleanupRegistered = false
 
 export function initTrashSession(): void {
-    if (sessionDir) return
     const root = getTrashRoot()
+    if (sessionDir && path.dirname(sessionDir) === root) return
     fs.mkdirSync(root, { recursive: true })
     purgeOrphans(root)
     sessionDir = path.join(root, `${process.pid}-${Date.now()}`)
     fs.mkdirSync(sessionDir, { recursive: true })
+    entryCounter = 0
     if (!cleanupRegistered) {
         cleanupRegistered = true
         process.on('exit', () => {
