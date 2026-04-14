@@ -455,6 +455,17 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'COPY_TO_LEFT' } },
     },
     {
+        id: 'copyFromFocused',
+        mode: 'directoryDiff',
+        keyLabel: 'space',
+        description: 'push entry',
+        helpDescription: 'Copy entry from focused side to the other',
+        keyDef: 'space',
+        helpKey: 'Space',
+        match: (input) => input === ' ',
+        effect: { type: 'dispatch', action: { type: 'COPY_FROM_FOCUSED' } },
+    },
+    {
         id: 'delete',
         mode: 'directoryDiff',
         keyLabel: 'd',

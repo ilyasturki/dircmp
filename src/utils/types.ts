@@ -111,6 +111,7 @@ export type Action =
     | { type: 'TOGGLE_FILTER' }
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
+    | { type: 'COPY_FROM_FOCUSED' }
     | { type: 'COPY_HUNK_TO_LEFT' }
     | { type: 'COPY_HUNK_TO_RIGHT' }
     | { type: 'COPY_HUNK_FROM_FOCUSED' }

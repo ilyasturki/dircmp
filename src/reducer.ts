@@ -416,6 +416,7 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'YANK_PATH':
         case 'COPY_TO_LEFT':
         case 'COPY_TO_RIGHT':
+        case 'COPY_FROM_FOCUSED':
         case 'COPY_HUNK_TO_LEFT':
         case 'COPY_HUNK_TO_RIGHT':
         case 'COPY_HUNK_FROM_FOCUSED':

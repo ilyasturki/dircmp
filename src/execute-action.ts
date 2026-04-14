@@ -82,12 +82,19 @@ export function executeAction(
         return
     }
 
-    // Intercept COPY_TO_RIGHT / COPY_TO_LEFT
-    if (action.type === 'COPY_TO_RIGHT' || action.type === 'COPY_TO_LEFT') {
+    // Intercept COPY_TO_RIGHT / COPY_TO_LEFT / COPY_FROM_FOCUSED
+    if (
+        action.type === 'COPY_TO_RIGHT'
+        || action.type === 'COPY_TO_LEFT'
+        || action.type === 'COPY_FROM_FOCUSED'
+    ) {
         const entry = state.entries[state.cursorIndex]
         if (!entry || entry.status === 'identical') return
 
-        const copyRight = action.type === 'COPY_TO_RIGHT'
+        const copyRight =
+            action.type === 'COPY_FROM_FOCUSED' ?
+                state.focusedPanel === 'left'
+            :   action.type === 'COPY_TO_RIGHT'
 
         // When the source side is empty (copying "nothing" to the dest side),
         // delete the dest side instead — the dest should mirror the empty source.
