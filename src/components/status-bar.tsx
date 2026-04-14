@@ -373,7 +373,7 @@ export function StatusBar({
         )
     }
 
-    const filterLabel = filterMode === 'all' ? '[all]' : '[diff only]'
+    const filterLabel = `[${filterMode}]`
     const sortArrow = sortDirection === 'asc' ? '↑' : '↓'
     const sortLabel = `[${sortMode} ${sortArrow}]`
 

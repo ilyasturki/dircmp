@@ -1,6 +1,6 @@
 import type { AppConfig } from '~/utils/config'
 import type { Action, AppState, CompareEntry, PanelSide } from '~/utils/types'
-import { buildVisibleTree } from '~/utils/compare'
+import { buildVisibleTree, filterByMode } from '~/utils/compare'
 import { pushUndo } from '~/utils/undo'
 
 export function createInitialState(init: {
@@ -107,7 +107,6 @@ function recomputeEntries(state: AppState): CompareEntry[] {
         state.leftScan,
         state.rightScan,
         expandedDirs,
-        state.filterMode,
         {
             compareDates: state.config.compareDates,
             compareContents: state.config.compareContents,
@@ -119,7 +118,8 @@ function recomputeEntries(state: AppState): CompareEntry[] {
         },
         state.manualPairings.size > 0 ? state.manualPairings : undefined,
     )
-    return filterBySearch(tree, state.searchQuery)
+    const filtered = filterByMode(tree, state.filterMode)
+    return filterBySearch(filtered, state.searchQuery)
 }
 
 function removeDescendants(
@@ -320,9 +320,12 @@ export function reducer(state: AppState, action: Action): AppState {
             return withRecompute(state, {
                 expandedDirs: new Set<string>(),
             })
-        case 'TOGGLE_FILTER':
+        case 'SHOW_FILTER_MENU':
+            return { ...state, dialog: 'filterMenu' }
+        case 'SET_FILTER':
             return withRecompute(state, {
-                filterMode: state.filterMode === 'all' ? 'diff-only' : 'all',
+                filterMode: action.mode,
+                dialog: action.close === false ? state.dialog : null,
             })
         case 'COPY_COMPLETE': {
             const destKey = action.side === 'left' ? 'leftScan' : 'rightScan'
@@ -348,7 +351,6 @@ export function reducer(state: AppState, action: Action): AppState {
                 state.leftScan,
                 state.rightScan,
                 collectAllDirs(state),
-                state.filterMode,
                 {
                     compareDates: state.config.compareDates,
                     compareContents: state.config.compareContents,
@@ -473,6 +475,7 @@ export function reducer(state: AppState, action: Action): AppState {
         case 'HIDE_KEYBINDINGS_EDITOR':
         case 'HIDE_RELEASE_NOTES':
         case 'HIDE_SORT_MENU':
+        case 'HIDE_FILTER_MENU':
             return { ...state, dialog: null }
         case 'DELETE_COMPLETE':
             return {

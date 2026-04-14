@@ -361,7 +361,6 @@ export function buildVisibleTree(
     leftScan: ScanResult,
     rightScan: ScanResult,
     expandedDirs: Set<string>,
-    filterMode: FilterMode = 'all',
     options: CompareOptions = { compareDates: false, compareContents: true },
     sortOpts: SortOptions = defaultSortOptions,
     manualPairings?: Map<string, string>,
@@ -379,9 +378,6 @@ export function buildVisibleTree(
             manualPairings,
         )
         for (const entry of entries) {
-            if (filterMode === 'diff-only' && entry.status === 'identical') {
-                continue
-            }
             const isExpanded =
                 entry.isDirectory && expandedDirs.has(entry.relativePath)
             result.push({ ...entry, depth, isExpanded })
@@ -403,4 +399,35 @@ export function buildVisibleTree(
 
     walk('', '', 0)
     return result
+}
+
+export function filterByMode(
+    entries: CompareEntry[],
+    mode: FilterMode,
+): CompareEntry[] {
+    if (mode === 'all') return entries
+
+    const targetStatus: DiffStatus =
+        mode === 'same' ? 'identical'
+        : mode === 'modified' ? 'modified'
+        : mode === 'only-left' ? 'only-left'
+        : 'only-right'
+
+    const keepPaths = new Set<string>()
+    for (const entry of entries) {
+        if (entry.status === targetStatus) {
+            keepPaths.add(entry.relativePath)
+        }
+    }
+
+    for (const relPath of [...keepPaths]) {
+        const parts = relPath.split('/')
+        let ancestor = ''
+        for (let i = 0; i < parts.length - 1; i++) {
+            ancestor = i === 0 ? parts[i]! : ancestor + '/' + parts[i]
+            keepPaths.add(ancestor)
+        }
+    }
+
+    return entries.filter((e) => keepPaths.has(e.relativePath))
 }

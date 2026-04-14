@@ -39,8 +39,14 @@ export type DialogType =
     | 'keybindingsEditor'
     | 'releaseNotes'
     | 'sortMenu'
+    | 'filterMenu'
 
-export type FilterMode = 'all' | 'diff-only'
+export type FilterMode =
+    | 'all'
+    | 'modified'
+    | 'only-left'
+    | 'only-right'
+    | 'same'
 
 export type SortMode = 'name' | 'size' | 'date' | 'status'
 export type SortDirection = 'asc' | 'desc'
@@ -108,7 +114,9 @@ export type Action =
     | { type: 'FOCUS_PANEL'; panel: PanelSide }
     | { type: 'EXPAND_ALL' }
     | { type: 'COLLAPSE_ALL' }
-    | { type: 'TOGGLE_FILTER' }
+    | { type: 'SHOW_FILTER_MENU' }
+    | { type: 'HIDE_FILTER_MENU' }
+    | { type: 'SET_FILTER'; mode: FilterMode; close?: boolean }
     | { type: 'COPY_TO_LEFT' }
     | { type: 'COPY_TO_RIGHT' }
     | { type: 'COPY_FROM_FOCUSED' }

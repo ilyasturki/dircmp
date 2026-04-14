@@ -8,6 +8,7 @@ import type { Action, ScanResult } from '~/utils/types'
 import { AppShell } from '~/app-shell'
 import { ContextMenu } from '~/components/context-menu'
 import { ConfirmDeleteDialog } from '~/components/dialogs/confirm-delete-dialog'
+import { FilterDialog } from '~/components/dialogs/filter-dialog'
 import { IgnoreDialog } from '~/components/dialogs/ignore-dialog'
 import { QuickIgnoreDialog } from '~/components/dialogs/quick-ignore-dialog'
 import { SortDialog } from '~/components/dialogs/sort-dialog'
@@ -310,6 +311,14 @@ export function App({
                     currentMode={state.sortMode}
                     currentDirection={state.sortDirection}
                     config={state.config}
+                    dispatch={dispatch}
+                    columns={columns}
+                    rows={rows}
+                />
+            )}
+            {state.dialog === 'filterMenu' && (
+                <FilterDialog
+                    currentMode={state.filterMode}
                     dispatch={dispatch}
                     columns={columns}
                     rows={rows}
