@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.4.0]
+
+### Added
+
+- Symlinks as a first-class entry type, compared by their target path
+- `--follow-symlinks` flag to follow symlinks as their targets instead (TUI, `diff`, and `check`)
+- Filter menu with five modes (all, modified, only-left, only-right, same) on `f`
+- Per-subcommand help for `diff` and `check` (`dircmp diff -h`, `dircmp check -h`)
+- `w` in the file diff view to toggle soft-wrap for long lines
+- `Space` in the directory view to copy the focused side across
+- `%` as an alias for `Tab` to switch panel focus
+
+### Changed
+
+- **Breaking:** symlinks are now compared by their target path by default; pass `--follow-symlinks` to restore the previous behavior
+- `f` now opens a filter selection menu instead of toggling diff-only
+- Keybindings and help dialogs group shortcuts by mode with section headers
+- File diff view wraps each side in a bordered panel titled with its path
+- Copying from an empty side now deletes the destination instead of doing nothing
+- Auto-expand directories while a filter is active so matching children stay visible
+- Lighter styling for hunk-header labels; dropped trailing ellipsis markers
+
+### Fixed
+
+- Show a red error icon with aligned background for broken symlinks
+- Keep collapsed directories visible under an active filter when they contain matches
+- Exclude file-diff-only shortcuts from the directory view's status-bar hints
+
 ## [1.3.0]
 
 ### Added

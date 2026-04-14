@@ -124,6 +124,7 @@ dircmp ./local-dir myremote:path
 | -------------------- | ---------------------------------------- |
 | `--no-ignore`        | Don't apply ignore patterns              |
 | `--ignore <pattern>` | Add a custom ignore pattern (repeatable) |
+| `--follow-symlinks`  | Follow symbolic links as their targets   |
 | `--help`, `-h`       | Show help                                |
 | `--version`, `-v`    | Show version                             |
 
@@ -145,7 +146,7 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 | `Ctrl+b`  | Full page up        |
 | `Ctrl+e`  | Scroll view down    |
 | `Ctrl+y`  | Scroll view up      |
-| `Tab`     | Switch panel focus  |
+| `Tab`/`%` | Switch panel focus  |
 | `H`       | Focus left panel    |
 | `L`       | Focus right panel   |
 
@@ -163,27 +164,28 @@ All keybindings are customizable via `~/.config/dircmp/keybindings.json` or the 
 
 ### Actions
 
-| Key | Action                          |
-| --- | ------------------------------- |
-| `>` | Copy entry to right             |
-| `<` | Copy entry to left              |
-| `d` | Delete selected entry           |
-| `y` | Yank file path to clipboard     |
-| `e` | Open focused entry in `$EDITOR` |
-| `r` | Refresh comparison              |
-| `u` | Undo last action                |
-| `U` | Redo last undone action         |
-| `S` | Swap panels                     |
-| `s` | Open sort options               |
-| `m` | Mark/pair renamed directory     |
-| `M` | Unpair directory                |
+| Key     | Action                          |
+| ------- | ------------------------------- |
+| `>`     | Copy entry to right             |
+| `<`     | Copy entry to left              |
+| `Space` | Copy focused side across        |
+| `d`     | Delete selected entry           |
+| `y`     | Yank file path to clipboard     |
+| `e`     | Open focused entry in `$EDITOR` |
+| `r`     | Refresh comparison              |
+| `u`     | Undo last action                |
+| `U`     | Redo last undone action         |
+| `S`     | Swap panels                     |
+| `s`     | Open sort options               |
+| `m`     | Mark/pair renamed directory     |
+| `M`     | Unpair directory                |
 
 ### Filtering & Config
 
 | Key  | Action                    |
 | ---- | ------------------------- |
 | `/`  | Filter entries by name    |
-| `f`  | Toggle diff-only filter   |
+| `f`  | Open filter menu          |
 | `i`  | Quick-add entry to ignore |
 | `I`  | Manage ignore patterns    |
 | `zi` | Toggle ignore filtering   |
