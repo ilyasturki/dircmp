@@ -130,6 +130,7 @@ export type Action =
     | { type: 'INCREASE_DIFF_CONTEXT' }
     | { type: 'DECREASE_DIFF_CONTEXT' }
     | { type: 'TOGGLE_LINE_MODE' }
+    | { type: 'TOGGLE_DIFF_WRAP' }
     | {
           type: 'COPY_COMPLETE'
           entries: FileEntry[]

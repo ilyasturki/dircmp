@@ -14,6 +14,8 @@ interface DiffCellProps {
     isFocusedSide: boolean
     gutterWidth: number
     contentWidth: number
+    showTruncationIndicator?: boolean
+    gutterOverride?: string
 }
 
 export function DiffCell({
@@ -22,18 +24,25 @@ export function DiffCell({
     isFocusedSide,
     gutterWidth,
     contentWidth,
+    showTruncationIndicator = true,
+    gutterOverride,
 }: DiffCellProps) {
     const gutter =
-        cell.lineNum !== null ?
+        gutterOverride
+        ?? (cell.lineNum !== null ?
             String(cell.lineNum).padStart(gutterWidth)
-        :   ' '.repeat(gutterWidth)
+        :   ' '.repeat(gutterWidth))
     const isSelected = inFocusedBlock && isFocusedSide
     const bg = inFocusedBlock && !isFocusedSide ? 'blackBright' : undefined
+
+    const truncated =
+        showTruncationIndicator && cell.content.length > contentWidth
+    const bodyWidth = truncated ? Math.max(0, contentWidth - 1) : contentWidth
 
     let body: React.ReactNode
     if (cell.segments) {
         const nodes: React.ReactNode[] = []
-        let remaining = contentWidth
+        let remaining = bodyWidth
         let key = 0
         for (const seg of cell.segments) {
             if (remaining <= 0) break
@@ -72,7 +81,35 @@ export function DiffCell({
                 </Text>,
             )
         }
+        if (truncated) {
+            nodes.push(
+                <Text
+                    key={key++}
+                    color='gray'
+                    dimColor
+                >
+                    {'\u203A'}
+                </Text>,
+            )
+        }
         body = nodes
+    } else if (truncated) {
+        body = (
+            <>
+                <Text
+                    backgroundColor={bg}
+                    inverse={isSelected}
+                >
+                    {cell.content.slice(0, bodyWidth).padEnd(bodyWidth)}
+                </Text>
+                <Text
+                    color='gray'
+                    dimColor
+                >
+                    {'\u203A'}
+                </Text>
+            </>
+        )
     } else {
         body = cell.content.slice(0, contentWidth).padEnd(contentWidth)
     }

@@ -285,6 +285,112 @@ export function applyHunkToContent(
     return targetLines.join('\n')
 }
 
+function sliceSegments(
+    segments: Segment[],
+    start: number,
+    end: number,
+): Segment[] {
+    const out: Segment[] = []
+    let offset = 0
+    for (const seg of segments) {
+        const segEnd = offset + seg.text.length
+        if (segEnd > start && offset < end) {
+            const from = Math.max(0, start - offset)
+            const to = Math.min(seg.text.length, end - offset)
+            out.push({ text: seg.text.slice(from, to), changed: seg.changed })
+        }
+        offset = segEnd
+        if (offset >= end) break
+    }
+    return out
+}
+
+export function wrapCell(cell: DiffCell, width: number): DiffCell[] {
+    if (cell.type === 'blank' || width <= 0) return [cell]
+    const len = cell.content.length
+    if (len <= width) return [cell]
+    const parts: DiffCell[] = []
+    for (let start = 0; start < len; start += width) {
+        const end = Math.min(len, start + width)
+        parts.push({
+            type: cell.type,
+            lineNum: start === 0 ? cell.lineNum : null,
+            content: cell.content.slice(start, end),
+            segments:
+                cell.segments ?
+                    sliceSegments(cell.segments, start, end)
+                :   undefined,
+        })
+    }
+    return parts
+}
+
+export interface VisualRow {
+    logicalIndex: number
+    isContinuation: boolean
+    row: DiffRow
+    left?: DiffCell
+    right?: DiffCell
+}
+
+export function expandToVisualRows(
+    diffRows: DiffRow[],
+    contentWidth: number,
+    wrap: boolean,
+): VisualRow[] {
+    const out: VisualRow[] = []
+    for (let i = 0; i < diffRows.length; i++) {
+        const row = diffRows[i]
+        if (row.kind === 'hunk-header') {
+            out.push({ logicalIndex: i, isContinuation: false, row })
+            continue
+        }
+        if (!wrap) {
+            out.push({
+                logicalIndex: i,
+                isContinuation: false,
+                row,
+                left: row.left,
+                right: row.right,
+            })
+            continue
+        }
+        const l = wrapCell(row.left, contentWidth)
+        const r = wrapCell(row.right, contentWidth)
+        const n = Math.max(l.length, r.length)
+        for (let k = 0; k < n; k++) {
+            out.push({
+                logicalIndex: i,
+                isContinuation: k > 0,
+                row,
+                left: l[k] ?? BLANK_CELL,
+                right: r[k] ?? BLANK_CELL,
+            })
+        }
+    }
+    return out
+}
+
+export function logicalRangeToVisual(
+    visualRows: VisualRow[],
+    logicalStart: number,
+    logicalEnd: number,
+): HunkRange | undefined {
+    let start = -1
+    let end = -1
+    for (let i = 0; i < visualRows.length; i++) {
+        const li = visualRows[i].logicalIndex
+        if (li >= logicalStart && li <= logicalEnd) {
+            if (start === -1) start = i
+            end = i
+        } else if (start !== -1) {
+            break
+        }
+    }
+    if (start === -1) return undefined
+    return { start, end }
+}
+
 export function computeGutterWidth(diffRows: DiffRow[] | null): number {
     if (!diffRows) return 3
     let max = 1

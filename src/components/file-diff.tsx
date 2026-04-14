@@ -11,7 +11,7 @@ import type {
     HunkUndoEntry,
     PanelSide,
 } from '~/utils/types'
-import type { DiffRow } from './file-diff/diff-compute'
+import type { VisualRow } from './file-diff/diff-compute'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { PanelBox } from '~/components/panels/panel-box'
 import { useUniversalShortcuts } from '~/hooks'
@@ -23,6 +23,8 @@ import {
     computeGutterWidth,
     computeHunkRanges,
     DEFAULT_DIFF_CONTEXT,
+    expandToVisualRows,
+    logicalRangeToVisual,
 } from './file-diff/diff-compute'
 import {
     useAutoScroll,
@@ -91,6 +93,7 @@ export function FileDiff({
     const [redoStack, setRedoStack] = useState<HunkUndoEntry[]>([])
     const [contextSize, setContextSize] = useState(DEFAULT_DIFF_CONTEXT)
     const [isLineMode, setIsLineMode] = useState(false)
+    const [wrapMode, setWrapMode] = useState(false)
 
     const { diffRows, error, leftContent, rightContent } = useDiffRows(
         entry,
@@ -144,6 +147,10 @@ export function FileDiff({
 
     const handleDispatch = useCallback(
         (action: Action) => {
+            if (action.type === 'TOGGLE_DIFF_WRAP') {
+                setWrapMode((w) => !w)
+                return
+            }
             if (action.type === 'TOGGLE_LINE_MODE') {
                 if (isLineMode) {
                     setIsLineMode(false)
@@ -268,19 +275,6 @@ export function FileDiff({
 
     // panel top title (1) + panel bottom border (1) + footer (1) + optional hints (1)
     const contentHeight = Math.max(1, rows - 3 - (showHints ? 1 : 0))
-    const { scrollOffset, setScrollOffset } = useAutoScroll(
-        focusedRange,
-        diffRows?.length ?? 0,
-        contentHeight,
-        contextSize,
-    )
-    useViewportShortcuts(
-        focusedRange?.start,
-        contentHeight,
-        diffRows?.length ?? 0,
-        setScrollOffset,
-        isActive,
-    )
 
     const hintItems = (keymap ?? [])
         .filter(
@@ -299,7 +293,40 @@ export function FileDiff({
     const rightInner = Math.floor(columns / 2) - 2
     const contentWidth = Math.max(0, rightInner - halfOverhead)
 
-    const visibleRows = diffRows?.slice(
+    const visualRows = useMemo(
+        () =>
+            diffRows ?
+                expandToVisualRows(diffRows, contentWidth, wrapMode)
+            :   [],
+        [diffRows, contentWidth, wrapMode],
+    )
+    const focusedVisualRange = useMemo(
+        () =>
+            focusedRange ?
+                logicalRangeToVisual(
+                    visualRows,
+                    focusedRange.start,
+                    focusedRange.end,
+                )
+            :   undefined,
+        [focusedRange, visualRows],
+    )
+
+    const { scrollOffset, setScrollOffset } = useAutoScroll(
+        focusedVisualRange,
+        visualRows.length,
+        contentHeight,
+        contextSize,
+    )
+    useViewportShortcuts(
+        focusedVisualRange?.start,
+        contentHeight,
+        visualRows.length,
+        setScrollOffset,
+        isActive,
+    )
+
+    const visibleVisualRows = visualRows.slice(
         scrollOffset,
         scrollOffset + contentHeight,
     )
@@ -327,19 +354,19 @@ export function FileDiff({
             {/* Content: two PanelBoxes side by side, path as title */}
             {(() => {
                 const renderRowHalf = (
-                    row: DiffRow,
-                    idx: number,
+                    vRow: VisualRow,
+                    visualIdx: number,
                     side: PanelSide,
                 ) => {
                     const isFocused =
                         focusedRange !== undefined
-                        && idx >= focusedRange.start
-                        && idx <= focusedRange.end
+                        && vRow.logicalIndex >= focusedRange.start
+                        && vRow.logicalIndex <= focusedRange.end
 
-                    if (row.kind === 'hunk-header') {
+                    if (vRow.row.kind === 'hunk-header') {
                         const label =
-                            row.skipped > 0 ?
-                                ` ${row.skipped} unchanged line${row.skipped === 1 ? '' : 's'} `
+                            vRow.row.skipped > 0 ?
+                                ` ${vRow.row.skipped} unchanged line${vRow.row.skipped === 1 ? '' : 's'} `
                             :   ''
                         const width = side === 'left' ? leftInner : rightInner
                         const barLen = Math.max(0, width - label.length)
@@ -353,7 +380,7 @@ export function FileDiff({
                         )
                         return (
                             <Text
-                                key={idx}
+                                key={visualIdx}
                                 color='gray'
                             >
                                 {text}
@@ -361,15 +388,16 @@ export function FileDiff({
                         )
                     }
 
-                    const cell = side === 'left' ? row.left : row.right
+                    const cell = side === 'left' ? vRow.left! : vRow.right!
                     return (
-                        <Box key={idx}>
+                        <Box key={visualIdx}>
                             <DiffCell
                                 cell={cell}
                                 inFocusedBlock={isFocused}
                                 isFocusedSide={focusedSide === side}
                                 gutterWidth={gutterWidth}
                                 contentWidth={contentWidth}
+                                showTruncationIndicator={!wrapMode}
                             />
                         </Box>
                     )
@@ -404,8 +432,8 @@ export function FileDiff({
                     }
                     return (
                         <Box flexDirection='column'>
-                            {visibleRows!.map((row, i) =>
-                                renderRowHalf(row, scrollOffset + i, side),
+                            {visibleVisualRows.map((vRow, i) =>
+                                renderRowHalf(vRow, scrollOffset + i, side),
                             )}
                         </Box>
                     )
@@ -451,7 +479,9 @@ export function FileDiff({
                         ` hunk ${focusedHunk + 1} of ${hunkRanges.length}`
                     :   ''}
                 </Text>
-                <Text dimColor>{`context ${contextSize} `}</Text>
+                <Text
+                    dimColor
+                >{`${wrapMode ? 'wrap ' : ''}context ${contextSize} `}</Text>
             </Box>
 
             {/* Keyboard hints */}

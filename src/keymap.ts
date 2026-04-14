@@ -694,6 +694,17 @@ export const defaultKeymap: Shortcut[] = [
         match: (input) => input === 'a',
         effect: { type: 'dispatch', action: { type: 'TOGGLE_LINE_MODE' } },
     },
+    {
+        id: 'fileDiffToggleWrap',
+        mode: 'fileDiff',
+        keyLabel: 'w',
+        description: 'wrap lines',
+        helpDescription: 'Toggle soft-wrap for long lines',
+        keyDef: 'w',
+        helpKey: 'w',
+        match: (input) => input === 'w',
+        effect: { type: 'dispatch', action: { type: 'TOGGLE_DIFF_WRAP' } },
+    },
 
     {
         id: 'showHelp',
