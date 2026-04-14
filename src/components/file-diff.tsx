@@ -339,7 +339,7 @@ export function FileDiff({
                     if (row.kind === 'hunk-header') {
                         const label =
                             row.skipped > 0 ?
-                                ` \u22EF ${row.skipped} unchanged line${row.skipped === 1 ? '' : 's'} \u22EF `
+                                ` ${row.skipped} unchanged line${row.skipped === 1 ? '' : 's'} `
                             :   ''
                         const width = side === 'left' ? leftInner : rightInner
                         const barLen = Math.max(0, width - label.length)
@@ -354,8 +354,7 @@ export function FileDiff({
                         return (
                             <Text
                                 key={idx}
-                                color='cyan'
-                                dimColor
+                                color='gray'
                             >
                                 {text}
                             </Text>
