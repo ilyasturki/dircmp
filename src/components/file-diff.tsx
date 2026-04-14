@@ -11,7 +11,9 @@ import type {
     HunkUndoEntry,
     PanelSide,
 } from '~/utils/types'
+import type { DiffRow } from './file-diff/diff-compute'
 import { KeyboardHints } from '~/components/keyboard-hints'
+import { PanelBox } from '~/components/panels/panel-box'
 import { useUniversalShortcuts } from '~/hooks'
 import { moveToTrash, restoreFromTrash } from '~/utils/trash'
 import { DiffCell } from './file-diff/diff-cell'
@@ -264,8 +266,8 @@ export function FileDiff({
 
     useUniversalShortcuts(activeKeymap, handleDispatch, isActive, 'fileDiff')
 
-    // header (1) + footer (1) + optional hints (1) reserved rows
-    const contentHeight = Math.max(1, rows - 2 - (showHints ? 1 : 0))
+    // panel top title (1) + panel bottom border (1) + footer (1) + optional hints (1)
+    const contentHeight = Math.max(1, rows - 3 - (showHints ? 1 : 0))
     const { scrollOffset, setScrollOffset } = useAutoScroll(
         focusedRange,
         diffRows?.length ?? 0,
@@ -289,18 +291,21 @@ export function FileDiff({
         .map((s) => ({ key: s.keyLabel, label: s.description }))
 
     const gutterWidth = computeGutterWidth(diffRows)
-    // Per half: gutter + '│' + ' ' + content = gutter + 2 + content
-    // Plus a middle ' │ ' separator (3 chars) between halves.
+    // Per panel inner width = panelWidth - 2 bold borders.
+    // Use floor(columns/2) - 2 (narrower right panel) so content fits both sides.
+    // Inner layout per side: gutter + '│' + ' ' + content = gutterWidth + 2 + contentWidth
     const halfOverhead = gutterWidth + 2
-    const contentWidth = Math.max(
-        0,
-        Math.floor((columns - 3 - 2 * halfOverhead) / 2),
-    )
+    const leftInner = Math.ceil(columns / 2) - 2
+    const rightInner = Math.floor(columns / 2) - 2
+    const contentWidth = Math.max(0, rightInner - halfOverhead)
 
     const visibleRows = diffRows?.slice(
         scrollOffset,
         scrollOffset + contentHeight,
     )
+
+    const leftBorderColor = focusedSide === 'left' ? 'cyan' : 'gray'
+    const rightBorderColor = focusedSide === 'right' ? 'cyan' : 'gray'
 
     return (
         <Box
@@ -319,113 +324,122 @@ export function FileDiff({
                 ))}
             </Box>
 
-            {/* Header */}
+            {/* Content: two PanelBoxes side by side, path as title */}
             {(() => {
-                const halfWidth = halfOverhead + contentWidth
-                const innerWidth = Math.max(0, halfWidth - 2)
-                const leftHeader = ` ${truncatePathLeft(leftPath, innerWidth).padEnd(innerWidth)} `
-                const rightHeader = ` ${truncatePathLeft(rightPath, innerWidth).padEnd(innerWidth)} `
+                const renderRowHalf = (
+                    row: DiffRow,
+                    idx: number,
+                    side: PanelSide,
+                ) => {
+                    const isFocused =
+                        focusedRange !== undefined
+                        && idx >= focusedRange.start
+                        && idx <= focusedRange.end
+
+                    if (row.kind === 'hunk-header') {
+                        const label =
+                            row.skipped > 0 ?
+                                ` \u22EF ${row.skipped} unchanged line${row.skipped === 1 ? '' : 's'} \u22EF `
+                            :   ''
+                        const width = side === 'left' ? leftInner : rightInner
+                        const barLen = Math.max(0, width - label.length)
+                        const leftBar = '\u2500'.repeat(Math.floor(barLen / 2))
+                        const rightBar = '\u2500'.repeat(
+                            barLen - Math.floor(barLen / 2),
+                        )
+                        const text = (leftBar + label + rightBar).slice(
+                            0,
+                            width,
+                        )
+                        return (
+                            <Text
+                                key={idx}
+                                color='cyan'
+                                dimColor
+                            >
+                                {text}
+                            </Text>
+                        )
+                    }
+
+                    const cell = side === 'left' ? row.left : row.right
+                    return (
+                        <Box key={idx}>
+                            <DiffCell
+                                cell={cell}
+                                inFocusedBlock={isFocused}
+                                isFocusedSide={focusedSide === side}
+                                gutterWidth={gutterWidth}
+                                contentWidth={contentWidth}
+                            />
+                        </Box>
+                    )
+                }
+
+                const renderPanelContents = (side: PanelSide) => {
+                    if (error) {
+                        return (
+                            <Box
+                                flexGrow={1}
+                                justifyContent='center'
+                                alignItems='center'
+                            >
+                                <Text color='yellow'>
+                                    {side === 'left' ? error : ''}
+                                </Text>
+                            </Box>
+                        )
+                    }
+                    if (!diffRows) {
+                        return (
+                            <Box
+                                flexGrow={1}
+                                justifyContent='center'
+                                alignItems='center'
+                            >
+                                <Text color='yellow'>
+                                    {side === 'left' ? 'Loading...' : ''}
+                                </Text>
+                            </Box>
+                        )
+                    }
+                    return (
+                        <Box flexDirection='column'>
+                            {visibleRows!.map((row, i) =>
+                                renderRowHalf(row, scrollOffset + i, side),
+                            )}
+                        </Box>
+                    )
+                }
+
                 return (
-                    <Box>
-                        <Text
-                            bold
-                            color='cyan'
+                    <Box
+                        flexDirection='row'
+                        flexGrow={1}
+                    >
+                        <PanelBox
+                            title={truncatePathLeft(
+                                leftPath,
+                                Math.max(0, leftInner - 3),
+                            )}
+                            borderColor={leftBorderColor}
+                            side='left'
                         >
-                            {leftHeader}
-                        </Text>
-                        <Text dimColor>{' \u2502 '}</Text>
-                        <Text
-                            bold
-                            color='cyan'
+                            {renderPanelContents('left')}
+                        </PanelBox>
+                        <PanelBox
+                            title={truncatePathLeft(
+                                rightPath,
+                                Math.max(0, rightInner - 3),
+                            )}
+                            borderColor={rightBorderColor}
+                            side='right'
                         >
-                            {rightHeader}
-                        </Text>
+                            {renderPanelContents('right')}
+                        </PanelBox>
                     </Box>
                 )
             })()}
-
-            {/* Content */}
-            {error ?
-                <Box
-                    flexGrow={1}
-                    justifyContent='center'
-                    alignItems='center'
-                >
-                    <Text color='yellow'>{error}</Text>
-                </Box>
-            : !diffRows ?
-                <Box
-                    flexGrow={1}
-                    justifyContent='center'
-                    alignItems='center'
-                >
-                    <Text color='yellow'>Loading...</Text>
-                </Box>
-            :   <Box
-                    flexDirection='column'
-                    flexGrow={1}
-                >
-                    {visibleRows!.map((row, i) => {
-                        const idx = scrollOffset + i
-                        const isFocused =
-                            focusedRange !== undefined
-                            && idx >= focusedRange.start
-                            && idx <= focusedRange.end
-
-                        if (row.kind === 'hunk-header') {
-                            const totalWidth =
-                                2 * (halfOverhead + contentWidth) + 3
-                            const label =
-                                row.skipped > 0 ?
-                                    ` \u22EF ${row.skipped} unchanged line${row.skipped === 1 ? '' : 's'} \u22EF `
-                                :   ''
-                            const barLen = Math.max(
-                                0,
-                                totalWidth - label.length,
-                            )
-                            const leftBar = '\u2500'.repeat(
-                                Math.floor(barLen / 2),
-                            )
-                            const rightBar = '\u2500'.repeat(
-                                barLen - Math.floor(barLen / 2),
-                            )
-                            const text = (leftBar + label + rightBar).slice(
-                                0,
-                                totalWidth,
-                            )
-                            return (
-                                <Text
-                                    key={idx}
-                                    color='cyan'
-                                    dimColor
-                                >
-                                    {text}
-                                </Text>
-                            )
-                        }
-
-                        return (
-                            <Box key={idx}>
-                                <DiffCell
-                                    cell={row.left}
-                                    inFocusedBlock={isFocused}
-                                    isFocusedSide={focusedSide === 'left'}
-                                    gutterWidth={gutterWidth}
-                                    contentWidth={contentWidth}
-                                />
-                                <Text dimColor={!isFocused}>{' \u2502 '}</Text>
-                                <DiffCell
-                                    cell={row.right}
-                                    inFocusedBlock={isFocused}
-                                    isFocusedSide={focusedSide === 'right'}
-                                    gutterWidth={gutterWidth}
-                                    contentWidth={contentWidth}
-                                />
-                            </Box>
-                        )
-                    })}
-                </Box>
-            }
 
             {/* Footer */}
             <Box justifyContent='space-between'>
