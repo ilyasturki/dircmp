@@ -88,8 +88,36 @@ export function executeAction(
         if (!entry || entry.status === 'identical') return
 
         const copyRight = action.type === 'COPY_TO_RIGHT'
-        if (copyRight && entry.status === 'only-right') return
-        if (!copyRight && entry.status === 'only-left') return
+
+        // When the source side is empty (copying "nothing" to the dest side),
+        // delete the dest side instead — the dest should mirror the empty source.
+        const deleteDest =
+            (copyRight && entry.status === 'only-right')
+            || (!copyRight && entry.status === 'only-left')
+
+        if (deleteDest) {
+            const destSide: PanelSide = copyRight ? 'right' : 'left'
+            const destRelPath =
+                destSide === 'right' ?
+                    (entry.right?.relativePath ?? entry.relativePath)
+                :   (entry.left?.relativePath ?? entry.relativePath)
+            const destPath = path.join(
+                destSide === 'right' ? rightDir : leftDir,
+                destRelPath,
+            )
+            if (!fs.existsSync(destPath)) return
+            const trashPath = moveToTrash(destPath)
+            const undo: UndoEntry = {
+                kind: 'delete',
+                originalAbsPath: destPath,
+                side: destSide,
+                trashPath,
+                isDirectory: entry.isDirectory,
+            }
+            dispatch({ type: 'DELETE_COMPLETE', undo })
+            onRefresh?.()
+            return
+        }
 
         const sourceRelPath =
             copyRight ?
