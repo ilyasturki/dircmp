@@ -155,12 +155,26 @@ export function useAutoScroll(
 export function useViewportShortcuts(
     referenceLine: number | undefined,
     contentHeight: number,
+    totalRows: number,
     setScrollOffset: React.Dispatch<React.SetStateAction<number>>,
     isActive: boolean,
 ): void {
     const pendingZRef = useRef(false)
     useInput(
         (input, key) => {
+            const h = Math.max(1, contentHeight)
+            const maxScroll = Math.max(0, totalRows - h)
+
+            if (key.ctrl && input === 'e') {
+                pendingZRef.current = false
+                setScrollOffset((prev) => Math.min(maxScroll, prev + 1))
+                return
+            }
+            if (key.ctrl && input === 'y') {
+                pendingZRef.current = false
+                setScrollOffset((prev) => Math.max(0, prev - 1))
+                return
+            }
             if (key.ctrl || key.meta) {
                 pendingZRef.current = false
                 return
@@ -168,7 +182,6 @@ export function useViewportShortcuts(
             if (pendingZRef.current) {
                 pendingZRef.current = false
                 if (referenceLine === undefined) return
-                const h = Math.max(1, contentHeight)
                 if (input === 'z') {
                     setScrollOffset(
                         Math.max(0, referenceLine - Math.floor(h / 2)),

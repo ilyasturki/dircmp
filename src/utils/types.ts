@@ -89,6 +89,12 @@ export type Action =
           position: 'center' | 'top' | 'bottom'
           viewHeight: number
       }
+    | {
+          type: 'SCROLL_LINES'
+          direction: 'up' | 'down'
+          count: number
+          viewHeight: number
+      }
     | { type: 'SET_SCROLL_OFFSET'; offset: number }
     | { type: 'SWITCH_PANEL' }
     | { type: 'NAVIGATE_INTO' }

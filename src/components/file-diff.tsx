@@ -188,6 +188,7 @@ export function FileDiff({
     useViewportShortcuts(
         hunkRanges[focusedHunk]?.start,
         contentHeight,
+        diffRows?.length ?? 0,
         setScrollOffset,
         isActive,
     )

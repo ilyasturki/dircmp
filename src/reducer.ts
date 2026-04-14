@@ -219,6 +219,23 @@ export function reducer(state: AppState, action: Action): AppState {
             scrollOffset = Math.max(0, scrollOffset)
             return { ...state, scrollOffset }
         }
+        case 'SCROLL_LINES': {
+            if (state.entries.length === 0) return state
+            const h = Math.max(1, action.viewHeight)
+            const delta =
+                action.direction === 'down' ? action.count : -action.count
+            const maxScroll = Math.max(0, state.entries.length - h)
+            const scrollOffset = Math.max(
+                0,
+                Math.min(maxScroll, state.scrollOffset + delta),
+            )
+            let cursorIndex = state.cursorIndex
+            if (cursorIndex < scrollOffset) cursorIndex = scrollOffset
+            else if (cursorIndex >= scrollOffset + h)
+                cursorIndex = scrollOffset + h - 1
+            cursorIndex = Math.min(cursorIndex, state.entries.length - 1)
+            return { ...state, scrollOffset, cursorIndex }
+        }
         case 'SWITCH_PANEL':
             return {
                 ...state,

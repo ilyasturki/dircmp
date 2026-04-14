@@ -264,6 +264,44 @@ export const defaultKeymap: Shortcut[] = [
         },
     },
     {
+        id: 'scrollLineDown',
+        mode: 'directoryDiff',
+        keyLabel: '',
+        description: 'scroll down',
+        helpDescription: 'Scroll view one line down',
+        keyDef: 'ctrl+e',
+        helpKey: 'Ctrl+e',
+        match: (input, key) => key.ctrl && input === 'e',
+        effect: {
+            type: 'dispatch',
+            action: {
+                type: 'SCROLL_LINES',
+                direction: 'down',
+                count: 1,
+                viewHeight: 0,
+            },
+        },
+    },
+    {
+        id: 'scrollLineUp',
+        mode: 'directoryDiff',
+        keyLabel: '',
+        description: 'scroll up',
+        helpDescription: 'Scroll view one line up',
+        keyDef: 'ctrl+y',
+        helpKey: 'Ctrl+y',
+        match: (input, key) => key.ctrl && input === 'y',
+        effect: {
+            type: 'dispatch',
+            action: {
+                type: 'SCROLL_LINES',
+                direction: 'up',
+                count: 1,
+                viewHeight: 0,
+            },
+        },
+    },
+    {
         id: 'viewportCenter',
         mode: 'directoryDiff',
         keyLabel: '',
@@ -517,7 +555,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'preferences',
-        mode: 'directoryDiff',
+        mode: 'universal',
         keyLabel: ',',
         description: 'preferences',
         helpDescription: 'Open preferences',

@@ -297,7 +297,10 @@ export function useKeymap(
             }
 
             let action = result.shortcut.effect.action
-            if (action.type === 'SCROLL_VIEWPORT') {
+            if (
+                action.type === 'SCROLL_VIEWPORT'
+                || action.type === 'SCROLL_LINES'
+            ) {
                 action = { ...action, viewHeight: contentHeight }
             }
 
