@@ -1,11 +1,11 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import TextInput from 'ink-text-input'
 import { useMemo, useState } from 'react'
 
 import type { Action } from '~/utils/types'
 import { useScrollNavigation } from '~/hooks'
 import { Dialog } from '../dialog'
+import { TextInput } from '../text-input'
 
 interface ReleaseNotesDialogProps {
     changelog: string

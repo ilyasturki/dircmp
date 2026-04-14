@@ -1,6 +1,5 @@
 import type { Dispatch } from 'react'
 import { Box, Text, useInput } from 'ink'
-import TextInput from 'ink-text-input'
 import { useState } from 'react'
 
 import type { Shortcut } from '~/keymap'
@@ -8,6 +7,7 @@ import type { Action } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { getHelpItems } from '~/keymap'
 import { Dialog } from '../dialog'
+import { TextInput } from '../text-input'
 
 interface HelpDialogProps {
     keymap: Shortcut[]
