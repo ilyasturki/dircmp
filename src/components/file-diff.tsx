@@ -307,9 +307,24 @@ export function FileDiff({
                         if (row.kind === 'hunk-header') {
                             const totalWidth =
                                 2 * (halfOverhead + contentWidth) + 3
-                            const text = row.content
-                                .slice(0, totalWidth)
-                                .padEnd(totalWidth)
+                            const label =
+                                row.skipped > 0 ?
+                                    ` \u22EF ${row.skipped} unchanged line${row.skipped === 1 ? '' : 's'} \u22EF `
+                                :   ''
+                            const barLen = Math.max(
+                                0,
+                                totalWidth - label.length,
+                            )
+                            const leftBar = '\u2500'.repeat(
+                                Math.floor(barLen / 2),
+                            )
+                            const rightBar = '\u2500'.repeat(
+                                barLen - Math.floor(barLen / 2),
+                            )
+                            const text = (leftBar + label + rightBar).slice(
+                                0,
+                                totalWidth,
+                            )
                             return (
                                 <Text
                                     key={idx}

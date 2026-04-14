@@ -16,7 +16,7 @@ export interface DiffCell {
 
 export type DiffRow =
     | { kind: 'split'; left: DiffCell; right: DiffCell }
-    | { kind: 'hunk-header'; content: string }
+    | { kind: 'hunk-header'; skipped: number }
 
 export interface HunkRange {
     start: number
@@ -156,11 +156,11 @@ export function computeDiffRows(
     )
 
     const rows: DiffRow[] = []
+    let prevHunkEndOld = 0
     for (const hunk of patch.hunks) {
-        rows.push({
-            kind: 'hunk-header',
-            content: `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`,
-        })
+        const skipped = Math.max(0, hunk.oldStart - 1 - prevHunkEndOld)
+        rows.push({ kind: 'hunk-header', skipped })
+        prevHunkEndOld = hunk.oldStart + hunk.oldLines - 1
 
         let leftNum = hunk.oldStart
         let rightNum = hunk.newStart
