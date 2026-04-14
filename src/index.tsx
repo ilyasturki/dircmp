@@ -66,12 +66,59 @@ const HELP_TEXT = `
     $ dircmp diff --format json ./a ./b
     $ dircmp check ./expected ./actual
     $ dircmp completions fish > ~/.config/fish/completions/dircmp.fish
+
+  Run 'dircmp <command> --help' for command-specific options.
+`
+
+const DIFF_HELP_TEXT = `
+  Usage
+    $ dircmp diff <left-dir> <right-dir>
+
+  Print a summary of differences between two directories to stdout.
+  Directories can be local paths or remote URIs (requires rclone).
+
+  Options
+    --format <fmt>          Output format: tree (default), flat, json
+    --only <filter>         Filter: modified, left-only, right-only
+    --stat                  Show only a summary line
+    --no-ignore             Don't apply ignore patterns
+    --ignore <pattern>      Add an ignore pattern (repeatable)
+    -h, --help              Show this help message
+
+  Examples
+    $ dircmp diff ./a ./b
+    $ dircmp diff --format flat --only modified ./a ./b
+    $ dircmp diff --format json ./a ./b
+    $ dircmp diff --stat ./a ./b
+`
+
+const CHECK_HELP_TEXT = `
+  Usage
+    $ dircmp check <left-dir> <right-dir>
+
+  Silent comparison — exits 0 if identical, 1 if different.
+  Useful in scripts and CI pipelines.
+
+  Options
+    --stat                  Print summary line before exiting
+    --no-ignore             Don't apply ignore patterns
+    --ignore <pattern>      Add an ignore pattern (repeatable)
+    -h, --help              Show this help message
+
+  Examples
+    $ dircmp check ./expected ./actual
+    $ dircmp check --stat ./expected ./actual
 `
 
 const cli = meow(HELP_TEXT, {
     importMeta: import.meta,
     version: pkg.version,
+    autoHelp: false,
     flags: {
+        help: {
+            type: 'boolean',
+            shortFlag: 'h',
+        },
         version: {
             type: 'boolean',
             shortFlag: 'v',
@@ -132,8 +179,20 @@ if (
     positionalArgs = positionalArgs.slice(1)
 }
 
+if (cli.flags.help) {
+    if (subcommand === 'diff') {
+        console.log(DIFF_HELP_TEXT)
+    } else if (subcommand === 'check') {
+        console.log(CHECK_HELP_TEXT)
+    } else {
+        console.log(HELP_TEXT)
+    }
+    process.exit(0)
+}
+
 if (positionalArgs.length === 0) {
-    cli.showHelp(0)
+    console.log(HELP_TEXT)
+    process.exit(0)
 }
 
 if (positionalArgs.length !== 2) {
