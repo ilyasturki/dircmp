@@ -110,10 +110,13 @@ export function FileDiff({
         isActive && isLineMode,
     )
 
-    // Exit line mode if no change lines remain (e.g. after reload).
+    // Exit line mode if no change lines remain after a successful reload.
+    // Skip when diffRows is null (still loading) so copy actions don't exit.
     useEffect(() => {
-        if (isLineMode && changeLineIndices.length === 0) setIsLineMode(false)
-    }, [isLineMode, changeLineIndices])
+        if (isLineMode && diffRows !== null && changeLineIndices.length === 0) {
+            setIsLineMode(false)
+        }
+    }, [isLineMode, diffRows, changeLineIndices])
 
     // Clamp cursor within bounds when indices change.
     useEffect(() => {
