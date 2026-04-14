@@ -235,7 +235,7 @@ export async function scanRemote(
         result.set(relativePath, {
             name: entry.Name,
             relativePath,
-            isDirectory: entry.IsDir,
+            type: entry.IsDir ? 'directory' : 'file',
             size: entry.IsDir ? 0 : entry.Size,
             modifiedTime: new Date(entry.ModTime),
             contentHash: null,
@@ -244,7 +244,7 @@ export async function scanRemote(
 
     // Compute directory sizes by summing child file sizes
     for (const [relPath, fileEntry] of result) {
-        if (fileEntry.isDirectory) continue
+        if (fileEntry.type === 'directory') continue
         let dir = path.dirname(relPath)
         while (dir !== '.') {
             const dirEntry = result.get(dir)

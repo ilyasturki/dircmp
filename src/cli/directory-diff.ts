@@ -12,6 +12,7 @@ interface DiffOptions {
     format: 'tree' | 'flat' | 'json'
     only?: 'modified' | 'only-left' | 'only-right'
     stat: boolean
+    followSymlinks: boolean
 }
 
 type DiffFilter = DiffOptions['only']
@@ -35,7 +36,7 @@ function collectAllEntries(
 
         result.push({ ...entry, depth })
 
-        if (entry.isDirectory) {
+        if (entry.type === 'directory') {
             const children = collectAllEntries(
                 leftScan,
                 rightScan,
@@ -88,7 +89,7 @@ async function computeLineDiffs(
 ): Promise<Map<string, LineDiff>> {
     const result = new Map<string, LineDiff>()
     const modified = entries.filter(
-        (e) => !e.isDirectory && e.status === 'modified',
+        (e) => e.type === 'file' && e.status === 'modified',
     )
 
     await Promise.all(
@@ -153,11 +154,14 @@ function formatTree(
         const indent = '  '.repeat(entry.depth)
         const sym = statusSymbol(entry.status)
         const color = statusColor(entry.status)
-        const suffix = entry.isDirectory ? '/' : ''
+        const suffix =
+            entry.type === 'directory' ? '/'
+            : entry.type === 'symlink' ? '@'
+            : ''
         const name = entry.name + suffix
 
         const detailParts: string[] = []
-        if (!entry.isDirectory) {
+        if (entry.type !== 'directory') {
             if (entry.status === 'modified' && entry.left && entry.right) {
                 detailParts.push(
                     `${DIM}${formatSize(entry.left.size).trim()} → ${formatSize(entry.right.size).trim()}${RESET}`,
@@ -196,7 +200,10 @@ function formatFlat(
     for (const entry of entries) {
         const sym = statusSymbol(entry.status)
         const color = statusColor(entry.status)
-        const suffix = entry.isDirectory ? '/' : ''
+        const suffix =
+            entry.type === 'directory' ? '/'
+            : entry.type === 'symlink' ? '@'
+            : ''
         let line = `${color}${sym} ${entry.relativePath}${suffix}${RESET}`
         const ld = formatLineDiff(lineDiffs.get(entry.relativePath))
         if (ld) line += `  ${ld}`
@@ -209,11 +216,13 @@ function formatFlat(
 interface JsonEntry {
     path: string
     status: DiffStatus
-    isDirectory: boolean
+    type: 'file' | 'directory' | 'symlink'
     leftSize?: number
     rightSize?: number
     linesAdded?: number
     linesRemoved?: number
+    leftLinkTarget?: string
+    rightLinkTarget?: string
 }
 
 function formatJson(
@@ -221,15 +230,17 @@ function formatJson(
     lineDiffs: Map<string, LineDiff>,
 ): string {
     const data: JsonEntry[] = entries
-        .filter((e) => !e.isDirectory)
+        .filter((e) => e.type !== 'directory')
         .map((e) => {
             const obj: JsonEntry = {
                 path: e.relativePath,
                 status: e.status,
-                isDirectory: e.isDirectory,
+                type: e.type,
             }
             if (e.left) obj.leftSize = e.left.size
             if (e.right) obj.rightSize = e.right.size
+            if (e.left?.linkTarget) obj.leftLinkTarget = e.left.linkTarget
+            if (e.right?.linkTarget) obj.rightLinkTarget = e.right.linkTarget
             const ld = lineDiffs.get(e.relativePath)
             if (ld) {
                 obj.linesAdded = ld.added
@@ -242,7 +253,7 @@ function formatJson(
 }
 
 function formatStat(entries: CompareEntry[]): string {
-    const files = entries.filter((e) => !e.isDirectory)
+    const files = entries.filter((e) => e.type !== 'directory')
     let modified = 0
     let leftOnly = 0
     let rightOnly = 0
@@ -274,6 +285,8 @@ export async function runDiff(
         leftDir,
         rightDir,
         ignoreOptions,
+        true,
+        options.followSymlinks,
     )
 
     const entries = collectAllEntries(leftScan, rightScan, '', 0, options.only)

@@ -8,6 +8,7 @@ export async function cliScan(
     rightDir: string,
     ignoreOptions: CliIgnoreOptions,
     computeHash: boolean = true,
+    followSymlinks: boolean = false,
 ): Promise<{ leftScan: ScanResult; rightScan: ScanResult }> {
     let shouldIgnore: ((relativePath: string) => boolean) | null = null
 
@@ -22,8 +23,8 @@ export async function cliScan(
     }
 
     const [leftScan, rightScan] = await Promise.all([
-        scanDirectory(leftDir, shouldIgnore, computeHash),
-        scanDirectory(rightDir, shouldIgnore, computeHash),
+        scanDirectory(leftDir, shouldIgnore, computeHash, followSymlinks),
+        scanDirectory(rightDir, shouldIgnore, computeHash, followSymlinks),
     ])
 
     return { leftScan, rightScan }

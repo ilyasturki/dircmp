@@ -24,37 +24,71 @@ type StatResult =
           fullPath: string
           stat: import('fs').Stats
       }
+    | {
+          kind: 'symlink'
+          entry: import('fs').Dirent
+          fullPath: string
+          linkTarget: string
+          stat: import('fs').Stats | null
+          broken: boolean
+      }
     | { kind: 'error'; entry: import('fs').Dirent; code: string }
     | { kind: 'skip' }
 
 async function statEntry(
     entry: import('fs').Dirent,
     fullPath: string,
+    followSymlinks: boolean,
 ): Promise<StatResult> {
-    let isDirectory = entry.isDirectory()
-    let resolvedPath = fullPath
-
     if (entry.isSymbolicLink()) {
-        try {
-            resolvedPath = await fsp.realpath(fullPath)
-            const stat = await fsp.stat(resolvedPath)
-            isDirectory = stat.isDirectory()
-            if (isDirectory) {
-                return { kind: 'directory', entry, fullPath, stat }
+        if (followSymlinks) {
+            try {
+                const resolvedPath = await fsp.realpath(fullPath)
+                const stat = await fsp.stat(resolvedPath)
+                if (stat.isDirectory()) {
+                    return { kind: 'directory', entry, fullPath, stat }
+                }
+                return { kind: 'file', entry, resolvedPath, stat }
+            } catch {
+                return { kind: 'error', entry, code: 'Broken symlink' }
             }
-            return { kind: 'file', entry, resolvedPath, stat }
+        }
+
+        let linkTarget = ''
+        try {
+            linkTarget = await fsp.readlink(fullPath)
         } catch {
-            return { kind: 'error', entry, code: 'Broken symlink' }
+            // readlink failed — treat as a broken/unreadable link
+        }
+        let lstatResult: import('fs').Stats | null = null
+        try {
+            lstatResult = await fsp.lstat(fullPath)
+        } catch {
+            // lstat failed — leave null
+        }
+        let broken = false
+        try {
+            await fsp.stat(fullPath)
+        } catch {
+            broken = true
+        }
+        return {
+            kind: 'symlink',
+            entry,
+            fullPath,
+            linkTarget,
+            stat: lstatResult,
+            broken,
         }
     }
 
-    if (isDirectory) {
+    if (entry.isDirectory()) {
         const stat = await fsp.stat(fullPath)
         return { kind: 'directory', entry, fullPath, stat }
     }
 
-    const stat = await fsp.stat(resolvedPath)
-    return { kind: 'file', entry, resolvedPath, stat }
+    const stat = await fsp.stat(fullPath)
+    return { kind: 'file', entry, resolvedPath: fullPath, stat }
 }
 
 async function mapConcurrent<T, R>(
@@ -83,6 +117,7 @@ async function walkDirectory(
     result: ScanResult,
     shouldIgnore: ((relativePath: string) => boolean) | null,
     computeHash: boolean = false,
+    followSymlinks: boolean = false,
 ): Promise<number> {
     let dirents
     try {
@@ -94,7 +129,7 @@ async function walkDirectory(
             result.set(relativePath, {
                 name: path.basename(currentPath),
                 relativePath,
-                isDirectory: true,
+                type: 'directory',
                 size: 0,
                 modifiedTime: new Date(),
                 contentHash: null,
@@ -130,7 +165,11 @@ async function walkDirectory(
         STAT_CONCURRENCY,
         async (item) => {
             try {
-                return await statEntry(item.dirent, item.fullPath)
+                return await statEntry(
+                    item.dirent,
+                    item.fullPath,
+                    followSymlinks,
+                )
             } catch (err: unknown) {
                 const code = (err as NodeJS.ErrnoException).code
                 if (code === 'EACCES' || code === 'EPERM') {
@@ -181,7 +220,7 @@ async function walkDirectory(
                 result.set(item.relativePath, {
                     name: sr.entry.name,
                     relativePath: item.relativePath,
-                    isDirectory: false,
+                    type: 'file',
                     size: 0,
                     modifiedTime: new Date(),
                     contentHash: null,
@@ -194,7 +233,7 @@ async function walkDirectory(
                 result.set(item.relativePath, {
                     name: sr.entry.name,
                     relativePath: item.relativePath,
-                    isDirectory: false,
+                    type: 'file',
                     size,
                     modifiedTime: sr.stat.mtime,
                     contentHash: hashResults.get(i) ?? null,
@@ -205,7 +244,7 @@ async function walkDirectory(
                 result.set(item.relativePath, {
                     name: sr.entry.name,
                     relativePath: item.relativePath,
-                    isDirectory: true,
+                    type: 'directory',
                     size: 0,
                     modifiedTime: sr.stat.mtime,
                     contentHash: null,
@@ -216,10 +255,24 @@ async function walkDirectory(
                     result,
                     shouldIgnore,
                     computeHash,
+                    followSymlinks,
                 )
                 const dirEntry = result.get(item.relativePath)!
                 dirEntry.size = subtreeSize
                 totalSize += subtreeSize
+                break
+            }
+            case 'symlink': {
+                result.set(item.relativePath, {
+                    name: sr.entry.name,
+                    relativePath: item.relativePath,
+                    type: 'symlink',
+                    size: sr.stat?.size ?? 0,
+                    modifiedTime: sr.stat?.mtime ?? new Date(0),
+                    contentHash: null,
+                    linkTarget: sr.linkTarget,
+                    linkBroken: sr.broken,
+                })
                 break
             }
         }
@@ -232,9 +285,17 @@ export async function scanDirectory(
     rootPath: string,
     shouldIgnore: ((relativePath: string) => boolean) | null = null,
     computeHash: boolean = false,
+    followSymlinks: boolean = false,
 ): Promise<ScanResult> {
     const result: ScanResult = new Map()
-    await walkDirectory(rootPath, rootPath, result, shouldIgnore, computeHash)
+    await walkDirectory(
+        rootPath,
+        rootPath,
+        result,
+        shouldIgnore,
+        computeHash,
+        followSymlinks,
+    )
     return result
 }
 

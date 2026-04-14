@@ -15,7 +15,7 @@ interface MenuItem {
 function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
     const items: MenuItem[] = []
 
-    if (entry.isDirectory) {
+    if (entry.type === 'directory') {
         items.push({
             label: 'Expand / Collapse',
             hint: 'l',
@@ -46,7 +46,7 @@ function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
     }
 
     if (
-        entry.isDirectory
+        entry.type === 'directory'
         && (entry.status === 'only-left' || entry.status === 'only-right')
     ) {
         items.push({

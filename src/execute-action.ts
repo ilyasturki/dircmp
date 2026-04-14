@@ -119,7 +119,7 @@ export function executeAction(
                 originalAbsPath: destPath,
                 side: destSide,
                 trashPath,
-                isDirectory: entry.isDirectory,
+                type: entry.type,
             }
             dispatch({ type: 'DELETE_COMPLETE', undo })
             onRefresh?.()
@@ -144,7 +144,7 @@ export function executeAction(
         if (fs.existsSync(destPath)) {
             backupTrashPath = moveToTrash(destPath)
         }
-        copyEntry(sourcePath, destPath, entry.isDirectory)
+        copyEntry(sourcePath, destPath, entry.type)
 
         const destSide: PanelSide = copyRight ? 'right' : 'left'
         const sourceScan = copyRight ? state.leftScan : state.rightScan
@@ -152,7 +152,7 @@ export function executeAction(
         if (sourceScan) {
             const sourceEntry = sourceScan.get(entry.relativePath)
             if (sourceEntry) patchEntries.push(sourceEntry)
-            if (entry.isDirectory) {
+            if (entry.type === 'directory') {
                 const prefix = entry.relativePath + '/'
                 for (const [relPath, fe] of sourceScan) {
                     if (relPath.startsWith(prefix)) patchEntries.push(fe)
@@ -164,7 +164,7 @@ export function executeAction(
             sourceAbsPath: sourcePath,
             destAbsPath: destPath,
             destSide,
-            isDirectory: entry.isDirectory,
+            type: entry.type,
             backupTrashPath,
         }
         dispatch({
@@ -227,7 +227,7 @@ export function executeAction(
             if (fs.existsSync(top.destAbsPath)) {
                 backupTrashPath = moveToTrash(top.destAbsPath)
             }
-            copyEntry(top.sourceAbsPath, top.destAbsPath, top.isDirectory)
+            copyEntry(top.sourceAbsPath, top.destAbsPath, top.type)
             dispatch({
                 type: 'REDO_COMPLETE',
                 entry: { ...top, backupTrashPath },
@@ -256,7 +256,7 @@ export function executeAction(
     // Intercept OPEN_FILE_DIFF for files: use external diff command or built-in viewer
     if (action.type === 'OPEN_FILE_DIFF') {
         const entry = state.entries[state.cursorIndex]
-        if (entry && !entry.isDirectory) {
+        if (entry && entry.type === 'file') {
             const diffCmd = state.config.diffCommand?.trim()
             if (diffCmd && onShellOut) {
                 const leftPath = path.join(leftDir, entry.relativePath)

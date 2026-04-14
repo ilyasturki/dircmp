@@ -73,6 +73,7 @@ export function useDirectoryScan(
     leftPreScan?: ScanResult,
     rightPreScan?: ScanResult,
     compareContents: boolean = true,
+    followSymlinks: boolean = false,
 ) {
     const [refreshCounter, setRefreshCounter] = useState(0)
     const preScanUsed = useRef(false)
@@ -97,11 +98,21 @@ export function useDirectoryScan(
             const leftPromise =
                 leftPreScan ?
                     Promise.resolve(leftPreScan)
-                :   scanDirectory(leftDir, shouldIgnore, compareContents)
+                :   scanDirectory(
+                        leftDir,
+                        shouldIgnore,
+                        compareContents,
+                        followSymlinks,
+                    )
             const rightPromise =
                 rightPreScan ?
                     Promise.resolve(rightPreScan)
-                :   scanDirectory(rightDir, shouldIgnore, compareContents)
+                :   scanDirectory(
+                        rightDir,
+                        shouldIgnore,
+                        compareContents,
+                        followSymlinks,
+                    )
             Promise.all([leftPromise, rightPromise])
                 .then(([leftScan, rightScan]) => {
                     const elapsed = performance.now() - start
@@ -126,10 +137,20 @@ export function useDirectoryScan(
         Promise.all([
             leftRemote ?
                 scanRemote(leftRemote, shouldIgnore)
-            :   scanDirectory(leftDir, shouldIgnore, compareContents),
+            :   scanDirectory(
+                    leftDir,
+                    shouldIgnore,
+                    compareContents,
+                    followSymlinks,
+                ),
             rightRemote ?
                 scanRemote(rightRemote, shouldIgnore)
-            :   scanDirectory(rightDir, shouldIgnore, compareContents),
+            :   scanDirectory(
+                    rightDir,
+                    shouldIgnore,
+                    compareContents,
+                    followSymlinks,
+                ),
         ])
             .then(([leftScan, rightScan]) => {
                 const elapsed = performance.now() - start
@@ -139,7 +160,14 @@ export function useDirectoryScan(
             .catch((err) => {
                 dispatch({ type: 'SCAN_ERROR', error: String(err) })
             })
-    }, [leftDir, rightDir, refreshCounter, ignoreEnabled, compareContents])
+    }, [
+        leftDir,
+        rightDir,
+        refreshCounter,
+        ignoreEnabled,
+        compareContents,
+        followSymlinks,
+    ])
 
     const refresh = useCallback(() => {
         setRefreshCounter((c) => c + 1)

@@ -5,6 +5,7 @@ import { cliScan } from './scan'
 
 interface CheckOptions {
     stat: boolean
+    followSymlinks: boolean
 }
 
 function hasDifferences(
@@ -20,7 +21,7 @@ function hasDifferences(
     let found = false
 
     for (const entry of entries) {
-        if (entry.status === 'modified' && !entry.isDirectory) {
+        if (entry.status === 'modified' && entry.type !== 'directory') {
             counts.modified++
             found = true
         } else if (entry.status === 'only-left') {
@@ -32,7 +33,7 @@ function hasDifferences(
         }
 
         if (
-            entry.isDirectory
+            entry.type === 'directory'
             && entry.status !== 'only-left'
             && entry.status !== 'only-right'
         ) {
@@ -57,6 +58,8 @@ export async function runCheck(
         leftDir,
         rightDir,
         ignoreOptions,
+        true,
+        options.followSymlinks,
     )
 
     const counts = { modified: 0, leftOnly: 0, rightOnly: 0 }

@@ -55,7 +55,10 @@ function filterBySearch(
     // Collect prefixes of matching directories (to keep descendants)
     const matchingDirPrefixes: string[] = []
     for (const entry of entries) {
-        if (entry.isDirectory && directMatches.has(entry.relativePath)) {
+        if (
+            entry.type === 'directory'
+            && directMatches.has(entry.relativePath)
+        ) {
             matchingDirPrefixes.push(entry.relativePath + '/')
         }
     }
@@ -99,9 +102,9 @@ function projectOntoCollapses(
         if (entry.depth > hideDepth) continue
         hideDepth = Infinity
         const isExpanded =
-            entry.isDirectory && userExpanded.has(entry.relativePath)
+            entry.type === 'directory' && userExpanded.has(entry.relativePath)
         result.push({ ...entry, isExpanded })
-        if (entry.isDirectory && !isExpanded) {
+        if (entry.type === 'directory' && !isExpanded) {
             hideDepth = entry.depth
         }
     }
@@ -173,7 +176,7 @@ function withRecompute(state: AppState, updates: Partial<AppState>): AppState {
 
 function toggleExpandDir(state: AppState): AppState {
     const entry = state.entries[state.cursorIndex]
-    if (!entry || !entry.isDirectory) return state
+    if (!entry || entry.type !== 'directory') return state
     const expandedDirs =
         state.expandedDirs.has(entry.relativePath) ?
             removeDescendants(state.expandedDirs, entry.relativePath)
@@ -192,12 +195,12 @@ function collectDirsFromScans(
     const dirs = new Set<string>()
     if (leftScan) {
         for (const [, e] of leftScan) {
-            if (e.isDirectory) dirs.add(e.relativePath)
+            if (e.type === 'directory') dirs.add(e.relativePath)
         }
     }
     if (rightScan) {
         for (const [, e] of rightScan) {
-            if (e.isDirectory) dirs.add(e.relativePath)
+            if (e.type === 'directory') dirs.add(e.relativePath)
         }
     }
     return dirs
@@ -290,7 +293,7 @@ export function reducer(state: AppState, action: Action): AppState {
             if (!entry) return state
 
             if (
-                entry.isDirectory
+                entry.type === 'directory'
                 && state.expandedDirs.has(entry.relativePath)
             ) {
                 return withRecompute(state, {
@@ -424,7 +427,7 @@ export function reducer(state: AppState, action: Action): AppState {
             if (action.direction === 'next') {
                 for (let i = fullIdx + 1; i < allEntries.length; i++) {
                     if (
-                        !allEntries[i].isDirectory
+                        allEntries[i].type !== 'directory'
                         && allEntries[i].status !== 'identical'
                     ) {
                         target = allEntries[i]
@@ -434,7 +437,7 @@ export function reducer(state: AppState, action: Action): AppState {
             } else {
                 for (let i = fullIdx - 1; i >= 0; i--) {
                     if (
-                        !allEntries[i].isDirectory
+                        allEntries[i].type !== 'directory'
                         && allEntries[i].status !== 'identical'
                     ) {
                         target = allEntries[i]
@@ -659,7 +662,7 @@ export function reducer(state: AppState, action: Action): AppState {
             })
         case 'MARK_PAIR': {
             const entry = state.entries[state.cursorIndex]
-            if (!entry || !entry.isDirectory) return state
+            if (!entry || entry.type !== 'directory') return state
             if (entry.status !== 'only-left' && entry.status !== 'only-right')
                 return state
 

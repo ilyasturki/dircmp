@@ -16,7 +16,7 @@ function fileEntry(relativePath: string, isDirectory = false): FileEntry {
     return {
         name: relativePath,
         relativePath,
-        isDirectory,
+        type: isDirectory ? 'directory' : 'file',
         size: 0,
         modifiedTime: new Date(0),
         contentHash: isDirectory ? null : 'abc',
@@ -31,7 +31,7 @@ function copyUndo(
         sourceAbsPath: '/L/a.txt',
         destAbsPath: '/R/a.txt',
         destSide: 'right',
-        isDirectory: false,
+        type: 'file',
         backupTrashPath: null,
         ...overrides,
     }
@@ -45,7 +45,7 @@ function deleteUndo(
         originalAbsPath: '/L/a.txt',
         side: 'left',
         trashPath: '/tmp/trash/1/a.txt',
-        isDirectory: false,
+        type: 'file',
         ...overrides,
     }
 }

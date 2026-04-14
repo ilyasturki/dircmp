@@ -39,7 +39,7 @@ export function ConfirmDeleteDialog({
             originalAbsPath: fullPath,
             side,
             trashPath,
-            isDirectory: entry.isDirectory,
+            type: entry.type,
         }
         dispatch({ type: 'DELETE_COMPLETE', undo })
         refresh()

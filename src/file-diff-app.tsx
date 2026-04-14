@@ -60,7 +60,7 @@ export function FileDiffApp({
         () => ({
             relativePath: path.basename(leftFile),
             name: path.basename(leftFile),
-            isDirectory: false,
+            type: 'file',
             status: 'modified',
             depth: 0,
             isExpanded: false,

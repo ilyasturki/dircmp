@@ -1,11 +1,15 @@
+export type EntryType = 'file' | 'directory' | 'symlink'
+
 export interface FileEntry {
     name: string
     relativePath: string
-    isDirectory: boolean
+    type: EntryType
     size: number
     modifiedTime: Date
     contentHash: string | null
     error?: string
+    linkTarget?: string
+    linkBroken?: boolean
 }
 
 export type DiffStatus = 'identical' | 'modified' | 'only-left' | 'only-right'
@@ -13,7 +17,7 @@ export type DiffStatus = 'identical' | 'modified' | 'only-left' | 'only-right'
 export interface CompareEntry {
     relativePath: string
     name: string
-    isDirectory: boolean
+    type: EntryType
     status: DiffStatus
     left?: FileEntry
     right?: FileEntry
@@ -57,7 +61,7 @@ export type UndoEntry =
           sourceAbsPath: string
           destAbsPath: string
           destSide: PanelSide
-          isDirectory: boolean
+          type: EntryType
           backupTrashPath: string | null
       }
     | {
@@ -65,7 +69,7 @@ export type UndoEntry =
           originalAbsPath: string
           side: PanelSide
           trashPath: string
-          isDirectory: boolean
+          type: EntryType
       }
     | {
           kind: 'pair' | 'unpair'

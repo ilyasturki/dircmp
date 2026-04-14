@@ -95,11 +95,14 @@ export const ERROR_ICON_PLAIN = '!'
 
 export function getFileIcon(
     name: string,
-    isDirectory: boolean,
+    type: 'file' | 'directory' | 'symlink',
     isExpanded: boolean,
     nerdFont = true,
 ): string {
-    if (isDirectory) {
+    if (type === 'symlink') {
+        return nerdFont ? '\uf481' : 'l'
+    }
+    if (type === 'directory') {
         if (!nerdFont) return isExpanded ? 'v' : '>'
         return isExpanded ? '\uf115' : '\uf114'
     }

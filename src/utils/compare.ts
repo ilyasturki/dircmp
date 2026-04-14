@@ -31,8 +31,10 @@ const defaultSortOptions: SortOptions = {
 function sortEntries(entries: CompareEntry[], opts: SortOptions): void {
     const dir = opts.direction === 'asc' ? 1 : -1
     entries.sort((a, b) => {
-        if (opts.dirsFirst && a.isDirectory !== b.isDirectory) {
-            return a.isDirectory ? -1 : 1
+        const aIsDir = a.type === 'directory'
+        const bIsDir = b.type === 'directory'
+        if (opts.dirsFirst && aIsDir !== bIsDir) {
+            return aIsDir ? -1 : 1
         }
         switch (opts.mode) {
             case 'name':
@@ -87,6 +89,10 @@ function isFileDifferent(
     right: FileEntry,
     options: CompareOptions,
 ): boolean {
+    if (left.type === 'symlink' && right.type === 'symlink') {
+        return left.linkTarget !== right.linkTarget
+    }
+    if (left.type !== right.type) return true
     if (left.size !== right.size) return true
     if (
         options.compareDates
@@ -123,7 +129,7 @@ function collectDescendantFiles(
     const prefix = dirPath === '' ? '' : dirPath + path.sep
     const bySuffix = new Map<string, FileEntry>()
     for (const [relPath, entry] of scan) {
-        if (relPath.startsWith(prefix) && !entry.isDirectory) {
+        if (relPath.startsWith(prefix) && entry.type !== 'directory') {
             bySuffix.set(relPath.slice(prefix.length), entry)
         }
     }
@@ -212,10 +218,16 @@ export function compareAtPath(
     const rightEntries = getEntriesAtPath(rightScan, rightDirPath)
 
     const leftMap = new Map(
-        leftEntries.map((e) => [e.name + (e.isDirectory ? '/' : ''), e]),
+        leftEntries.map((e) => [
+            e.name + (e.type === 'directory' ? '/' : ''),
+            e,
+        ]),
     )
     const rightMap = new Map(
-        rightEntries.map((e) => [e.name + (e.isDirectory ? '/' : ''), e]),
+        rightEntries.map((e) => [
+            e.name + (e.type === 'directory' ? '/' : ''),
+            e,
+        ]),
     )
 
     // Process manual pairings: find pairings relevant to this directory level
@@ -265,7 +277,7 @@ export function compareAtPath(
             pairedEntries.push({
                 relativePath: left.relativePath,
                 name: left.name,
-                isDirectory: true,
+                type: 'directory',
                 status,
                 left,
                 right,
@@ -284,18 +296,18 @@ export function compareAtPath(
     for (const key of allKeys) {
         const left = leftMap.get(key)
         const right = rightMap.get(key)
-        const isDir = (left?.isDirectory ?? right?.isDirectory) as boolean
+        const type = (left?.type ?? right?.type) as CompareEntry['type']
         const name = (left?.name ?? right?.name) as string
         const canonicalRelPath =
             left?.relativePath
             ?? (leftDirPath ? leftDirPath + '/' + name : name)
 
-        // Handle same name but different types (file vs dir)
-        if (left && right && left.isDirectory !== right.isDirectory) {
+        // Handle same name but different types (file vs dir vs symlink)
+        if (left && right && left.type !== right.type) {
             entries.push({
                 relativePath: left.relativePath,
                 name: left.name,
-                isDirectory: left.isDirectory,
+                type: left.type,
                 status: 'only-left',
                 left,
                 depth: 0,
@@ -304,7 +316,7 @@ export function compareAtPath(
             entries.push({
                 relativePath: canonicalRelPath,
                 name: right.name,
-                isDirectory: right.isDirectory,
+                type: right.type,
                 status: 'only-right',
                 right,
                 depth: 0,
@@ -318,7 +330,7 @@ export function compareAtPath(
             status = 'only-right'
         } else if (!right) {
             status = 'only-left'
-        } else if (isDir) {
+        } else if (left.type === 'directory' && right.type === 'directory') {
             const leftPath = samePath ? canonicalRelPath : left.relativePath
             const rightPath = samePath ? canonicalRelPath : right.relativePath
             status =
@@ -341,7 +353,7 @@ export function compareAtPath(
         entries.push({
             relativePath: canonicalRelPath,
             name,
-            isDirectory: isDir,
+            type,
             status,
             left,
             right,
@@ -379,7 +391,8 @@ export function buildVisibleTree(
         )
         for (const entry of entries) {
             const isExpanded =
-                entry.isDirectory && expandedDirs.has(entry.relativePath)
+                entry.type === 'directory'
+                && expandedDirs.has(entry.relativePath)
             result.push({ ...entry, depth, isExpanded })
             if (isExpanded) {
                 const childLeft =

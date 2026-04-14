@@ -39,6 +39,7 @@ interface AppProps {
     initialConfig: AppConfig
     ignoreOptions?: CliIgnoreOptions
     changelog: string
+    followSymlinks?: boolean
 }
 
 export function App({
@@ -53,6 +54,7 @@ export function App({
     initialConfig,
     ignoreOptions,
     changelog,
+    followSymlinks = false,
 }: AppProps) {
     const [state, dispatch] = useReducer(
         reducer,
@@ -78,6 +80,7 @@ export function App({
         leftPreScan,
         rightPreScan,
         state.config.compareContents,
+        followSymlinks,
     )
 
     const effectiveLeftDir = state.swapped ? rightDir : leftDir

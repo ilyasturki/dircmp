@@ -83,6 +83,7 @@ export const EntryRow = memo(function EntryRow({
     const nerdFont = useNerdFont()
     const errorIcon = nerdFont ? ERROR_ICON : ERROR_ICON_PLAIN
     const hasError = fileEntry?.error
+    const isSymlink = entry.type === 'symlink'
     const isPaired = !!entry.pairedLeftPath
     const dimColor = !hasError && entry.status === 'identical' && !isPaired
     const color =
@@ -91,20 +92,19 @@ export const EntryRow = memo(function EntryRow({
         : entry.status === 'modified' ? 'yellow'
         : entry.status === 'only-left' || entry.status === 'only-right' ?
             'green'
-        :   undefined
-    const name = entry.isDirectory ? `${entry.name}/` : entry.name
+        : isSymlink ? 'cyan'
+        : undefined
+    const name =
+        entry.type === 'directory' ? `${entry.name}/`
+        : isSymlink ? `${entry.name}@`
+        : entry.name
     const indent = '  '.repeat(entry.depth)
-    const icon = getFileIcon(
-        entry.name,
-        entry.isDirectory,
-        entry.isExpanded,
-        nerdFont,
-    )
+    const icon = getFileIcon(entry.name, entry.type, entry.isExpanded, nerdFont)
     const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
     const dimSelectedBg = 'blackBright'
-    const colorIconOnly = entry.isDirectory && color && !isSelected
+    const colorIconOnly = entry.type === 'directory' && color && !isSelected
 
     const errorSuffix = hasError ? ` ${errorIcon}` : ''
     const pairMark = isPendingPairMark ? ' [m]' : ''
@@ -127,7 +127,7 @@ export const EntryRow = memo(function EntryRow({
     const highlightedName = highlightMatches(visibleName, searchQuery)
 
     const textProps = {
-        bold: entry.isDirectory,
+        bold: entry.type === 'directory',
         dimColor,
         color: colorIconOnly ? undefined : color,
         inverse: isSelected,

@@ -74,7 +74,9 @@ export function DirectoryPanel({
                         entry.relativePath
                         + '-'
                         + side
-                        + (entry.isDirectory ? '-d' : '-f')
+                        + (entry.type === 'directory' ? '-d'
+                        : entry.type === 'symlink' ? '-l'
+                        : '-f')
 
                     if (isMissingSide) {
                         return (

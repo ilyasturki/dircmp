@@ -70,7 +70,11 @@ export function moveToTrash(absPath: string): string {
         fs.renameSync(absPath, trashPath)
     } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
-            fs.cpSync(absPath, trashPath, { recursive: true })
+            fs.cpSync(absPath, trashPath, {
+                recursive: true,
+                dereference: false,
+                verbatimSymlinks: true,
+            })
             fs.rmSync(absPath, { recursive: true, force: true })
         } else {
             throw err
@@ -85,7 +89,11 @@ export function restoreFromTrash(trashPath: string, destPath: string): void {
         fs.renameSync(trashPath, destPath)
     } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
-            fs.cpSync(trashPath, destPath, { recursive: true })
+            fs.cpSync(trashPath, destPath, {
+                recursive: true,
+                dereference: false,
+                verbatimSymlinks: true,
+            })
             fs.rmSync(trashPath, { recursive: true, force: true })
         } else {
             throw err

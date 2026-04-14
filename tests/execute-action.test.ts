@@ -94,7 +94,7 @@ describe('executeAction: UNDO branch', () => {
             sourceAbsPath: path.join(leftDir, 'a.txt'),
             destAbsPath: dest,
             destSide: 'right',
-            isDirectory: false,
+            type: 'file',
             backupTrashPath: null,
         }
         const c = captures()
@@ -134,7 +134,7 @@ describe('executeAction: UNDO branch', () => {
             sourceAbsPath: path.join(leftDir, 'a.txt'),
             destAbsPath: dest,
             destSide: 'right',
-            isDirectory: false,
+            type: 'file',
             backupTrashPath,
         }
         const c = captures()
@@ -167,7 +167,7 @@ describe('executeAction: UNDO branch', () => {
             originalAbsPath: orig,
             side: 'left',
             trashPath,
-            isDirectory: false,
+            type: 'file',
         }
         const c = captures()
         executeAction(
@@ -194,7 +194,7 @@ describe('executeAction: UNDO branch', () => {
             originalAbsPath: '/definitely/not/inside/left/or/right.txt',
             side: 'left',
             trashPath: '/tmp/whatever',
-            isDirectory: false,
+            type: 'file',
         }
         const c = captures()
         executeAction(
@@ -270,7 +270,7 @@ describe('executeAction: REDO branch', () => {
             sourceAbsPath: src,
             destAbsPath: dest,
             destSide: 'right',
-            isDirectory: false,
+            type: 'file',
             backupTrashPath: null, // stale — redo should compute fresh
         }
         const c = captures()
@@ -310,7 +310,7 @@ describe('executeAction: REDO branch', () => {
             originalAbsPath: orig,
             side: 'left',
             trashPath: '/stale/path',
-            isDirectory: false,
+            type: 'file',
         }
         const c = captures()
         executeAction(

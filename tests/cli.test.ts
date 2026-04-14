@@ -59,7 +59,8 @@ describe('diff --format json', () => {
         for (const entry of entries) {
             expect(entry).toHaveProperty('path')
             expect(entry).toHaveProperty('status')
-            expect(entry).toHaveProperty('isDirectory')
+            expect(entry).toHaveProperty('type')
+            expect(['file', 'directory', 'symlink']).toContain(entry.type)
             expect(['modified', 'only-left', 'only-right']).toContain(
                 entry.status,
             )
@@ -136,6 +137,64 @@ describe('diff --format json', () => {
             (e: { status: string }) => e.status === 'identical',
         )
         expect(identical.length).toBe(0)
+    })
+
+    test('symlink entries expose type and linkTarget fields', async () => {
+        const { stdout } = await run(
+            'diff',
+            '--format',
+            'json',
+            DATA_LEFT,
+            DATA_RIGHT,
+        )
+        const entries = JSON.parse(stdout)
+        const symlinks = entries.filter(
+            (e: { type: string }) => e.type === 'symlink',
+        )
+        expect(symlinks.length).toBeGreaterThan(0)
+        // At least one symlink entry should have a linkTarget on one side
+        const withTarget = symlinks.find(
+            (e: { leftLinkTarget?: string; rightLinkTarget?: string }) =>
+                e.leftLinkTarget != null || e.rightLinkTarget != null,
+        )
+        expect(withTarget).toBeDefined()
+    })
+})
+
+// ---------------------------------------------------------------------------
+// --follow-symlinks flag
+// ---------------------------------------------------------------------------
+describe('--follow-symlinks', () => {
+    test('without flag, symlinks are distinct entries in JSON output', async () => {
+        const { stdout } = await run(
+            'diff',
+            '--format',
+            'json',
+            DATA_LEFT,
+            DATA_RIGHT,
+        )
+        const entries = JSON.parse(stdout)
+        const symlinks = entries.filter(
+            (e: { type: string }) => e.type === 'symlink',
+        )
+        expect(symlinks.length).toBeGreaterThan(0)
+    })
+
+    test('with flag, symlinks resolve to their target type', async () => {
+        const { stdout } = await run(
+            'diff',
+            '--format',
+            'json',
+            '--follow-symlinks',
+            DATA_LEFT,
+            DATA_RIGHT,
+        )
+        const entries = JSON.parse(stdout)
+        const symlinks = entries.filter(
+            (e: { type: string }) => e.type === 'symlink',
+        )
+        // When following, symlinks are absorbed into file/directory types
+        expect(symlinks.length).toBe(0)
     })
 })
 

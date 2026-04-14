@@ -43,6 +43,8 @@ const HELP_TEXT = `
     -v, --version           Show version number
     --no-ignore             Don't apply ignore patterns
     --ignore <pattern>      Add an ignore pattern (repeatable)
+    --follow-symlinks       Follow symbolic links as their targets
+                            (default: compare links by their target path)
 
   Options for diff
     --format <fmt>          Output format: tree (default), flat, json
@@ -83,6 +85,7 @@ const DIFF_HELP_TEXT = `
     --stat                  Show only a summary line
     --no-ignore             Don't apply ignore patterns
     --ignore <pattern>      Add an ignore pattern (repeatable)
+    --follow-symlinks       Follow symbolic links as their targets
     -h, --help              Show this help message
 
   Examples
@@ -103,6 +106,7 @@ const CHECK_HELP_TEXT = `
     --stat                  Print summary line before exiting
     --no-ignore             Don't apply ignore patterns
     --ignore <pattern>      Add an ignore pattern (repeatable)
+    --follow-symlinks       Follow symbolic links as their targets
     -h, --help              Show this help message
 
   Examples
@@ -140,6 +144,10 @@ const cli = meow(HELP_TEXT, {
             type: 'string',
         },
         stat: {
+            type: 'boolean',
+            default: false,
+        },
+        followSymlinks: {
             type: 'boolean',
             default: false,
         },
@@ -331,12 +339,14 @@ if (fileMode && subcommand === 'diff') {
         format: cli.flags.format as 'tree' | 'flat' | 'json',
         only: onlyFilter,
         stat: cli.flags.stat,
+        followSymlinks: cli.flags.followSymlinks,
     })
     cleanupMounts()
 } else if (subcommand === 'check') {
     const { runCheck } = await import('~/cli/directory-check')
     await runCheck(leftDir, rightDir, ignoreOptions, {
         stat: cli.flags.stat,
+        followSymlinks: cli.flags.followSymlinks,
     })
     cleanupMounts()
 } else {
@@ -390,6 +400,7 @@ if (fileMode && subcommand === 'diff') {
                 initialConfig={config}
                 ignoreOptions={ignoreOptions}
                 changelog={changelogText}
+                followSymlinks={cli.flags.followSymlinks}
             />,
         )
     }

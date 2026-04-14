@@ -69,7 +69,7 @@ function useLineDiff(
     useEffect(() => {
         if (
             !entry
-            || entry.isDirectory
+            || entry.type !== 'file'
             || entry.status !== 'modified'
             || !entry.left
             || !entry.right
@@ -132,13 +132,7 @@ function useLineDiff(
         return () => {
             cancelled = true
         }
-    }, [
-        entry?.relativePath,
-        entry?.status,
-        entry?.isDirectory,
-        leftDir,
-        rightDir,
-    ])
+    }, [entry?.relativePath, entry?.status, entry?.type, leftDir, rightDir])
 
     return result
 }
@@ -155,7 +149,7 @@ function useDirDiffCount(
     const [result, setResult] = useState<DirDiffResult | null>(null)
 
     useEffect(() => {
-        if (!entry || !entry.isDirectory || !leftScan || !rightScan) {
+        if (!entry || entry.type !== 'directory' || !leftScan || !rightScan) {
             setResult(null)
             return
         }
@@ -191,7 +185,7 @@ function useDirDiffCount(
         }
     }, [
         entry?.relativePath,
-        entry?.isDirectory,
+        entry?.type,
         entry?.status,
         entry?.pairedLeftPath,
         entry?.pairedRightPath,
@@ -205,7 +199,7 @@ function useDirDiffCount(
 }
 
 function sizeInfo(entry: CompareEntry): string {
-    if (entry.isDirectory) return ''
+    if (entry.type === 'directory') return ''
     const leftSize = entry.left?.size
     const rightSize = entry.right?.size
     if (leftSize != null && rightSize != null) {
@@ -256,7 +250,7 @@ function getEntryInfo(
         case 'only-right':
             return joinTextParts([pathPrefix, 'only in right', sizeInfo(entry)])
         case 'modified': {
-            if (entry.isDirectory) {
+            if (entry.type === 'directory') {
                 if (!dirDiff || dirDiff.type === 'loading')
                     return joinTextParts([pathPrefix, '...'])
                 return joinTextParts([
@@ -355,7 +349,7 @@ export function StatusBar({
         [
             focusedEntry?.relativePath,
             focusedEntry?.status,
-            focusedEntry?.isDirectory,
+            focusedEntry?.type,
             focusedEntry?.pairedLeftPath,
             focusedEntry?.pairedRightPath,
             dirDiff,
