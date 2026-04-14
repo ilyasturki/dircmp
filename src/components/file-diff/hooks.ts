@@ -163,6 +163,7 @@ export function useAutoScroll(
     focusedRange: HunkRange | undefined,
     totalRows: number,
     contentHeight: number,
+    contextPadding: number = 0,
 ): {
     scrollOffset: number
     setScrollOffset: React.Dispatch<React.SetStateAction<number>>
@@ -171,14 +172,23 @@ export function useAutoScroll(
     useEffect(() => {
         if (!focusedRange) return
         const maxScroll = Math.max(0, totalRows - contentHeight)
+        const extStart = Math.max(0, focusedRange.start - contextPadding)
+        const extEnd = Math.min(
+            Math.max(0, totalRows - 1),
+            focusedRange.end + contextPadding,
+        )
         setScrollOffset((prev) => {
-            if (focusedRange.start < prev) return focusedRange.start
-            if (focusedRange.end >= prev + contentHeight) {
-                return Math.min(focusedRange.start, maxScroll)
+            if (extStart < prev) return extStart
+            if (extEnd >= prev + contentHeight) {
+                const offsetToShowEnd = extEnd - contentHeight + 1
+                return Math.max(
+                    0,
+                    Math.min(offsetToShowEnd, extStart, maxScroll),
+                )
             }
             return prev
         })
-    }, [focusedRange, totalRows, contentHeight])
+    }, [focusedRange, totalRows, contentHeight, contextPadding])
     return { scrollOffset, setScrollOffset }
 }
 

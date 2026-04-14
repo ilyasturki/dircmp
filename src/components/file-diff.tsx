@@ -270,6 +270,7 @@ export function FileDiff({
         focusedRange,
         diffRows?.length ?? 0,
         contentHeight,
+        contextSize,
     )
     useViewportShortcuts(
         focusedRange?.start,
