@@ -80,6 +80,29 @@ bun run build
 ./dircmp <left-dir> <right-dir>
 ```
 
+## Comparison with other tools
+
+| Tool                  | Terminal | Interactive | Recursive tree | In-place copy/delete/sync | Remote dirs | Content hashing |
+| --------------------- | :------: | :---------: | :------------: | :-----------------------: | :---------: | :-------------: |
+| `diff -qr`            |    ✓     |      ✗      |       ✓        |             ✗             |      ✗      |        ✗        |
+| `rsync -nai`          |    ✓     |      ✗      |       ✓        |        ✗ (re-run)         |      ✓      |    checksum     |
+| `git diff --no-index` |    ✓     |      ✗      |       ✓        |             ✗             |      ✗      |        ✗        |
+| `vimdiff` / `nvim -d` |    ✓     |      ✓      | ✗ (file-only)  |          manual           |      ✗      |        ✗        |
+| `diffoscope`          |    ✓     |      ✗      |       ✓        |             ✗             |      ✗      |        ✓        |
+| `meld`                | ✗ (GUI)  |      ✓      |       ✓        |             ✓             |      ✗      |        ✗        |
+| Beyond Compare        | ✗ (GUI)  |      ✓      |       ✓        |             ✓             |      ✓      |        ✓        |
+| **dircmp**            |    ✓     |      ✓      |       ✓        |             ✓             | ✓ (rclone)  |   ✓ (SHA-256)   |
+
+**When to reach for dircmp:** you live in the terminal (SSH, tmux, no X forwarding) and want the interactive ergonomics of a GUI differ — tree navigation, per-hunk copy, undo/redo, rename pairing — without leaving the shell. It also scripts cleanly: `dircmp check` and `dircmp diff --format json` plug into CI and pipelines.
+
+**When another tool fits better:**
+
+- **`diff -qr` / `rsync -nai`** — you only need a one-shot report in a script; no interaction required.
+- **`meld`** — you want 3-way merge or are already in a graphical session. dircmp is 2-way only.
+- **Beyond Compare** — you need deep binary/format-aware comparison (images, archives, registry files) and a commercial license is acceptable.
+- **`diffoscope`** — you're auditing reproducible builds and need recursive comparison inside archives, ELFs, PDFs, etc.
+- **`vimdiff` / `delta`** — you're comparing two single files and already have the editor open. dircmp can delegate to these via the `diffCommand` preference.
+
 ## Usage
 
 ```sh
