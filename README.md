@@ -2,7 +2,7 @@
 
 Terminal TUI for comparing two directories side by side.
 
-![dircmp screenshot](assets/screenshot.png)
+![dircmp demo](assets/demo.gif)
 
 [![npm version](https://img.shields.io/npm/v/@ilyasturki/dircmp)](https://www.npmjs.com/package/@ilyasturki/dircmp)
 [![CI](https://github.com/ilyasturki/dircmp/actions/workflows/ci.yml/badge.svg)](https://github.com/ilyasturki/dircmp/actions/workflows/ci.yml)
@@ -12,15 +12,16 @@ Terminal TUI for comparing two directories side by side.
 
 ## Features
 
-- **Side-by-side tree view** with color-coded diff status
-- **Built-in unified diff viewer** with line-level added/removed counts
-- **Copy, delete, and sync** entries between directories
-- **Gitignore-style ignore patterns** (global and per-directory-pair)
-- **Remote directory support** via rclone (SFTP, S3, GCS)
-- **Manual directory pairing** for renamed directories
-- **Content-based comparison** via SHA-256 hashing
-- **Sortable entries** by name, size, date modified, or status
-- **Configurable** preferences, keybindings, and external diff command
+- **See differences at a glance** — side-by-side tree with color-coded status, instant `]c`/`[c` jumps between changes, and `zR`/`zM` to fold the whole tree
+- **Diff without leaving the terminal** — unified viewer with per-hunk add/remove counts, adjustable context, soft-wrap, and line-by-line selection
+- **Resolve differences in place** — copy, delete, and sync whole entries or individual hunks between sides, with full undo/redo
+- **Trust what you see** — SHA-256 content hashing catches files that `mtime` lies about; metadata comparison is opt-in
+- **Compare across machines** — diff local against SFTP, S3, GCS, or any rclone remote as if it were a local path
+- **Handle real-world refactors** — manually pair renamed directories so their contents diff against each other instead of showing as two unrelated trees
+- **Filter out the noise** — gitignore-syntax patterns, global or per-directory-pair, togglable on the fly
+- **Sort and slice** by name, size, mtime, or diff status; swap panels, filter by name, quick-add to ignore
+- **Script it** — `dircmp check` for CI exit codes, `dircmp diff --format json` for pipelines
+- **Make it yours** — remappable keybindings (Vim-style by default), editable preferences, and delegation to `nvim -d`, `delta`, or any external differ
 
 ## Installation
 

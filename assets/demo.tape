@@ -3,7 +3,7 @@
 
 Output assets/demo.gif
 Set FontSize 28
-Set FontFamily "IosevkaTerm Nerd Font Mono"
+Set FontFamily "IosevkaTerm Nerd Font"
 Set Width 2400
 Set Height 1400
 Set Padding 40
@@ -41,19 +41,15 @@ Sleep 220ms
 Type "j"
 Sleep 400ms
 
-# Jump straight to next difference (git-style ]c / [c)
-Type "]c"
-Sleep 500ms
-Type "]c"
-Sleep 500ms
-Type "]c"
-Sleep 700ms
-
-# Walk down to src/
+# Continue down to src/ (extra step for the blank right-only row)
 Type "j"
 Sleep 200ms
 Type "j"
-Sleep 300ms
+Sleep 200ms
+Type "j"
+Sleep 200ms
+Type "j"
+Sleep 400ms
 
 # Expand src/
 Type "l"
@@ -81,10 +77,8 @@ Sleep 350ms
 Type "j"
 Sleep 500ms
 
-# Widen context lines
-Type "}"
-Sleep 400ms
-Type "}"
+# Push a hunk from focused side
+Space
 Sleep 700ms
 
 # Switch to line-by-line selection mode
@@ -95,10 +89,27 @@ Sleep 250ms
 Type "j"
 Sleep 250ms
 Type "j"
+Sleep 250ms
+Type "j"
+Sleep 250ms
+Type "j"
+Sleep 250ms
+Type "j"
 Sleep 500ms
+# Push the focused line
+Space
+Sleep 700ms
 # Back to change mode
 Type "a"
 Sleep 500ms
+
+# Widen context lines by 3
+Type "}"
+Sleep 300ms
+Type "}"
+Sleep 300ms
+Type "}"
+Sleep 600ms
 
 # Close diff view
 Escape
@@ -131,6 +142,18 @@ Sleep 1.2s
 # Swap back
 Type "zs"
 Sleep 800ms
+
+# Manage ignore patterns
+Type "I"
+Sleep 2s
+Escape
+Sleep 500ms
+
+# Open preferences
+Type ","
+Sleep 2s
+Escape
+Sleep 500ms
 
 # Open the full keybindings help
 Type "?"
