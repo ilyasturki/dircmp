@@ -4,11 +4,11 @@ Terminal TUI for comparing two directories side by side.
 
 ![dircmp demo](assets/demo.gif)
 
-[![npm version](https://img.shields.io/npm/v/@ilyasturki/dircmp)](https://www.npmjs.com/package/@ilyasturki/dircmp)
 [![CI](https://github.com/ilyasturki/dircmp/actions/workflows/ci.yml/badge.svg)](https://github.com/ilyasturki/dircmp/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/github/license/ilyasturki/dircmp)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/@ilyasturki/dircmp)](https://www.npmjs.com/package/@ilyasturki/dircmp)
 [![AUR version](https://img.shields.io/aur/version/dircmp)](https://aur.archlinux.org/packages/dircmp)
 [![platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)](https://github.com/ilyasturki/dircmp/releases)
+[![License: MIT](https://img.shields.io/github/license/ilyasturki/dircmp)](LICENSE)
 
 ## Features
 
