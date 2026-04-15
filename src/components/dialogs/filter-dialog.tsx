@@ -9,7 +9,8 @@ import { KeyboardHints } from '../keyboard-hints'
 
 const filterModes: { mode: FilterMode; label: string }[] = [
     { mode: 'all', label: 'All' },
-    { mode: 'modified', label: 'Modified' },
+    { mode: 'all-changes', label: 'All changes' },
+    { mode: 'modified', label: 'Only modified' },
     { mode: 'only-left', label: 'Only left' },
     { mode: 'only-right', label: 'Only right' },
     { mode: 'same', label: 'Same' },

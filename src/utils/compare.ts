@@ -420,15 +420,16 @@ export function filterByMode(
 ): CompareEntry[] {
     if (mode === 'all') return entries
 
-    const targetStatus: DiffStatus =
-        mode === 'same' ? 'identical'
-        : mode === 'modified' ? 'modified'
-        : mode === 'only-left' ? 'only-left'
-        : 'only-right'
+    const matches: (status: DiffStatus) => boolean =
+        mode === 'all-changes' ? (s) => s !== 'identical'
+        : mode === 'same' ? (s) => s === 'identical'
+        : mode === 'modified' ? (s) => s === 'modified'
+        : mode === 'only-left' ? (s) => s === 'only-left'
+        : (s) => s === 'only-right'
 
     const keepPaths = new Set<string>()
     for (const entry of entries) {
-        if (entry.status === targetStatus) {
+        if (matches(entry.status)) {
             keepPaths.add(entry.relativePath)
         }
     }

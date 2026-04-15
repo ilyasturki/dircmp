@@ -47,6 +47,7 @@ export type DialogType =
 
 export type FilterMode =
     | 'all'
+    | 'all-changes'
     | 'modified'
     | 'only-left'
     | 'only-right'
