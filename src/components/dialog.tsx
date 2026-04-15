@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { Box, measureElement, Text } from 'ink'
 import { useEffect, useRef, useState } from 'react'
 
+import { theme } from '../utils/theme'
+
 interface DialogProps {
     title: string
     columns: number
@@ -45,7 +47,7 @@ export function Dialog({ title, columns, rows, width, children }: DialogProps) {
                     ref={ref}
                     flexDirection='column'
                     borderStyle='bold'
-                    borderColor='cyan'
+                    borderColor={theme.borderFocused}
                     paddingX={2}
                     paddingY={1}
                     gap={1}

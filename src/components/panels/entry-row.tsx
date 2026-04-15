@@ -7,6 +7,7 @@ import { useDateFormatter } from '~/context/date-locale'
 import { useNerdFont } from '~/context/nerd-font'
 import { ERROR_ICON, ERROR_ICON_PLAIN, getFileIcon } from '~/utils/file-icons'
 import { formatSize } from '~/utils/format-size'
+import { theme } from '~/utils/theme'
 
 function highlightMatches(text: string, query: string): ReactNode {
     if (!query) return text
@@ -22,8 +23,8 @@ function highlightMatches(text: string, query: string): ReactNode {
         parts.push(
             <Text
                 key={idx}
-                backgroundColor='cyan'
-                color='black'
+                backgroundColor={theme.searchMatchBg}
+                color={theme.searchMatchFg}
             >
                 {text.slice(idx, idx + query.length)}
             </Text>,
@@ -46,15 +47,16 @@ export const MissingEntryRow = memo(function MissingEntryRow({
     isDimSelected: boolean
     panelWidth: number
 }) {
-    const dimSelectedBg = 'blackBright'
     const content = ''
 
     return (
         <Box width='100%'>
             <Text
-                color='red'
+                color={theme.errorText}
                 inverse={isSelected}
-                backgroundColor={isDimSelected ? dimSelectedBg : undefined}
+                backgroundColor={
+                    isDimSelected ? theme.dimSelectedBg : undefined
+                }
             >
                 {content.padEnd(panelWidth)}
             </Text>
@@ -90,11 +92,11 @@ export const EntryRow = memo(function EntryRow({
     const dimColor = !hasError && entry.status === 'identical' && !isPaired
     const color =
         hasError || dimColor ? undefined
-        : isPaired ? 'magenta'
-        : entry.status === 'modified' ? 'yellow'
-        : entry.status === 'only-left' || entry.status === 'only-right' ?
-            'green'
-        : isSymlink ? 'cyan'
+        : isPaired ? theme.entryPaired
+        : entry.status === 'modified' ? theme.entryModified
+        : entry.status === 'only-left' ? theme.entryOnlyLeft
+        : entry.status === 'only-right' ? theme.entryOnlyRight
+        : isSymlink ? theme.entrySymlink
         : undefined
     const name =
         entry.type === 'directory' ? `${entry.name}/`
@@ -105,7 +107,6 @@ export const EntryRow = memo(function EntryRow({
     const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 
-    const dimSelectedBg = 'blackBright'
     const colorIconOnly = entry.type === 'directory' && color && !isSelected
 
     const errorSuffix = showErrorIcon ? ` ${errorIcon}` : ''
@@ -133,7 +134,7 @@ export const EntryRow = memo(function EntryRow({
         dimColor,
         color: colorIconOnly ? undefined : color,
         inverse: isSelected,
-        backgroundColor: isDimSelected ? dimSelectedBg : undefined,
+        backgroundColor: isDimSelected ? theme.dimSelectedBg : undefined,
     } as const
 
     const nameContent =
@@ -153,7 +154,7 @@ export const EntryRow = memo(function EntryRow({
             {showErrorIcon && (
                 <>
                     {' '}
-                    <Text color='red'>{errorIcon}</Text>
+                    <Text color={theme.errorText}>{errorIcon}</Text>
                 </>
             )}
             {' '.repeat(gap)}
@@ -169,7 +170,7 @@ export const EntryRow = memo(function EntryRow({
             </Text>
             {isPendingPairMark && (
                 <Text
-                    color='magenta'
+                    color={theme.entryPairMark}
                     inverse={isSelected}
                 >
                     [m]

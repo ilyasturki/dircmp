@@ -7,6 +7,7 @@ import type {
     FileEntry,
     PanelSide,
 } from '~/utils/types'
+import { borderFor } from '~/utils/theme'
 import { EntryRow, MissingEntryRow } from './entry-row'
 import { PanelBox } from './panel-box'
 
@@ -53,7 +54,7 @@ export function DirectoryPanel({
     return (
         <PanelBox
             title={rootPath}
-            borderColor={isFocused ? 'cyan' : 'gray'}
+            borderColor={borderFor(isFocused)}
             side={side}
         >
             {entries.length === 0 ?

@@ -5,6 +5,7 @@ import type { AppConfig } from '~/utils/config'
 import type { Action, SortDirection, SortMode } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { saveConfig } from '~/utils/config'
+import { theme } from '~/utils/theme'
 import { Dialog } from '../dialog'
 import { KeyboardHints } from '../keyboard-hints'
 
@@ -105,14 +106,16 @@ export function SortDialog({
                         {i === selectedIndex ?
                             <Text
                                 bold
-                                color='cyan'
+                                color={theme.selectionMarker}
                             >
                                 {'▸ '}
                             </Text>
                         :   <Text>{'  '}</Text>}
                         <Text bold={i === selectedIndex}>{item.label}</Text>
                         {item.mode === currentMode && (
-                            <Text color='cyan'>{` ${dirArrow}`}</Text>
+                            <Text
+                                color={theme.selectionMarker}
+                            >{` ${dirArrow}`}</Text>
                         )}
                     </Text>
                 ))}
@@ -121,7 +124,7 @@ export function SortDialog({
                     {onDirsFirstRow ?
                         <Text
                             bold
-                            color='cyan'
+                            color={theme.selectionMarker}
                         >
                             {'▸ '}
                         </Text>

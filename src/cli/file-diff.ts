@@ -1,9 +1,11 @@
 import fsp from 'node:fs/promises'
 import { diffLines } from 'diff'
 
-const RED = '\x1b[31m'
-const GREEN = '\x1b[32m'
-const RESET = '\x1b[0m'
+import { ansiFor, ansiReset } from '~/utils/theme'
+
+const RED = ansiFor('diffRemovedLine')
+const GREEN = ansiFor('diffAddedLine')
+const RESET = ansiReset
 
 export async function runFileDiff(
     leftFile: string,

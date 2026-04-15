@@ -1,10 +1,12 @@
+import type { TextProps } from 'ink'
 import { Text } from 'ink'
 
 import type { CellType, DiffCell as DiffCellData } from './diff-compute'
+import { theme } from '~/utils/theme'
 
-function colorFor(type: CellType): string | undefined {
-    if (type === 'added') return 'green'
-    if (type === 'removed' || type === 'changed') return 'yellow'
+function colorFor(type: CellType): TextProps['color'] {
+    if (type === 'added') return theme.diffAddedLine
+    if (type === 'removed' || type === 'changed') return theme.diffRemovedLine
     return undefined
 }
 
@@ -33,7 +35,8 @@ export function DiffCell({
             String(cell.lineNum).padStart(gutterWidth)
         :   ' '.repeat(gutterWidth))
     const isSelected = inFocusedBlock && isFocusedSide
-    const bg = inFocusedBlock && !isFocusedSide ? 'blackBright' : undefined
+    const bg =
+        inFocusedBlock && !isFocusedSide ? theme.dimSelectedBg : undefined
 
     const truncated =
         showTruncationIndicator && cell.content.length > contentWidth
@@ -52,7 +55,7 @@ export function DiffCell({
                 nodes.push(
                     <Text
                         key={key++}
-                        color='red'
+                        color={theme.diffChangedSegment}
                         bold
                     >
                         {text}
@@ -85,7 +88,7 @@ export function DiffCell({
             nodes.push(
                 <Text
                     key={key++}
-                    color='gray'
+                    color={theme.dimText}
                     dimColor
                 >
                     {'\u203A'}
@@ -103,7 +106,7 @@ export function DiffCell({
                     {cell.content.slice(0, bodyWidth).padEnd(bodyWidth)}
                 </Text>
                 <Text
-                    color='gray'
+                    color={theme.dimText}
                     dimColor
                 >
                     {'\u203A'}
@@ -117,7 +120,8 @@ export function DiffCell({
     // Blank cells have no fg color — without one, `inverse` flips the terminal
     // default (black on light themes) into the background, producing black bars.
     const outerColor =
-        colorFor(cell.type) ?? (cell.type === 'blank' ? 'red' : undefined)
+        colorFor(cell.type)
+        ?? (cell.type === 'blank' ? theme.errorText : undefined)
 
     return (
         <Text
@@ -126,7 +130,7 @@ export function DiffCell({
             inverse={isSelected}
         >
             <Text
-                color={isFocusedSide ? 'cyan' : undefined}
+                color={isFocusedSide ? theme.diffGutterFocused : undefined}
                 dimColor={!isFocusedSide}
                 backgroundColor={bg}
                 inverse={isSelected}

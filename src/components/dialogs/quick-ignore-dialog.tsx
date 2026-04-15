@@ -4,6 +4,7 @@ import { Box, Text, useInput } from 'ink'
 import type { Action, CompareEntry } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { saveGlobalIgnorePatterns, savePairIgnorePattern } from '~/utils/ignore'
+import { theme } from '~/utils/theme'
 import { Dialog } from '../dialog'
 import { KeyboardHints } from '../keyboard-hints'
 
@@ -157,7 +158,7 @@ export function QuickIgnoreDialog({
                         {i === selectedIndex ?
                             <Text
                                 bold
-                                color='cyan'
+                                color={theme.selectionMarker}
                             >
                                 {'▸ '}
                             </Text>

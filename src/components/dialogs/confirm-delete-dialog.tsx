@@ -4,6 +4,7 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { Action, CompareEntry, PanelSide, UndoEntry } from '~/utils/types'
+import { theme } from '~/utils/theme'
 import { moveToTrash } from '~/utils/trash'
 import { Dialog } from '../dialog'
 
@@ -72,8 +73,8 @@ export function ConfirmDeleteDialog({
     })
 
     const options = [
-        { label: 'Confirm', shortcut: 'y', color: 'green' },
-        { label: 'Cancel', shortcut: 'n', color: 'yellow' },
+        { label: 'Confirm', shortcut: 'y', color: theme.buttonConfirm },
+        { label: 'Cancel', shortcut: 'n', color: theme.buttonCancel },
     ] as const
 
     return (
@@ -87,7 +88,7 @@ export function ConfirmDeleteDialog({
                     Delete{' '}
                     <Text
                         bold
-                        color='red'
+                        color={theme.errorText}
                     >
                         {entry.name}
                     </Text>

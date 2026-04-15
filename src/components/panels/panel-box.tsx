@@ -1,3 +1,4 @@
+import type { TextProps } from 'ink'
 import type { ReactNode } from 'react'
 import { Box, Text, useStdout } from 'ink'
 
@@ -5,7 +6,7 @@ import type { PanelSide } from '~/utils/types'
 
 interface PanelBoxProps {
     title: string
-    borderColor: string
+    borderColor: TextProps['color']
     side: PanelSide
     children: ReactNode
 }

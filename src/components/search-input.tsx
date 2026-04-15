@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 import type { Action } from '~/utils/types'
+import { theme } from '~/utils/theme'
 import { TextInput } from './text-input'
 
 interface SearchInputProps {
@@ -36,7 +37,7 @@ export function SearchInput({
     return (
         <Box justifyContent='space-between'>
             <Text wrap='wrap'>
-                <Text color='cyan'>/</Text>
+                <Text color={theme.searchPrefix}>/</Text>
                 <TextInput
                     value={inputValue}
                     onChange={handleChange}

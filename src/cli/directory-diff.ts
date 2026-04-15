@@ -6,6 +6,7 @@ import type { CliIgnoreOptions } from '~/cli/types'
 import type { CompareEntry, DiffStatus, ScanResult } from '~/utils/types'
 import { compareAtPath } from '~/utils/compare'
 import { formatSize } from '~/utils/format-size'
+import { ansiBold, ansiDim, ansiFor, ansiReset } from '~/utils/theme'
 import { cliScan } from './scan'
 
 interface DiffOptions {
@@ -67,11 +68,11 @@ function statusSymbol(status: DiffStatus): string {
 function statusColor(status: DiffStatus): string {
     switch (status) {
         case 'modified':
-            return '\x1b[33m' // yellow
+            return ansiFor('entryModified')
         case 'only-left':
-            return '\x1b[31m' // red
+            return ansiFor('entryOnlyLeft')
         case 'only-right':
-            return '\x1b[32m' // green
+            return ansiFor('entryOnlyRight')
         case 'identical':
             return ''
     }
@@ -123,11 +124,11 @@ async function computeLineDiffs(
     return result
 }
 
-const RESET = '\x1b[0m'
-const DIM = '\x1b[2m'
-const BOLD = '\x1b[1m'
-const GREEN = '\x1b[32m'
-const RED = '\x1b[31m'
+const RESET = ansiReset
+const DIM = ansiDim
+const BOLD = ansiBold
+const GREEN = ansiFor('diffAddedCount')
+const RED = ansiFor('diffRemovedCount')
 
 function formatLineDiff(ld: LineDiff | undefined): string {
     if (!ld) return ''

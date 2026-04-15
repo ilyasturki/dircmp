@@ -25,6 +25,7 @@ import {
 import { defaultKeymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
 import { loadKeybindings, resolveKeymap } from '~/utils/keybindings'
+import { theme } from '~/utils/theme'
 import { initTrashSession } from '~/utils/trash'
 
 interface AppProps {
@@ -176,7 +177,7 @@ export function App({
     if (state.error) {
         return (
             <Box>
-                <Text color='red'>Error: {state.error}</Text>
+                <Text color={theme.errorText}>Error: {state.error}</Text>
             </Box>
         )
     }
@@ -198,7 +199,7 @@ export function App({
                     justifyContent='center'
                     alignItems='center'
                 >
-                    <Text color='yellow'>Scanning directories...</Text>
+                    <Text color={theme.loading}>Scanning directories...</Text>
                 </Box>
             :   <DirectoryDiff
                     leftDir={effectiveLeftDir}

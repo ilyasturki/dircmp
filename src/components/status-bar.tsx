@@ -18,6 +18,7 @@ import type {
 import { isBinary } from '~/utils/binary'
 import { countDescendantDiffs } from '~/utils/compare'
 import { formatSize } from '~/utils/format-size'
+import { theme } from '~/utils/theme'
 import { KeyboardHints } from './keyboard-hints'
 import { SearchInput } from './search-input'
 
@@ -287,8 +288,8 @@ function getEntryInfo(
             return (
                 <>
                     {prefix !== '' && `${prefix}${SEP}`}
-                    <Text color='green'>+{added}</Text>{' '}
-                    <Text color='red'>-{removed}</Text>
+                    <Text color={theme.diffAddedCount}>+{added}</Text>{' '}
+                    <Text color={theme.diffRemovedCount}>-{removed}</Text>
                     {suffix !== '' && `${SEP}${suffix}`}
                 </>
             )
@@ -361,7 +362,7 @@ export function StatusBar({
     if (isLoading) {
         return (
             <Box flexDirection='column'>
-                <Text color='yellow'>Scanning directories...</Text>
+                <Text color={theme.loading}>Scanning directories...</Text>
                 <Text> </Text>
             </Box>
         )
@@ -385,18 +386,22 @@ export function StatusBar({
                 />
             :   <Box justifyContent='space-between'>
                     <Box>
-                        <Text color='cyan'>{filterLabel} </Text>
-                        <Text color='cyan'>{sortLabel} </Text>
-                        {ignoreEnabled && <Text color='cyan'>[ignore] </Text>}
+                        <Text color={theme.statusBarMode}>{filterLabel} </Text>
+                        <Text color={theme.statusBarMode}>{sortLabel} </Text>
+                        {ignoreEnabled && (
+                            <Text color={theme.statusBarMode}>[ignore] </Text>
+                        )}
                         {pendingPairMark && (
-                            <Text color='magenta'>
+                            <Text color={theme.entryPairMark}>
                                 [pair:{' '}
                                 {path.basename(pendingPairMark.relativePath)}
                                 /]{' '}
                             </Text>
                         )}
                         {searchQuery !== '' && (
-                            <Text color='cyan'>[filter: {searchQuery}] </Text>
+                            <Text color={theme.statusBarMode}>
+                                [filter: {searchQuery}]{' '}
+                            </Text>
                         )}
                         {entryInfo != null && <Text dimColor>{entryInfo}</Text>}
                     </Box>

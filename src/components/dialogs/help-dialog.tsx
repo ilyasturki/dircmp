@@ -6,6 +6,7 @@ import type { HelpItem, Shortcut } from '~/keymap'
 import type { Action } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
 import { getHelpItems, groupByMode, MODE_LABELS } from '~/keymap'
+import { theme } from '~/utils/theme'
 import { Dialog } from '../dialog'
 import { TextInput } from '../text-input'
 
@@ -128,7 +129,7 @@ export function HelpDialog({
                 {searchActive ?
                     <Box>
                         <Text>
-                            <Text color='cyan'>/</Text>
+                            <Text color={theme.searchPrefix}>/</Text>
                             <TextInput
                                 value={searchQuery}
                                 onChange={handleSearchChange}
@@ -178,7 +179,9 @@ export function HelpDialog({
                                     </Text>
                                 )}
                                 <Text inverse={isSelected}>
-                                    <Text color='cyan'>{keyPart}</Text>
+                                    <Text color={theme.keybindingKey}>
+                                        {keyPart}
+                                    </Text>
                                     {descPart}
                                     {' '.repeat(pad)}
                                 </Text>

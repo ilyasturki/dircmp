@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink'
 
 import type { Action, CompareEntry, PanelSide } from '~/utils/types'
 import { useListNavigation } from '~/hooks'
+import { theme } from '~/utils/theme'
 import { Dialog } from './dialog'
 import { KeyboardHints } from './keyboard-hints'
 
@@ -141,7 +142,7 @@ export function ContextMenu({
                             {i === selectedIndex ?
                                 <Text
                                     bold
-                                    color='cyan'
+                                    color={theme.selectionMarker}
                                 >
                                     {'▸ '}
                                 </Text>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 
 import type { Action } from '~/utils/types'
 import { useScrollNavigation } from '~/hooks'
+import { theme } from '~/utils/theme'
 import { Dialog } from '../dialog'
 import { TextInput } from '../text-input'
 
@@ -202,7 +203,7 @@ export function ReleaseNotesDialog({
                 {searchActive ?
                     <Box>
                         <Text>
-                            <Text color='cyan'>/</Text>
+                            <Text color={theme.searchPrefix}>/</Text>
                             <TextInput
                                 value={searchQuery}
                                 onChange={handleSearchChange}
@@ -235,7 +236,7 @@ export function ReleaseNotesDialog({
                                 <Text
                                     key={scrollOffset + i}
                                     bold
-                                    color='cyan'
+                                    color={theme.versionHeader}
                                 >
                                     {line.text}
                                     {pad}
@@ -246,7 +247,7 @@ export function ReleaseNotesDialog({
                             return (
                                 <Text
                                     key={scrollOffset + i}
-                                    color='yellow'
+                                    color={theme.warning}
                                 >
                                     {line.text}
                                     {pad}

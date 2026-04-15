@@ -15,6 +15,7 @@ import type { VisualRow } from './file-diff/diff-compute'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { PanelBox } from '~/components/panels/panel-box'
 import { useUniversalShortcuts } from '~/hooks'
+import { borderFor, theme } from '~/utils/theme'
 import { moveToTrash, restoreFromTrash } from '~/utils/trash'
 import { DiffCell } from './file-diff/diff-cell'
 import {
@@ -331,8 +332,8 @@ export function FileDiff({
         scrollOffset + contentHeight,
     )
 
-    const leftBorderColor = focusedSide === 'left' ? 'cyan' : 'gray'
-    const rightBorderColor = focusedSide === 'right' ? 'cyan' : 'gray'
+    const leftBorderColor = borderFor(focusedSide === 'left')
+    const rightBorderColor = borderFor(focusedSide === 'right')
 
     return (
         <Box
@@ -381,7 +382,7 @@ export function FileDiff({
                         return (
                             <Text
                                 key={visualIdx}
-                                color='gray'
+                                color={theme.dimText}
                             >
                                 {text}
                             </Text>
@@ -411,7 +412,7 @@ export function FileDiff({
                                 justifyContent='center'
                                 alignItems='center'
                             >
-                                <Text color='yellow'>
+                                <Text color={theme.warning}>
                                     {side === 'left' ? error : ''}
                                 </Text>
                             </Box>
@@ -424,7 +425,7 @@ export function FileDiff({
                                 justifyContent='center'
                                 alignItems='center'
                             >
-                                <Text color='yellow'>
+                                <Text color={theme.warning}>
                                     {side === 'left' ? 'Loading...' : ''}
                                 </Text>
                             </Box>

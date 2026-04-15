@@ -13,6 +13,7 @@ import {
     saveKeybindings,
     validateKeyDef,
 } from '~/utils/keybindings'
+import { theme } from '~/utils/theme'
 import { Dialog } from '../dialog'
 import { InputField } from '../input-field'
 import { KeyboardHints } from '../keyboard-hints'
@@ -245,7 +246,9 @@ export function KeybindingsDialog({
                                 {marker}
                                 {desc}
                                 {' '.repeat(gap + (maxDescWidth - desc.length))}
-                                <Text color='cyan'>{keyPart}</Text>{' '}
+                                <Text color={theme.keybindingKey}>
+                                    {keyPart}
+                                </Text>{' '}
                             </Text>
                         </Box>
                     )

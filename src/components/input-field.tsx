@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink'
 
+import { theme } from '~/utils/theme'
 import { TextInput } from './text-input'
 
 interface InputFieldProps {
@@ -62,7 +63,7 @@ export function InputField({
                     focus={focus}
                 />
             </Text>
-            {error && <Text color='red'>{error}</Text>}
+            {error && <Text color={theme.errorText}>{error}</Text>}
             {hint && !error && <Text dimColor> {hint}</Text>}
         </Box>
     )
