@@ -10,6 +10,12 @@ Terminal TUI for comparing two directories side by side.
 [![platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)](https://github.com/ilyasturki/dircmp/releases)
 [![License: MIT](https://img.shields.io/github/license/ilyasturki/dircmp)](LICENSE)
 
+## Why
+
+I was a heavy Beyond Compare and Meld user, but coming from vim, their UX never felt right — my hands expect `hjkl`, not a mouse. I couldn't find a TUI directory differ worth using, so I built one for myself. Keybindings are vim-style by default and fully customizable.
+
+A note on the stack: dircmp is TypeScript + Ink + React. Go or Rust would be better suited for walking large trees, but TypeScript let me ship quickly. Performance on monorepo-scale trees hasn't been seriously stress-tested, and binary-file handling is minimal — it flags that files differ, but doesn't show you how.
+
 ## Features
 
 - **See differences at a glance** — side-by-side tree with color-coded status, instant `]c`/`[c` jumps between changes, and `zR`/`zM` to fold the whole tree

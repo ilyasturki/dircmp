@@ -2,7 +2,7 @@
     "name": "@ilyasturki/dircmp",
     "version": "1.4.0",
     "type": "module",
-    "description": "Terminal TUI for comparing two directories side by side",
+    "description": "Side-by-side directory and file diff for your terminal",
     "author": "Ilyas Turki",
     "license": "MIT",
     "homepage": "https://github.com/ilyasturki/dircmp#readme",
