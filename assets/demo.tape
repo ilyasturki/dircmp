@@ -15,9 +15,9 @@ Set Shell bash
 Hide
 Type "export DIRCMP_RECORDING=1"
 Enter
-Type "export XDG_CONFIG_HOME=./.dev/config"
+Type "export XDG_CONFIG_HOME=./.prod/config"
 Enter
-Type "export XDG_DATA_HOME=./.dev/data"
+Type "export XDG_DATA_HOME=./.prod/data"
 Enter
 Type "alias dircmp=./dircmp"
 Enter
