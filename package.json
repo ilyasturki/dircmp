@@ -38,7 +38,7 @@
         "dev:prod": "XDG_CONFIG_HOME=./.prod/config XDG_DATA_HOME=./.prod/data tsx src/index.tsx",
         "format": "prettier --write '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
         "format:check": "prettier --check '**/*.{js,ts,jsx,tsx,vue,css,scss,html,json,md,yml}'",
-        "build": "bun build src/index.tsx --compile --outfile dircmp",
+        "build": "bun scripts/build-binary.ts --outfile dircmp",
         "build:npm": "bun build src/index.tsx --outfile dist/index.js --target=node --define process.env.DEV='\"false\"'",
         "prepublishOnly": "bun run build:npm",
         "test": "bun test",

@@ -50,7 +50,7 @@
             buildPhase = ''
               cp -r ${node_modules} node_modules
               chmod -R u+w node_modules
-              bun build src/index.tsx --compile --outfile dircmp
+              bun scripts/build-binary.ts --outfile dircmp
             '';
             installPhase = ''
               mkdir -p $out/bin

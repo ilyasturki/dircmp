@@ -15,14 +15,22 @@ import {
 } from '~/utils/rclone'
 import pkg from '../package.json'
 
+// Injected at compile time via `bun build --define __CHANGELOG__=...`.
+// Undefined in tsx/dev and npm-bundle runs; those fall back to fs.readFileSync below.
+declare const __CHANGELOG__: string
+
 let changelogText = ''
-try {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url))
-    changelogText = fs.readFileSync(
-        path.join(__dirname, '..', 'CHANGELOG.md'),
-        'utf-8',
-    )
-} catch {}
+if (typeof __CHANGELOG__ !== 'undefined') {
+    changelogText = __CHANGELOG__
+} else {
+    try {
+        const __dirname = path.dirname(fileURLToPath(import.meta.url))
+        changelogText = fs.readFileSync(
+            path.join(__dirname, '..', 'CHANGELOG.md'),
+            'utf-8',
+        )
+    } catch {}
+}
 
 const HELP_TEXT = `
   Usage
