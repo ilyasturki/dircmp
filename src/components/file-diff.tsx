@@ -272,11 +272,15 @@ export function FileDiff({
         ],
     )
 
-    // Suppress closeFileDiff (Esc/q) while in line mode — Esc exits line mode.
+    // In line mode, narrow closeFileDiff to `q` only so Esc can exit line mode.
     const activeKeymap = useMemo(
         () =>
             isLineMode ?
-                (keymap ?? []).filter((s) => s.id !== 'closeFileDiff')
+                (keymap ?? []).map((s) =>
+                    s.id === 'closeFileDiff' ?
+                        { ...s, match: (input: string) => input === 'q' }
+                    :   s,
+                )
             :   (keymap ?? []),
         [keymap, isLineMode],
     )
