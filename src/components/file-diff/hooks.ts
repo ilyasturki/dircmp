@@ -178,15 +178,17 @@ export function useAutoScroll(
             focusedRange.end + contextPadding,
         )
         setScrollOffset((prev) => {
-            if (extStart < prev) return extStart
-            if (extEnd >= prev + contentHeight) {
-                const offsetToShowEnd = extEnd - contentHeight + 1
-                return Math.max(
-                    0,
-                    Math.min(offsetToShowEnd, extStart, maxScroll),
-                )
+            const fullyVisible =
+                extStart >= prev && extEnd < prev + contentHeight
+            if (fullyVisible) return prev
+            if (extEnd - extStart + 1 > contentHeight) {
+                // Taller than viewport: top-anchor so the hunk header stays in view.
+                return Math.max(0, Math.min(extStart, maxScroll))
             }
-            return prev
+            const centered = Math.floor(
+                (extStart + extEnd - contentHeight + 1) / 2,
+            )
+            return Math.max(0, Math.min(centered, maxScroll))
         })
     }, [focusedRange, totalRows, contentHeight, contextPadding])
     return { scrollOffset, setScrollOffset }
