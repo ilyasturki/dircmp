@@ -22,7 +22,7 @@ function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
             hint: 'l',
             action: { type: 'NAVIGATE_INTO' },
         })
-    } else {
+    } else if (entry.status !== 'only-left' && entry.status !== 'only-right') {
         items.push({
             label: 'Open diff',
             hint: 'Enter',

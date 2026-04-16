@@ -257,6 +257,11 @@ export function executeAction(
     if (action.type === 'OPEN_FILE_DIFF') {
         const entry = state.entries[state.cursorIndex]
         if (entry && entry.type === 'file') {
+            if (entry.status === 'only-left' || entry.status === 'only-right') {
+                const side = entry.status === 'only-left' ? 'left' : 'right'
+                onToast?.(`File only exists on ${side}`)
+                return
+            }
             const diffCmd = state.config.diffCommand?.trim()
             if (diffCmd && onShellOut) {
                 const leftPath = path.join(leftDir, entry.relativePath)
