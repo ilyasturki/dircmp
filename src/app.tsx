@@ -101,9 +101,9 @@ export function App({
 
     const handleShellOut = useCallback(
         (command: string, args: string[]) => {
-            process.stdout.write('\x1b[?1049l')
+            process.stdout.write('\x1b[?1049l\x1b[?25h')
             const result = spawnSync(command, args, { stdio: 'inherit' })
-            process.stdout.write('\x1b[?1049h')
+            process.stdout.write('\x1b[?1049h\x1b[?25l')
             dispatch({ type: 'REDRAW' })
             if (result.error) {
                 showToast(`Failed to run: ${command} (${result.error.message})`)

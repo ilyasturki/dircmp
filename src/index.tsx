@@ -361,8 +361,8 @@ if (fileMode && subcommand === 'diff') {
     // Default: interactive TUI
     const { render } = await import('ink')
 
-    const ENTER_ALT_SCREEN = '\x1b[?1049h'
-    const EXIT_ALT_SCREEN = '\x1b[?1049l'
+    const ENTER_ALT_SCREEN = '\x1b[?1049h\x1b[?25l'
+    const EXIT_ALT_SCREEN = '\x1b[?1049l\x1b[?25h'
 
     let inAlternateScreen = false
 
