@@ -172,7 +172,26 @@ function withRecompute(state: AppState, updates: Partial<AppState>): AppState {
         state.cursorIndex,
         Math.max(0, newState.entries.length - 1),
     )
+    newState.scrollOffset = Math.max(
+        0,
+        Math.min(state.scrollOffset, Math.max(0, newState.entries.length - 1)),
+    )
     return newState
+}
+
+/** Adjust scrollOffset so cursorIndex is inside [scrollOffset, scrollOffset+h). */
+function followCursor(
+    cursorIndex: number,
+    scrollOffset: number,
+    entriesLength: number,
+    viewHeight: number,
+): number {
+    const h = Math.max(1, viewHeight)
+    const maxScrollOffset = Math.max(0, entriesLength - h)
+    let next = Math.max(0, Math.min(scrollOffset, maxScrollOffset))
+    if (cursorIndex < next) next = cursorIndex
+    else if (cursorIndex >= next + h) next = cursorIndex - h + 1
+    return Math.max(0, next)
 }
 
 function toggleExpandDir(state: AppState): AppState {
@@ -220,12 +239,7 @@ export function reducer(state: AppState, action: Action): AppState {
                     action.rightScan,
                 )
             }
-            const result = withRecompute(state, updates)
-            result.scrollOffset = Math.min(
-                state.scrollOffset,
-                Math.max(0, result.entries.length - 1),
-            )
-            return result
+            return withRecompute(state, updates)
         }
         case 'SCAN_ERROR':
             return { ...state, error: action.error }
@@ -244,7 +258,17 @@ export function reducer(state: AppState, action: Action): AppState {
             } else {
                 newIndex = state.entries.length - 1
             }
-            return { ...state, cursorIndex: newIndex }
+            if (newIndex === state.cursorIndex) return state
+            const scrollOffset =
+                action.viewHeight !== undefined ?
+                    followCursor(
+                        newIndex,
+                        state.scrollOffset,
+                        state.entries.length,
+                        action.viewHeight,
+                    )
+                :   state.scrollOffset
+            return { ...state, cursorIndex: newIndex, scrollOffset }
         }
         case 'SET_SCROLL_OFFSET':
             return { ...state, scrollOffset: action.offset }
@@ -327,7 +351,17 @@ export function reducer(state: AppState, action: Action): AppState {
             const ancestorIndex = result.entries.findIndex(
                 (e) => e.relativePath === foundAncestor,
             )
-            if (ancestorIndex >= 0) result.cursorIndex = ancestorIndex
+            if (ancestorIndex >= 0) {
+                result.cursorIndex = ancestorIndex
+                if (action.viewHeight !== undefined) {
+                    result.scrollOffset = followCursor(
+                        ancestorIndex,
+                        result.scrollOffset,
+                        result.entries.length,
+                        action.viewHeight,
+                    )
+                }
+            }
             return result
         }
         case 'REFRESH':
@@ -464,6 +498,14 @@ export function reducer(state: AppState, action: Action): AppState {
             )
             if (newIdx === -1) return state
             result.cursorIndex = newIdx
+            if (action.viewHeight !== undefined) {
+                result.scrollOffset = followCursor(
+                    newIdx,
+                    result.scrollOffset,
+                    result.entries.length,
+                    action.viewHeight,
+                )
+            }
             return result
         }
         case 'YANK_PATH':

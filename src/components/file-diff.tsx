@@ -11,7 +11,7 @@ import type {
     HunkUndoEntry,
     PanelSide,
 } from '~/utils/types'
-import type { VisualRow } from './file-diff/diff-compute'
+import type { VisualRow, VisualRowsResult } from './file-diff/diff-compute'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { PanelBox } from '~/components/panels/panel-box'
 import { useUniversalShortcuts } from '~/hooks'
@@ -49,6 +49,12 @@ interface FileDiffProps {
     dialogOpen?: boolean
     showHints?: boolean
     focusedSide?: PanelSide
+}
+
+const EMPTY_VISUAL_RESULT: VisualRowsResult = {
+    rows: [],
+    logicalToVisualStart: new Int32Array(0),
+    logicalToVisualEnd: new Int32Array(0),
 }
 
 function truncatePathLeft(p: string, maxWidth: number): string {
@@ -133,10 +139,13 @@ export function FileDiff({
     }, [changeLineIndices, setLineCursor])
 
     const focusedRowIndex = changeLineIndices[lineCursor]
-    const focusedRange =
-        isLineMode && focusedRowIndex !== undefined ?
-            { start: focusedRowIndex, end: focusedRowIndex }
-        :   hunkRanges[focusedHunk]
+    const focusedRange = useMemo(
+        () =>
+            isLineMode && focusedRowIndex !== undefined ?
+                { start: focusedRowIndex, end: focusedRowIndex }
+            :   hunkRanges[focusedHunk],
+        [isLineMode, focusedRowIndex, hunkRanges, focusedHunk],
+    )
 
     // Esc exits line mode (must run before universal shortcut closes diff).
     useInput(
@@ -294,23 +303,24 @@ export function FileDiff({
     const rightInner = Math.floor(columns / 2) - 2
     const contentWidth = Math.max(0, rightInner - halfOverhead)
 
-    const visualRows = useMemo(
+    const visualResult = useMemo(
         () =>
             diffRows ?
                 expandToVisualRows(diffRows, contentWidth, wrapMode)
-            :   [],
+            :   EMPTY_VISUAL_RESULT,
         [diffRows, contentWidth, wrapMode],
     )
+    const visualRows = visualResult.rows
     const focusedVisualRange = useMemo(
         () =>
             focusedRange ?
                 logicalRangeToVisual(
-                    visualRows,
+                    visualResult,
                     focusedRange.start,
                     focusedRange.end,
                 )
             :   undefined,
-        [focusedRange, visualRows],
+        [focusedRange, visualResult],
     )
 
     const { scrollOffset, setScrollOffset } = useAutoScroll(
@@ -335,6 +345,12 @@ export function FileDiff({
     const leftBorderColor = borderFor(focusedSide === 'left')
     const rightBorderColor = borderFor(focusedSide === 'right')
 
+    const backdrop = useMemo(
+        () =>
+            Array.from({ length: rows }, () => ' '.repeat(columns)).join('\n'),
+        [columns, rows],
+    )
+
     return (
         <Box
             position='absolute'
@@ -343,13 +359,8 @@ export function FileDiff({
             flexDirection='column'
         >
             {/* Blank backdrop */}
-            <Box
-                position='absolute'
-                flexDirection='column'
-            >
-                {Array.from({ length: rows }, (_, i) => (
-                    <Text key={i}>{' '.repeat(columns)}</Text>
-                ))}
+            <Box position='absolute'>
+                <Text>{backdrop}</Text>
             </Box>
 
             {/* Content: two PanelBoxes side by side, path as title */}

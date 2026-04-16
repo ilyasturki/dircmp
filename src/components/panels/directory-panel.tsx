@@ -1,12 +1,8 @@
 import path from 'node:path'
-import { Box, Text, useStdout } from 'ink'
+import { Box, Text } from 'ink'
+import { memo } from 'react'
 
-import type {
-    AppState,
-    CompareEntry,
-    FileEntry,
-    PanelSide,
-} from '~/utils/types'
+import type { AppState, CompareEntry, PanelSide } from '~/utils/types'
 import { borderFor } from '~/utils/theme'
 import { EntryRow, MissingEntryRow } from './entry-row'
 import { PanelBox } from './panel-box'
@@ -21,6 +17,7 @@ interface DirectoryPanelProps {
     scrollOffset: number
     searchQuery: string
     pendingPairMark: AppState['pendingPairMark']
+    columns: number
 }
 
 function EmptyPanel() {
@@ -31,7 +28,7 @@ function EmptyPanel() {
     )
 }
 
-export function DirectoryPanel({
+export const DirectoryPanel = memo(function DirectoryPanel({
     rootPath,
     entries,
     cursorIndex,
@@ -41,9 +38,8 @@ export function DirectoryPanel({
     scrollOffset,
     searchQuery,
     pendingPairMark,
+    columns,
 }: DirectoryPanelProps) {
-    const { stdout } = useStdout()
-    const columns = stdout?.columns ?? 80
     const panelWidth = Math.floor(columns / 2) - 2
 
     const visibleEntries = entries.slice(
@@ -93,14 +89,12 @@ export function DirectoryPanel({
                     const fileEntry = side === 'left' ? entry.left : entry.right
 
                     // For paired entries, show each side's own name
-                    let displayEntry = entry
-                    if (entry.pairedLeftPath && entry.pairedRightPath) {
-                        const displayName =
+                    const displayName =
+                        entry.pairedLeftPath && entry.pairedRightPath ?
                             side === 'left' ?
                                 path.basename(entry.pairedLeftPath)
                             :   path.basename(entry.pairedRightPath)
-                        displayEntry = { ...entry, name: displayName }
-                    }
+                        :   undefined
 
                     const isPendingPairMark =
                         pendingPairMark !== null
@@ -110,7 +104,8 @@ export function DirectoryPanel({
                     return (
                         <EntryRow
                             key={entryKey}
-                            entry={displayEntry}
+                            entry={entry}
+                            displayName={displayName}
                             fileEntry={fileEntry}
                             isSelected={isSelected}
                             isDimSelected={isDimSelected}
@@ -123,4 +118,4 @@ export function DirectoryPanel({
             }
         </PanelBox>
     )
-}
+})

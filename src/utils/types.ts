@@ -94,6 +94,7 @@ export type Action =
           type: 'MOVE_CURSOR'
           direction: 'up' | 'down' | 'top' | 'bottom'
           count?: number
+          viewHeight?: number
       }
     | {
           type: 'SCROLL_VIEWPORT'
@@ -110,7 +111,7 @@ export type Action =
     | { type: 'SWITCH_PANEL' }
     | { type: 'NAVIGATE_INTO' }
     | { type: 'OPEN_FILE_DIFF' }
-    | { type: 'COLLAPSE_PARENT' }
+    | { type: 'COLLAPSE_PARENT'; viewHeight?: number }
     | { type: 'REDRAW' }
     | { type: 'TOGGLE_PREFERENCES' }
     | { type: 'UPDATE_CONFIG'; config: import('~/utils/config').AppConfig }
@@ -138,7 +139,11 @@ export type Action =
           side: PanelSide
           undo?: UndoEntry
       }
-    | { type: 'JUMP_TO_DIFF'; direction: 'next' | 'prev' }
+    | {
+          type: 'JUMP_TO_DIFF'
+          direction: 'next' | 'prev'
+          viewHeight?: number
+      }
     | { type: 'YANK_PATH' }
     | { type: 'OPEN_IN_EDITOR' }
     | { type: 'CONFIRM_DELETE' }

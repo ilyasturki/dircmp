@@ -19,6 +19,7 @@ interface DirectoryDiffProps {
     scrollOffset: number
     searchQuery: string
     pendingPairMark: AppState['pendingPairMark']
+    columns: number
 }
 
 export function DirectoryDiff({
@@ -34,6 +35,7 @@ export function DirectoryDiff({
     scrollOffset,
     searchQuery,
     pendingPairMark,
+    columns,
 }: DirectoryDiffProps) {
     return (
         <Box flexGrow={1}>
@@ -47,6 +49,7 @@ export function DirectoryDiff({
                 scrollOffset={scrollOffset}
                 searchQuery={searchQuery}
                 pendingPairMark={pendingPairMark}
+                columns={columns}
             />
             <DirectoryPanel
                 rootPath={rightLabel ?? rightDir.replace(homeDir, '~')}
@@ -58,6 +61,7 @@ export function DirectoryDiff({
                 scrollOffset={scrollOffset}
                 searchQuery={searchQuery}
                 pendingPairMark={pendingPairMark}
+                columns={columns}
             />
         </Box>
     )

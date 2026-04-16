@@ -72,6 +72,7 @@ export const EntryRow = memo(function EntryRow({
     panelWidth,
     searchQuery = '',
     isPendingPairMark = false,
+    displayName,
 }: {
     entry: CompareEntry
     fileEntry: FileEntry | undefined
@@ -80,6 +81,7 @@ export const EntryRow = memo(function EntryRow({
     panelWidth: number
     searchQuery?: string
     isPendingPairMark?: boolean
+    displayName?: string
 }) {
     const dateFormatter = useDateFormatter()
     const nerdFont = useNerdFont()
@@ -98,12 +100,13 @@ export const EntryRow = memo(function EntryRow({
         : entry.status === 'only-right' ? theme.entryOnlyRight
         : isSymlink ? theme.entrySymlink
         : undefined
+    const baseName = displayName ?? entry.name
     const name =
-        entry.type === 'directory' ? `${entry.name}/`
-        : isSymlink ? `${entry.name}@`
-        : entry.name
+        entry.type === 'directory' ? `${baseName}/`
+        : isSymlink ? `${baseName}@`
+        : baseName
     const indent = '  '.repeat(entry.depth)
-    const icon = getFileIcon(entry.name, entry.type, entry.isExpanded, nerdFont)
+    const icon = getFileIcon(baseName, entry.type, entry.isExpanded, nerdFont)
     const size = fileEntry ? formatSize(fileEntry.size) : ''
     const date = fileEntry ? dateFormatter.format(fileEntry.modifiedTime) : ''
 

@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { Box, Text, useApp, useStdout } from 'ink'
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
@@ -155,25 +155,6 @@ export function App({
 
     const isLoading = !state.leftScan || !state.rightScan
 
-    // Adjust scroll offset to keep cursor in view. Clamp against entries length
-    // so it stays valid after entries shrink (collapse, re-scan, filter).
-    let scrollOffset = state.scrollOffset
-    const maxScrollOffset = Math.max(0, state.entries.length - contentHeight)
-    scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset))
-    if (state.cursorIndex < scrollOffset) {
-        scrollOffset = state.cursorIndex
-    } else if (state.cursorIndex >= scrollOffset + contentHeight) {
-        scrollOffset = state.cursorIndex - contentHeight + 1
-    }
-
-    // Persist the adjusted offset so subsequent cursor moves inside the viewport
-    // don't recompute from a stale baseline (e.g., after jump-to-bottom).
-    useEffect(() => {
-        if (scrollOffset !== state.scrollOffset) {
-            dispatch({ type: 'SET_SCROLL_OFFSET', offset: scrollOffset })
-        }
-    }, [scrollOffset, state.scrollOffset])
-
     if (state.error) {
         return (
             <Box>
@@ -215,9 +196,10 @@ export function App({
                         || state.searchInputActive
                     }
                     visibleHeight={contentHeight}
-                    scrollOffset={scrollOffset}
+                    scrollOffset={state.scrollOffset}
                     searchQuery={state.searchQuery}
                     pendingPairMark={state.pendingPairMark}
+                    columns={columns}
                 />
             }
             <StatusBar

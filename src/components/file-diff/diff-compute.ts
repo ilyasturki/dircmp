@@ -333,62 +333,67 @@ export interface VisualRow {
     right?: DiffCell
 }
 
+export interface VisualRowsResult {
+    rows: VisualRow[]
+    /** Visual row index of the first visual row for each logical index. */
+    logicalToVisualStart: Int32Array
+    /** Visual row index of the last visual row for each logical index. */
+    logicalToVisualEnd: Int32Array
+}
+
 export function expandToVisualRows(
     diffRows: DiffRow[],
     contentWidth: number,
     wrap: boolean,
-): VisualRow[] {
-    const out: VisualRow[] = []
-    for (let i = 0; i < diffRows.length; i++) {
+): VisualRowsResult {
+    const rows: VisualRow[] = []
+    const n = diffRows.length
+    const logicalToVisualStart = new Int32Array(n)
+    const logicalToVisualEnd = new Int32Array(n)
+    for (let i = 0; i < n; i++) {
         const row = diffRows[i]
+        logicalToVisualStart[i] = rows.length
         if (row.kind === 'hunk-header') {
-            out.push({ logicalIndex: i, isContinuation: false, row })
-            continue
-        }
-        if (!wrap) {
-            out.push({
+            rows.push({ logicalIndex: i, isContinuation: false, row })
+        } else if (!wrap) {
+            rows.push({
                 logicalIndex: i,
                 isContinuation: false,
                 row,
                 left: row.left,
                 right: row.right,
             })
-            continue
+        } else {
+            const l = wrapCell(row.left, contentWidth)
+            const r = wrapCell(row.right, contentWidth)
+            const parts = Math.max(l.length, r.length)
+            for (let k = 0; k < parts; k++) {
+                rows.push({
+                    logicalIndex: i,
+                    isContinuation: k > 0,
+                    row,
+                    left: l[k] ?? BLANK_CELL,
+                    right: r[k] ?? BLANK_CELL,
+                })
+            }
         }
-        const l = wrapCell(row.left, contentWidth)
-        const r = wrapCell(row.right, contentWidth)
-        const n = Math.max(l.length, r.length)
-        for (let k = 0; k < n; k++) {
-            out.push({
-                logicalIndex: i,
-                isContinuation: k > 0,
-                row,
-                left: l[k] ?? BLANK_CELL,
-                right: r[k] ?? BLANK_CELL,
-            })
-        }
+        logicalToVisualEnd[i] = rows.length - 1
     }
-    return out
+    return { rows, logicalToVisualStart, logicalToVisualEnd }
 }
 
 export function logicalRangeToVisual(
-    visualRows: VisualRow[],
+    result: VisualRowsResult,
     logicalStart: number,
     logicalEnd: number,
 ): HunkRange | undefined {
-    let start = -1
-    let end = -1
-    for (let i = 0; i < visualRows.length; i++) {
-        const li = visualRows[i].logicalIndex
-        if (li >= logicalStart && li <= logicalEnd) {
-            if (start === -1) start = i
-            end = i
-        } else if (start !== -1) {
-            break
-        }
+    const { logicalToVisualStart, logicalToVisualEnd } = result
+    if (logicalStart < 0 || logicalEnd >= logicalToVisualStart.length)
+        return undefined
+    return {
+        start: logicalToVisualStart[logicalStart],
+        end: logicalToVisualEnd[logicalEnd],
     }
-    if (start === -1) return undefined
-    return { start, end }
 }
 
 export function computeGutterWidth(diffRows: DiffRow[] | null): number {

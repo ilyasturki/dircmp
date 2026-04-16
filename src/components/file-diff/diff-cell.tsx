@@ -1,5 +1,6 @@
 import type { TextProps } from 'ink'
 import { Text } from 'ink'
+import { memo } from 'react'
 
 import type { CellType, DiffCell as DiffCellData } from './diff-compute'
 import { theme } from '~/utils/theme'
@@ -20,7 +21,7 @@ interface DiffCellProps {
     gutterOverride?: string
 }
 
-export function DiffCell({
+export const DiffCell = memo(function DiffCell({
     cell,
     inFocusedBlock,
     isFocusedSide,
@@ -141,4 +142,4 @@ export function DiffCell({
             {body}
         </Text>
     )
-}
+})

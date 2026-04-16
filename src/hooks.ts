@@ -301,6 +301,7 @@ export function useKeymap(
                     type: 'MOVE_CURSOR',
                     direction: result.direction,
                     count: result.count,
+                    viewHeight: contentHeight,
                 })
                 return
             }
@@ -328,6 +329,9 @@ export function useKeymap(
             if (
                 action.type === 'SCROLL_VIEWPORT'
                 || action.type === 'SCROLL_LINES'
+                || action.type === 'MOVE_CURSOR'
+                || action.type === 'JUMP_TO_DIFF'
+                || action.type === 'COLLAPSE_PARENT'
             ) {
                 action = { ...action, viewHeight: contentHeight }
             }
