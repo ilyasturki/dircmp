@@ -220,4 +220,7 @@ export interface AppState {
     sortDirection: SortDirection
     undoStack: UndoEntry[]
     redoStack: UndoEntry[]
+    // Incremented on REDRAW; rendered as zero-width spaces so the output
+    // string differs after a shell-out, bypassing Ink's frame cache.
+    redrawNonce: number
 }

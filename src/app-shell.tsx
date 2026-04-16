@@ -1,5 +1,5 @@
 import type { Dispatch, ReactNode } from 'react'
-import { Box } from 'ink'
+import { Box, Text } from 'ink'
 
 import type { Shortcut } from '~/keymap'
 import type { Action, AppState } from '~/utils/types'
@@ -78,6 +78,16 @@ export function AppShell({
                     rows={rows}
                 />
             )}
+            {/*
+                Why: after shelling out to $EDITOR/diff tool we exit and re-enter
+                the alt screen, which leaves Ink's last-output cache matching the
+                (now blank) terminal — the next render would be a no-op and the
+                UI looks frozen until the user presses a key. REDRAW increments
+                redrawNonce, and emitting a variable number of zero-width spaces
+                here guarantees Ink's computed output string changes and the
+                full frame is rewritten.
+            */}
+            <Text>{'\u200B'.repeat(state.redrawNonce & 1)}</Text>
         </Box>
     )
 }

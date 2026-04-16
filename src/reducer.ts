@@ -34,6 +34,7 @@ export function createInitialState(init: {
         sortDirection: 'asc',
         undoStack: [],
         redoStack: [],
+        redrawNonce: 0,
     }
 }
 
@@ -608,7 +609,7 @@ export function reducer(state: AppState, action: Action): AppState {
             }
         }
         case 'REDRAW':
-            return { ...state }
+            return { ...state, redrawNonce: state.redrawNonce + 1 }
         case 'SHOW_HELP':
             return { ...state, dialog: 'help' }
         case 'SHOW_FILE_DIFF':
