@@ -1,6 +1,6 @@
 {
     "name": "@ilyasturki/dircmp",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "type": "module",
     "description": "Side-by-side directory and file diff for your terminal",
     "author": "Ilyas Turki",

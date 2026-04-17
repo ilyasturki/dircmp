@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.5.0]
+
+### Added
+
+- `All changes` filter mode that shows modified, only-left, and only-right entries together
+- Pair two single-only files with `m`/`m` to open them in the file diff view
+
+### Changed
+
+- Renamed the `Modified` filter mode to `Only modified` to distinguish it from `All changes`
+- Center small hunks in the diff view; top-anchor tall ones when scrolling
+- Refreshing after a file edit only rescans the edited file instead of the whole tree
+
+### Fixed
+
+- Collapse dissimilar `-`/`+` line pairs into a single changed row instead of stacking them
+- Keep the diff visible while reloading after a context-size change or hunk action
+- Render CRLF carriage returns as a dim grey glyph instead of a raw terminal control character
+- Allow `q` to close the file diff view while in line-selection mode
+- Block opening the diff view on one-sided entries; pair them with `m`/`m` first
+- Force a repaint after shelling out so the alt-screen UI redraws cleanly
+- Hide the terminal cursor in the alt screen
+- Embed release notes in compiled binaries so the in-app `n` dialog works in built releases
+
+### Performance
+
+- Memoize panels and precompute the visual row mapping for smoother scrolling
+
 ## [1.4.0]
 
 ### Added

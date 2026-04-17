@@ -214,7 +214,7 @@ Works everywhere.
 | `d`     | Delete selected entry           |
 | `y`     | Yank file path to clipboard     |
 | `e`     | Open focused entry in `$EDITOR` |
-| `m`     | Mark/pair renamed directory     |
+| `m`     | Mark/pair renamed dir or file   |
 | `M`     | Unpair directory                |
 | `Esc`   | Clear pending pair mark         |
 
@@ -288,15 +288,15 @@ Patterns use gitignore syntax and are stored under `$XDG_DATA_HOME/dircmp/` (def
 
 Default ignored: `.git`, `node_modules`, `.DS_Store`.
 
-## Manual directory pairing
+## Manual pairing
 
-When a directory has been renamed on one side, it shows up as two unmatched entries (one left-only, one right-only) instead of being compared together. Manual pairing lets you tell dircmp that two differently-named directories are logically the same, so their contents are diffed against each other.
+When a directory or file has been renamed on one side, it shows up as two unmatched entries (one left-only, one right-only) instead of being compared together. Manual pairing lets you tell dircmp that two differently-named entries are logically the same, so they diff against each other.
 
-1. Navigate to the directory on one side and press `m` — a magenta `[m]` indicator appears next to the name.
-2. Switch to the other panel (`Tab`) and navigate to the corresponding renamed directory.
-3. Press `m` again — the pairing is created and the two directories are compared as one entry.
+1. Navigate to the entry on one side and press `m` — a magenta `[m]` indicator appears next to the name.
+2. Switch to the other panel (`Tab`) and navigate to the corresponding renamed entry.
+3. Press `m` again — for directories, the pairing is created and they are compared as one entry; for files, the file diff view opens immediately.
 
-Both directories must share the same parent directory. To cancel a pending mark before pairing, press `m` on the marked directory, `M`, or `Escape`. To remove an existing pairing, press `M` on the paired entry or restart the app.
+Both entries must share the same parent directory and be of the same kind (dir-with-dir, file-with-file). To cancel a pending mark before pairing, press `m` on the marked entry, `M`, or `Escape`. To remove an existing directory pairing, press `M` on the paired entry or restart the app.
 
 ## Color coding
 
