@@ -1,11 +1,16 @@
 import fs from 'node:fs'
 import { useInput } from 'ink'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { CompareEntry } from '~/utils/types'
 import type { DiffRow, HunkRange } from './diff-compute'
 import { computeDiffRows } from './diff-compute'
 import { readFileForDiff } from './read-file'
+
+type LoadState =
+    | { status: 'loading' }
+    | { status: 'error'; error: string }
+    | { status: 'loaded'; leftContent: string; rightContent: string }
 
 export function useDiffRows(
     entry: CompareEntry,
@@ -19,15 +24,10 @@ export function useDiffRows(
     leftContent: string
     rightContent: string
 } {
-    const [diffRows, setDiffRows] = useState<DiffRow[] | null>(null)
-    const [error, setError] = useState<string | null>(null)
-    const [leftContent, setLeftContent] = useState('')
-    const [rightContent, setRightContent] = useState('')
+    const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' })
 
     useEffect(() => {
         let cancelled = false
-        setError(null)
-        setDiffRows(null)
 
         async function load() {
             try {
@@ -43,7 +43,7 @@ export function useDiffRows(
                     const result = await readFileForDiff(leftPath)
                     if (cancelled) return
                     if ('error' in result) {
-                        setError(result.error)
+                        setLoadState({ status: 'error', error: result.error })
                         return
                     }
                     leftText = result.content
@@ -53,33 +53,26 @@ export function useDiffRows(
                     const result = await readFileForDiff(rightPath)
                     if (cancelled) return
                     if ('error' in result) {
-                        setError(result.error)
+                        setLoadState({ status: 'error', error: result.error })
                         return
                     }
                     rightText = result.content
                 }
-
-                const computed = computeDiffRows(
-                    leftText,
-                    rightText,
-                    entry.relativePath,
-                    entry.relativePath,
-                    context,
-                )
-
                 if (cancelled) return
-                setLeftContent(leftText)
-                setRightContent(rightText)
-                if (computed.length === 0) {
-                    setError('Files are identical')
-                } else {
-                    setDiffRows(computed)
-                }
+                setLoadState({
+                    status: 'loaded',
+                    leftContent: leftText,
+                    rightContent: rightText,
+                })
             } catch (e) {
                 if (!cancelled) {
-                    setError(
-                        e instanceof Error ? e.message : 'Failed to read file',
-                    )
+                    setLoadState({
+                        status: 'error',
+                        error:
+                            e instanceof Error ?
+                                e.message
+                            :   'Failed to read file',
+                    })
                 }
             }
         }
@@ -88,7 +81,31 @@ export function useDiffRows(
         return () => {
             cancelled = true
         }
-    }, [entry, leftPath, rightPath, reloadKey, context])
+        // `context` is omitted: it's applied via useMemo below so `{`/`}`
+        // don't trigger a file re-read. loadState isn't reset on re-runs so
+        // the previous diff stays visible during reloads (no "Loading" flash).
+    }, [entry, leftPath, rightPath, reloadKey])
+
+    const computed = useMemo(() => {
+        if (loadState.status !== 'loaded') return null
+        return computeDiffRows(
+            loadState.leftContent,
+            loadState.rightContent,
+            entry.relativePath,
+            entry.relativePath,
+            context,
+        )
+    }, [loadState, entry.relativePath, context])
+
+    const diffRows = computed !== null && computed.length > 0 ? computed : null
+    const error =
+        loadState.status === 'error' ? loadState.error
+        : computed !== null && computed.length === 0 ? 'Files are identical'
+        : null
+    const leftContent =
+        loadState.status === 'loaded' ? loadState.leftContent : ''
+    const rightContent =
+        loadState.status === 'loaded' ? loadState.rightContent : ''
 
     return { diffRows, error, leftContent, rightContent }
 }
