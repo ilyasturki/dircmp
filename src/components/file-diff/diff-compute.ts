@@ -95,17 +95,12 @@ function flushChangeBlock(
             rows.push({
                 kind: 'split',
                 left: {
-                    type: 'removed',
+                    type: 'changed',
                     lineNum: r.lineNum,
                     content: r.content,
                 },
-                right: BLANK_CELL,
-            })
-            rows.push({
-                kind: 'split',
-                left: BLANK_CELL,
                 right: {
-                    type: 'added',
+                    type: 'changed',
                     lineNum: a.lineNum,
                     content: a.content,
                 },
