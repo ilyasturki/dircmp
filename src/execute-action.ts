@@ -272,7 +272,7 @@ export function executeAction(
             }
             dispatch({
                 type: 'SHOW_FILE_DIFF',
-                entryIndex: state.cursorIndex,
+                source: { kind: 'entry', index: state.cursorIndex },
             })
             return
         }

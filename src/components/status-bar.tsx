@@ -10,6 +10,7 @@ import type {
     Action,
     CompareEntry,
     FilterMode,
+    PairableType,
     PanelSide,
     ScanResult,
     SortDirection,
@@ -41,7 +42,11 @@ interface StatusBarProps {
     columns: number
     entryCount: number
     dispatch: Dispatch<Action>
-    pendingPairMark: { relativePath: string; side: PanelSide } | null
+    pendingPairMark: {
+        relativePath: string
+        side: PanelSide
+        type: PairableType
+    } | null
     sortMode: SortMode
     sortDirection: SortDirection
 }
@@ -395,7 +400,10 @@ export function StatusBar({
                             <Text color={theme.entryPairMark}>
                                 [pair:{' '}
                                 {path.basename(pendingPairMark.relativePath)}
-                                /]{' '}
+                                {pendingPairMark.type === 'directory' ?
+                                    '/'
+                                :   ''}
+                                ]{' '}
                             </Text>
                         )}
                         {searchQuery !== '' && (

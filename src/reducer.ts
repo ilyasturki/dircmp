@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import type { AppConfig } from '~/utils/config'
 import type { Action, AppState, CompareEntry, PanelSide } from '~/utils/types'
 import { buildVisibleTree, filterByMode } from '~/utils/compare'
@@ -24,7 +26,7 @@ export function createInitialState(init: {
         ignoreEnabled: init.ignoreEnabled,
         globalIgnorePatterns: [],
         pairIgnorePatterns: [],
-        fileDiffEntryIndex: null,
+        fileDiffSource: null,
         keybindingVersion: 0,
         searchQuery: '',
         searchInputActive: false,
@@ -658,39 +660,56 @@ export function reducer(state: AppState, action: Action): AppState {
             return {
                 ...state,
                 view: 'fileDiff',
-                fileDiffEntryIndex: action.entryIndex,
+                fileDiffSource: action.source,
             }
         case 'HIDE_FILE_DIFF':
             return {
                 ...state,
                 view: 'directoryDiff',
                 dialog: null,
-                fileDiffEntryIndex: null,
+                fileDiffSource: null,
             }
         case 'PATCH_FILE_ENTRY': {
             if (!state.leftScan || !state.rightScan) return state
             const updates: Partial<AppState> = {}
-            if (action.left !== undefined) {
+            if (action.left) {
                 const leftScan = new Map(state.leftScan)
-                if (action.left) leftScan.set(action.relativePath, action.left)
-                else leftScan.delete(action.relativePath)
+                if (action.left.entry)
+                    leftScan.set(action.left.relativePath, action.left.entry)
+                else leftScan.delete(action.left.relativePath)
                 updates.leftScan = leftScan
             }
-            if (action.right !== undefined) {
+            if (action.right) {
                 const rightScan = new Map(state.rightScan)
-                if (action.right)
-                    rightScan.set(action.relativePath, action.right)
-                else rightScan.delete(action.relativePath)
+                if (action.right.entry)
+                    rightScan.set(action.right.relativePath, action.right.entry)
+                else rightScan.delete(action.right.relativePath)
                 updates.rightScan = rightScan
             }
             const next = withRecompute(state, updates)
-            const newIdx = next.entries.findIndex(
-                (e) => e.relativePath === action.relativePath,
-            )
-            if (newIdx !== -1) {
-                next.cursorIndex = newIdx
-                if (state.fileDiffEntryIndex !== null) {
-                    next.fileDiffEntryIndex = newIdx
+            // Re-lock cursor / file-diff index only when the patch targets
+            // a single entry row (both sides same relative path, or only one
+            // side provided).
+            const leftRel = action.left?.relativePath
+            const rightRel = action.right?.relativePath
+            const trackPath =
+                leftRel && rightRel ?
+                    leftRel === rightRel ?
+                        leftRel
+                    :   null
+                :   (leftRel ?? rightRel ?? null)
+            if (trackPath !== null) {
+                const newIdx = next.entries.findIndex(
+                    (e) => e.relativePath === trackPath,
+                )
+                if (newIdx !== -1) {
+                    next.cursorIndex = newIdx
+                    if (state.fileDiffSource?.kind === 'entry') {
+                        next.fileDiffSource = {
+                            kind: 'entry',
+                            index: newIdx,
+                        }
+                    }
                 }
             }
             return next
@@ -733,12 +752,15 @@ export function reducer(state: AppState, action: Action): AppState {
             })
         case 'MARK_PAIR': {
             const entry = state.entries[state.cursorIndex]
-            if (!entry || entry.type !== 'directory') return state
+            if (!entry) return state
+            if (entry.type !== 'directory' && entry.type !== 'file')
+                return state
             if (entry.status !== 'only-left' && entry.status !== 'only-right')
                 return state
 
             const side: PanelSide =
                 entry.status === 'only-left' ? 'left' : 'right'
+            const markType = entry.type
 
             // Toggle off if pressing on the already-marked entry
             if (
@@ -749,17 +771,23 @@ export function reducer(state: AppState, action: Action): AppState {
                 return { ...state, pendingPairMark: null }
             }
 
-            if (!state.pendingPairMark || state.pendingPairMark.side === side) {
+            // Same side, no pending, or type mismatch — replace pending mark
+            if (
+                !state.pendingPairMark
+                || state.pendingPairMark.side === side
+                || state.pendingPairMark.type !== markType
+            ) {
                 return {
                     ...state,
                     pendingPairMark: {
                         relativePath: entry.relativePath,
                         side,
+                        type: markType,
                     },
                 }
             }
 
-            // Opposite side: create the pairing
+            // Opposite side, matching type: create the pairing
             const leftPath =
                 side === 'right' ?
                     state.pendingPairMark.relativePath
@@ -780,6 +808,20 @@ export function reducer(state: AppState, action: Action): AppState {
                 :   ''
             if (leftParent !== rightParent) {
                 return { ...state, pendingPairMark: null }
+            }
+
+            if (markType === 'file') {
+                return {
+                    ...state,
+                    pendingPairMark: null,
+                    view: 'fileDiff',
+                    fileDiffSource: {
+                        kind: 'pair',
+                        leftRelativePath: leftPath,
+                        rightRelativePath: rightPath,
+                        name: path.basename(rightPath),
+                    },
+                }
             }
 
             const manualPairings = new Map(state.manualPairings)

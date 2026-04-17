@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process'
+import path from 'node:path'
 import { Box, Text, useApp, useStdout } from 'ink'
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
 import type { AppConfig } from '~/utils/config'
-import type { Action, ScanResult } from '~/utils/types'
+import type { Action, CompareEntry, ScanResult } from '~/utils/types'
 import { AppShell } from '~/app-shell'
 import { ContextMenu } from '~/components/context-menu'
 import { ConfirmDeleteDialog } from '~/components/dialogs/confirm-delete-dialog'
@@ -88,6 +89,39 @@ export function App({
     const effectiveRightDir = state.swapped ? leftDir : rightDir
     const effectiveLeftLabel = state.swapped ? rightLabel : leftLabel
     const effectiveRightLabel = state.swapped ? leftLabel : rightLabel
+
+    const fileDiffProps = useMemo(() => {
+        const source = state.fileDiffSource
+        if (!source) return null
+        if (source.kind === 'entry') {
+            const entry = state.entries[source.index]
+            if (!entry) return null
+            return { entry }
+        }
+        const entry: CompareEntry = {
+            relativePath: source.rightRelativePath,
+            name: source.name,
+            type: 'file',
+            status: 'modified',
+            depth: 0,
+            isExpanded: false,
+        }
+        return {
+            entry,
+            leftFilePath: path.join(effectiveLeftDir, source.leftRelativePath),
+            rightFilePath: path.join(
+                effectiveRightDir,
+                source.rightRelativePath,
+            ),
+            leftRelativePath: source.leftRelativePath,
+            rightRelativePath: source.rightRelativePath,
+        }
+    }, [
+        state.fileDiffSource,
+        state.entries,
+        effectiveLeftDir,
+        effectiveRightDir,
+    ])
 
     // Reserve rows: status bar (2 with hints, 1 without) + 3 for borders
     const contentHeight = Math.max(1, rows - (state.config.showHints ? 5 : 4))
@@ -225,25 +259,27 @@ export function App({
                 sortMode={state.sortMode}
                 sortDirection={state.sortDirection}
             />
-            {state.view === 'fileDiff'
-                && state.fileDiffEntryIndex !== null
-                && state.entries[state.fileDiffEntryIndex] && (
-                    <FileDiff
-                        entry={state.entries[state.fileDiffEntryIndex]!}
-                        leftDir={effectiveLeftDir}
-                        rightDir={effectiveRightDir}
-                        dispatch={dispatch}
-                        onToast={showToast}
-                        columns={columns}
-                        rows={rows}
-                        keymap={keymap}
-                        dialogOpen={state.dialog !== null}
-                        showHints={state.config.showHints}
-                        focusedSide={state.focusedPanel}
-                        compareContents={state.config.compareContents}
-                        followSymlinks={followSymlinks}
-                    />
-                )}
+            {state.view === 'fileDiff' && fileDiffProps !== null && (
+                <FileDiff
+                    entry={fileDiffProps.entry}
+                    leftDir={effectiveLeftDir}
+                    rightDir={effectiveRightDir}
+                    leftFilePath={fileDiffProps.leftFilePath}
+                    rightFilePath={fileDiffProps.rightFilePath}
+                    leftRelativePath={fileDiffProps.leftRelativePath}
+                    rightRelativePath={fileDiffProps.rightRelativePath}
+                    dispatch={dispatch}
+                    onToast={showToast}
+                    columns={columns}
+                    rows={rows}
+                    keymap={keymap}
+                    dialogOpen={state.dialog !== null}
+                    showHints={state.config.showHints}
+                    focusedSide={state.focusedPanel}
+                    compareContents={state.config.compareContents}
+                    followSymlinks={followSymlinks}
+                />
+            )}
             {state.dialog === 'deleteConfirm'
                 && state.entries[state.cursorIndex] && (
                     <ConfirmDeleteDialog

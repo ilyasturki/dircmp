@@ -47,11 +47,14 @@ function getMenuItems(entry: CompareEntry, side: PanelSide): MenuItem[] {
     }
 
     if (
-        entry.type === 'directory'
+        (entry.type === 'directory' || entry.type === 'file')
         && (entry.status === 'only-left' || entry.status === 'only-right')
     ) {
         items.push({
-            label: 'Pair directory',
+            label:
+                entry.type === 'directory' ?
+                    'Pair directory'
+                :   'Pair file (compare)',
             hint: 'm',
             action: { type: 'MARK_PAIR' },
         })

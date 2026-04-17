@@ -1,4 +1,5 @@
 export type EntryType = 'file' | 'directory' | 'symlink'
+export type PairableType = Exclude<EntryType, 'symlink'>
 
 export interface FileEntry {
     name: string
@@ -32,6 +33,15 @@ export type ScanResult = Map<string, FileEntry>
 export type PanelSide = 'left' | 'right'
 
 export type ViewType = 'directoryDiff' | 'fileDiff'
+
+export type FileDiffSource =
+    | { kind: 'entry'; index: number }
+    | {
+          kind: 'pair'
+          leftRelativePath: string
+          rightRelativePath: string
+          name: string
+      }
 
 export type DialogType =
     | 'preferences'
@@ -179,13 +189,12 @@ export type Action =
     | { type: 'SET_IGNORE_PATTERNS'; global: string[]; pair: string[] }
     | { type: 'SHOW_HELP' }
     | { type: 'HIDE_HELP' }
-    | { type: 'SHOW_FILE_DIFF'; entryIndex: number }
+    | { type: 'SHOW_FILE_DIFF'; source: FileDiffSource }
     | { type: 'HIDE_FILE_DIFF' }
     | {
           type: 'PATCH_FILE_ENTRY'
-          relativePath: string
-          left?: FileEntry | null
-          right?: FileEntry | null
+          left?: { relativePath: string; entry: FileEntry | null }
+          right?: { relativePath: string; entry: FileEntry | null }
       }
     | { type: 'SHOW_KEYBINDINGS_EDITOR' }
     | { type: 'HIDE_KEYBINDINGS_EDITOR' }
@@ -221,11 +230,15 @@ export interface AppState {
     ignoreEnabled: boolean
     globalIgnorePatterns: string[]
     pairIgnorePatterns: string[]
-    fileDiffEntryIndex: number | null
+    fileDiffSource: FileDiffSource | null
     keybindingVersion: number
     searchQuery: string
     searchInputActive: boolean
-    pendingPairMark: { relativePath: string; side: PanelSide } | null
+    pendingPairMark: {
+        relativePath: string
+        side: PanelSide
+        type: PairableType
+    } | null
     manualPairings: Map<string, string>
     sortMode: SortMode
     sortDirection: SortDirection

@@ -42,6 +42,8 @@ interface FileDiffProps {
     rightDir: string
     leftFilePath?: string
     rightFilePath?: string
+    leftRelativePath?: string
+    rightRelativePath?: string
     dispatch: Dispatch<Action>
     onToast?: (message: string) => void
     columns: number
@@ -86,6 +88,8 @@ export function FileDiff({
     rightDir,
     leftFilePath,
     rightFilePath,
+    leftRelativePath,
+    rightRelativePath,
     dispatch,
     onToast,
     columns,
@@ -99,8 +103,17 @@ export function FileDiff({
 }: FileDiffProps) {
     const leftPath = leftFilePath ?? path.join(leftDir, entry.relativePath)
     const rightPath = rightFilePath ?? path.join(rightDir, entry.relativePath)
-    const isDirectoryContext =
-        leftFilePath === undefined && rightFilePath === undefined
+    // Relative paths used to patch the scan maps back on close. Default to
+    // entry.relativePath only when the caller didn't override the file path
+    // (matched-entry mode). When paths are overridden without explicit
+    // relatives (standalone file-diff app) both stay undefined and no patch
+    // is dispatched.
+    const leftRel =
+        leftRelativePath
+        ?? (leftFilePath === undefined ? entry.relativePath : undefined)
+    const rightRel =
+        rightRelativePath
+        ?? (rightFilePath === undefined ? entry.relativePath : undefined)
 
     const [reloadKey, setReloadKey] = useState(0)
     const [undoStack, setUndoStack] = useState<HunkUndoEntry[]>([])
@@ -257,31 +270,40 @@ export function FileDiff({
                 setReloadKey((k) => k + 1)
                 return
             }
-            if (action.type === 'HIDE_FILE_DIFF' && isDirectoryContext) {
+            if (
+                action.type === 'HIDE_FILE_DIFF'
+                && leftRel !== undefined
+                && rightRel !== undefined
+            ) {
                 const editedSides = new Set<PanelSide>()
                 for (const e of undoStack) editedSides.add(e.destSide)
                 for (const e of redoStack) editedSides.add(e.destSide)
                 if (editedSides.size > 0) {
                     dispatch({
                         type: 'PATCH_FILE_ENTRY',
-                        relativePath: entry.relativePath,
                         left:
                             editedSides.has('left') ?
-                                statFileEntrySync(
-                                    leftDir,
-                                    entry.relativePath,
-                                    compareContents,
-                                    followSymlinks,
-                                )
+                                {
+                                    relativePath: leftRel,
+                                    entry: statFileEntrySync(
+                                        leftDir,
+                                        leftRel,
+                                        compareContents,
+                                        followSymlinks,
+                                    ),
+                                }
                             :   undefined,
                         right:
                             editedSides.has('right') ?
-                                statFileEntrySync(
-                                    rightDir,
-                                    entry.relativePath,
-                                    compareContents,
-                                    followSymlinks,
-                                )
+                                {
+                                    relativePath: rightRel,
+                                    entry: statFileEntrySync(
+                                        rightDir,
+                                        rightRel,
+                                        compareContents,
+                                        followSymlinks,
+                                    ),
+                                }
                             :   undefined,
                     })
                 }
@@ -305,10 +327,10 @@ export function FileDiff({
             undoStack,
             redoStack,
             onToast,
-            isDirectoryContext,
             leftDir,
             rightDir,
-            entry.relativePath,
+            leftRel,
+            rightRel,
             compareContents,
             followSymlinks,
         ],
