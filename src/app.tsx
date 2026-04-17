@@ -240,6 +240,8 @@ export function App({
                         dialogOpen={state.dialog !== null}
                         showHints={state.config.showHints}
                         focusedSide={state.focusedPanel}
+                        compareContents={state.config.compareContents}
+                        followSymlinks={followSymlinks}
                     />
                 )}
             {state.dialog === 'deleteConfirm'

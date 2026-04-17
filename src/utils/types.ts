@@ -181,6 +181,12 @@ export type Action =
     | { type: 'HIDE_HELP' }
     | { type: 'SHOW_FILE_DIFF'; entryIndex: number }
     | { type: 'HIDE_FILE_DIFF' }
+    | {
+          type: 'PATCH_FILE_ENTRY'
+          relativePath: string
+          left?: FileEntry | null
+          right?: FileEntry | null
+      }
     | { type: 'SHOW_KEYBINDINGS_EDITOR' }
     | { type: 'HIDE_KEYBINDINGS_EDITOR' }
     | { type: 'KEYBINDINGS_UPDATED' }

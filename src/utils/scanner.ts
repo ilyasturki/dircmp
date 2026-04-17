@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 
@@ -297,6 +298,117 @@ export async function scanDirectory(
         followSymlinks,
     )
     return result
+}
+
+export function statFileEntrySync(
+    rootDir: string,
+    relativePath: string,
+    computeHash: boolean,
+    followSymlinks: boolean,
+): FileEntry | null {
+    const fullPath = path.join(rootDir, relativePath)
+    const name = path.basename(fullPath)
+
+    let lstat: fs.Stats
+    try {
+        lstat = fs.lstatSync(fullPath)
+    } catch {
+        return null
+    }
+
+    if (lstat.isSymbolicLink()) {
+        if (followSymlinks) {
+            try {
+                const resolvedPath = fs.realpathSync(fullPath)
+                const stat = fs.statSync(resolvedPath)
+                if (stat.isDirectory()) {
+                    return {
+                        name,
+                        relativePath,
+                        type: 'directory',
+                        size: 0,
+                        modifiedTime: stat.mtime,
+                        contentHash: null,
+                    }
+                }
+                let contentHash: string | null = null
+                if (computeHash) {
+                    try {
+                        const content = fs.readFileSync(resolvedPath)
+                        contentHash = createHash('sha256')
+                            .update(content)
+                            .digest('hex')
+                    } catch {
+                        // unreadable — leave null
+                    }
+                }
+                return {
+                    name,
+                    relativePath,
+                    type: 'file',
+                    size: stat.size,
+                    modifiedTime: stat.mtime,
+                    contentHash,
+                }
+            } catch {
+                return null
+            }
+        }
+
+        let linkTarget = ''
+        try {
+            linkTarget = fs.readlinkSync(fullPath)
+        } catch {
+            // readlink failed — treat as broken
+        }
+        let broken = false
+        try {
+            fs.statSync(fullPath)
+        } catch {
+            broken = true
+        }
+        return {
+            name,
+            relativePath,
+            type: 'symlink',
+            size: lstat.size,
+            modifiedTime: lstat.mtime,
+            contentHash: null,
+            linkTarget,
+            linkBroken: broken,
+        }
+    }
+
+    if (lstat.isDirectory()) {
+        return {
+            name,
+            relativePath,
+            type: 'directory',
+            size: 0,
+            modifiedTime: lstat.mtime,
+            contentHash: null,
+        }
+    }
+
+    if (!lstat.isFile()) return null
+
+    let contentHash: string | null = null
+    if (computeHash) {
+        try {
+            const content = fs.readFileSync(fullPath)
+            contentHash = createHash('sha256').update(content).digest('hex')
+        } catch {
+            // unreadable — leave null
+        }
+    }
+    return {
+        name,
+        relativePath,
+        type: 'file',
+        size: lstat.size,
+        modifiedTime: lstat.mtime,
+        contentHash,
+    }
 }
 
 export function getEntriesAtPath(

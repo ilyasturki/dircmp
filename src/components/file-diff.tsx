@@ -15,6 +15,7 @@ import type { VisualRow, VisualRowsResult } from './file-diff/diff-compute'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { PanelBox } from '~/components/panels/panel-box'
 import { useUniversalShortcuts } from '~/hooks'
+import { statFileEntrySync } from '~/utils/scanner'
 import { borderFor, theme } from '~/utils/theme'
 import { moveToTrash, restoreFromTrash } from '~/utils/trash'
 import { DiffCell } from './file-diff/diff-cell'
@@ -49,6 +50,8 @@ interface FileDiffProps {
     dialogOpen?: boolean
     showHints?: boolean
     focusedSide?: PanelSide
+    compareContents?: boolean
+    followSymlinks?: boolean
 }
 
 const EMPTY_VISUAL_RESULT: VisualRowsResult = {
@@ -91,9 +94,13 @@ export function FileDiff({
     dialogOpen,
     showHints,
     focusedSide = 'left',
+    compareContents = true,
+    followSymlinks = false,
 }: FileDiffProps) {
     const leftPath = leftFilePath ?? path.join(leftDir, entry.relativePath)
     const rightPath = rightFilePath ?? path.join(rightDir, entry.relativePath)
+    const isDirectoryContext =
+        leftFilePath === undefined && rightFilePath === undefined
 
     const [reloadKey, setReloadKey] = useState(0)
     const [undoStack, setUndoStack] = useState<HunkUndoEntry[]>([])
@@ -250,6 +257,35 @@ export function FileDiff({
                 setReloadKey((k) => k + 1)
                 return
             }
+            if (action.type === 'HIDE_FILE_DIFF' && isDirectoryContext) {
+                const editedSides = new Set<PanelSide>()
+                for (const e of undoStack) editedSides.add(e.destSide)
+                for (const e of redoStack) editedSides.add(e.destSide)
+                if (editedSides.size > 0) {
+                    dispatch({
+                        type: 'PATCH_FILE_ENTRY',
+                        relativePath: entry.relativePath,
+                        left:
+                            editedSides.has('left') ?
+                                statFileEntrySync(
+                                    leftDir,
+                                    entry.relativePath,
+                                    compareContents,
+                                    followSymlinks,
+                                )
+                            :   undefined,
+                        right:
+                            editedSides.has('right') ?
+                                statFileEntrySync(
+                                    rightDir,
+                                    entry.relativePath,
+                                    compareContents,
+                                    followSymlinks,
+                                )
+                            :   undefined,
+                    })
+                }
+            }
             dispatch(action)
         },
         [
@@ -269,6 +305,12 @@ export function FileDiff({
             undoStack,
             redoStack,
             onToast,
+            isDirectoryContext,
+            leftDir,
+            rightDir,
+            entry.relativePath,
+            compareContents,
+            followSymlinks,
         ],
     )
 

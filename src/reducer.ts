@@ -667,6 +667,34 @@ export function reducer(state: AppState, action: Action): AppState {
                 dialog: null,
                 fileDiffEntryIndex: null,
             }
+        case 'PATCH_FILE_ENTRY': {
+            if (!state.leftScan || !state.rightScan) return state
+            const updates: Partial<AppState> = {}
+            if (action.left !== undefined) {
+                const leftScan = new Map(state.leftScan)
+                if (action.left) leftScan.set(action.relativePath, action.left)
+                else leftScan.delete(action.relativePath)
+                updates.leftScan = leftScan
+            }
+            if (action.right !== undefined) {
+                const rightScan = new Map(state.rightScan)
+                if (action.right)
+                    rightScan.set(action.relativePath, action.right)
+                else rightScan.delete(action.relativePath)
+                updates.rightScan = rightScan
+            }
+            const next = withRecompute(state, updates)
+            const newIdx = next.entries.findIndex(
+                (e) => e.relativePath === action.relativePath,
+            )
+            if (newIdx !== -1) {
+                next.cursorIndex = newIdx
+                if (state.fileDiffEntryIndex !== null) {
+                    next.fileDiffEntryIndex = newIdx
+                }
+            }
+            return next
+        }
         case 'TOGGLE_PREFERENCES':
             return {
                 ...state,
