@@ -373,9 +373,18 @@ export function StatusBar({
         )
     }
 
-    const filterLabel = `[${filterMode}]`
+    const keyFor = (id: string) =>
+        keymap.find((s) => s.id === id)?.helpKey ?? ''
+    const filterKey = keyFor('filterMenu')
+    const sortKey = keyFor('sortMenu')
+    const reverseSortKey = keyFor('reverseSortDirection')
+    const toggleIgnoreKey = keyFor('toggleIgnore')
+    const ignorePatternsKey = keyFor('ignorePatterns')
+
+    const filterLabel = `[${filterMode} (${filterKey})]`
     const sortArrow = sortDirection === 'asc' ? '↑' : '↓'
-    const sortLabel = `[${sortMode} ${sortArrow}]`
+    const sortLabel = `[${sortMode} ${sortArrow} (${sortKey}/${reverseSortKey})]`
+    const ignoreLabel = `[ignore (${toggleIgnoreKey}/${ignorePatternsKey})]`
 
     const helpItems = keymap
         .filter((s) => s.keyLabel !== '' && s.mode !== 'fileDiff')
@@ -393,9 +402,14 @@ export function StatusBar({
                     <Box>
                         <Text color={theme.statusBarMode}>{filterLabel} </Text>
                         <Text color={theme.statusBarMode}>{sortLabel} </Text>
-                        {ignoreEnabled && (
-                            <Text color={theme.statusBarMode}>[ignore] </Text>
-                        )}
+                        <Text
+                            color={
+                                ignoreEnabled ? theme.statusBarMode : undefined
+                            }
+                            dimColor={!ignoreEnabled}
+                        >
+                            {ignoreLabel}{' '}
+                        </Text>
                         {pendingPairMark && (
                             <Text color={theme.entryPairMark}>
                                 [pair:{' '}
