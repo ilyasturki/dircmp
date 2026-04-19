@@ -754,6 +754,18 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'TOGGLE_IGNORE' } },
     },
     {
+        id: 'toggleCompareDates',
+        mode: 'directoryDiff',
+        keyLabel: '',
+        description: 'toggle compare dates',
+        helpDescription: 'Toggle comparing modification dates',
+        keyDef: 'zd',
+        helpKey: 'zd',
+        sequence: 'zd',
+        match: () => false,
+        effect: { type: 'dispatch', action: { type: 'TOGGLE_COMPARE_DATES' } },
+    },
+    {
         id: 'sortMenu',
         mode: 'directoryDiff',
         keyLabel: 's',

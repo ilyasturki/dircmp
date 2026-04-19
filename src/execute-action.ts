@@ -10,6 +10,7 @@ import type {
     PanelSide,
     UndoEntry,
 } from '~/utils/types'
+import { saveConfig } from '~/utils/config'
 import { copyEntry } from '~/utils/copy'
 import { moveToTrash, restoreFromTrash } from '~/utils/trash'
 
@@ -43,6 +44,18 @@ export function executeAction(
     if (action.type === 'REFRESH') {
         dispatch(action)
         onRefresh?.()
+        return
+    }
+
+    // Intercept TOGGLE_COMPARE_DATES: flip the config flag and persist it.
+    if (action.type === 'TOGGLE_COMPARE_DATES') {
+        const newConfig = {
+            ...state.config,
+            compareDates: !state.config.compareDates,
+        }
+        dispatch({ type: 'UPDATE_CONFIG', config: newConfig })
+        saveConfig(newConfig)
+        onToast?.(`Compare dates: ${newConfig.compareDates ? 'on' : 'off'}`)
         return
     }
 

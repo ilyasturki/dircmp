@@ -124,6 +124,7 @@ export type Action =
     | { type: 'COLLAPSE_PARENT'; viewHeight?: number }
     | { type: 'REDRAW' }
     | { type: 'TOGGLE_PREFERENCES' }
+    | { type: 'TOGGLE_COMPARE_DATES' }
     | { type: 'UPDATE_CONFIG'; config: import('~/utils/config').AppConfig }
     | { type: 'REFRESH' }
     | { type: 'SWAP_PANELS' }
