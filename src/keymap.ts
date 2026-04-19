@@ -227,6 +227,18 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'EXPAND_ALL' } },
     },
     {
+        id: 'expandFocused',
+        mode: 'directoryDiff',
+        keyLabel: '',
+        description: 'expand focused',
+        helpDescription: 'Recursively expand focused directory',
+        keyDef: 'zO',
+        helpKey: 'zO',
+        sequence: 'zO',
+        match: () => false,
+        effect: { type: 'dispatch', action: { type: 'EXPAND_FOCUSED' } },
+    },
+    {
         id: 'collapseAll',
         mode: 'directoryDiff',
         keyLabel: '',

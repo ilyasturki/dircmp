@@ -129,6 +129,7 @@ export type Action =
     | { type: 'SWAP_PANELS' }
     | { type: 'FOCUS_PANEL'; panel: PanelSide }
     | { type: 'EXPAND_ALL' }
+    | { type: 'EXPAND_FOCUSED' }
     | { type: 'COLLAPSE_ALL' }
     | { type: 'SHOW_FILTER_MENU' }
     | { type: 'HIDE_FILTER_MENU' }

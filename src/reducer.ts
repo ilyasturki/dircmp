@@ -395,6 +395,19 @@ export function reducer(state: AppState, action: Action): AppState {
                 expandedDirs: collectAllDirs(state),
             })
         }
+        case 'EXPAND_FOCUSED': {
+            if (!state.leftScan || !state.rightScan) return state
+            const entry = state.entries[state.cursorIndex]
+            if (!entry || entry.type !== 'directory') return state
+            const allDirs = collectAllDirs(state)
+            const expandedDirs = new Set(state.expandedDirs)
+            expandedDirs.add(entry.relativePath)
+            const prefix = entry.relativePath + '/'
+            for (const dir of allDirs) {
+                if (dir.startsWith(prefix)) expandedDirs.add(dir)
+            }
+            return withRecompute(state, { expandedDirs })
+        }
         case 'COLLAPSE_ALL':
             return withRecompute(state, {
                 expandedDirs: new Set<string>(),
