@@ -270,6 +270,7 @@ export function App({
                     rightRelativePath={fileDiffProps.rightRelativePath}
                     dispatch={dispatch}
                     onToast={showToast}
+                    onShellOut={handleShellOut}
                     columns={columns}
                     rows={rows}
                     keymap={keymap}

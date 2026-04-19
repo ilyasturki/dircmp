@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { useApp, useStdout } from 'ink'
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
@@ -56,6 +57,19 @@ export function FileDiffApp({
         [exit],
     )
 
+    const handleShellOut = useCallback(
+        (command: string, args: string[]) => {
+            process.stdout.write('\x1b[?1049l\x1b[?25h')
+            const result = spawnSync(command, args, { stdio: 'inherit' })
+            process.stdout.write('\x1b[?1049h\x1b[?25l')
+            rawDispatch({ type: 'REDRAW' })
+            if (result.error) {
+                showToast(`Failed to run: ${command} (${result.error.message})`)
+            }
+        },
+        [showToast],
+    )
+
     const entry: CompareEntry = useMemo(
         () => ({
             relativePath: path.basename(leftFile),
@@ -86,6 +100,7 @@ export function FileDiffApp({
                 rightFilePath={rightFile}
                 dispatch={dispatch}
                 onToast={showToast}
+                onShellOut={handleShellOut}
                 columns={columns}
                 rows={rows}
                 keymap={keymap}

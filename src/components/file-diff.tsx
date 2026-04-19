@@ -46,6 +46,7 @@ interface FileDiffProps {
     rightRelativePath?: string
     dispatch: Dispatch<Action>
     onToast?: (message: string) => void
+    onShellOut?: (command: string, args: string[]) => void
     columns: number
     rows: number
     keymap?: Shortcut[]
@@ -92,6 +93,7 @@ export function FileDiff({
     rightRelativePath,
     dispatch,
     onToast,
+    onShellOut,
     columns,
     rows,
     keymap,
@@ -247,6 +249,15 @@ export function FileDiff({
                 setReloadKey((k) => k + 1)
                 return
             }
+            if (action.type === 'OPEN_IN_EDITOR') {
+                if (!onShellOut) return
+                const editor = process.env.EDITOR || process.env.VISUAL
+                if (!editor) return
+                const targetPath = focusedSide === 'left' ? leftPath : rightPath
+                const parts = editor.split(/\s+/)
+                onShellOut(parts[0]!, [...parts.slice(1), targetPath])
+                return
+            }
             if (action.type === 'INCREASE_DIFF_CONTEXT') {
                 setContextSize((c) => c + 1)
                 return
@@ -327,6 +338,7 @@ export function FileDiff({
             undoStack,
             redoStack,
             onToast,
+            onShellOut,
             leftDir,
             rightDir,
             leftRel,

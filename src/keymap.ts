@@ -499,7 +499,7 @@ export const defaultKeymap: Shortcut[] = [
     },
     {
         id: 'openInEditor',
-        mode: 'directoryDiff',
+        mode: 'universal',
         keyLabel: 'e',
         description: 'edit',
         helpDescription: 'Open focused entry in $EDITOR',
