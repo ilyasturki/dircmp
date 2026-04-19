@@ -304,6 +304,15 @@ function getEntryInfo(
     }
 }
 
+const filterModeLabels: Record<FilterMode, string> = {
+    all: 'all',
+    'all-changes': 'different',
+    modified: 'modified',
+    'only-left': 'only-left',
+    'only-right': 'only-right',
+    same: 'same',
+}
+
 export function StatusBar({
     isLoading,
     keymap,
@@ -381,7 +390,7 @@ export function StatusBar({
     const toggleIgnoreKey = keyFor('toggleIgnore')
     const ignorePatternsKey = keyFor('ignorePatterns')
 
-    const filterLabel = `[${filterMode} (${filterKey})]`
+    const filterLabel = `[${filterModeLabels[filterMode]} (${filterKey})]`
     const sortArrow = sortDirection === 'asc' ? '↑' : '↓'
     const sortLabel = `[${sortMode} ${sortArrow} (${sortKey}/${reverseSortKey})]`
     const ignoreLabel = `[ignore (${toggleIgnoreKey}/${ignorePatternsKey})]`
