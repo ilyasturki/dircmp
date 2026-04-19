@@ -366,13 +366,35 @@ export function FileDiff({
     // panel top title (1) + panel bottom border (1) + footer (1) + optional hints (1)
     const contentHeight = Math.max(1, rows - 3 - (showHints ? 1 : 0))
 
-    const hintItems = (keymap ?? [])
-        .filter(
-            (s) =>
-                (s.mode === 'universal' || s.mode === 'fileDiff')
-                && s.keyLabel !== '',
-        )
-        .map((s) => ({ key: s.keyLabel, label: s.description }))
+    const EXCLUDED_HINTS = new Set(['closeFileDiff', 'releaseNotes'])
+    const NEAR_END_HINTS = new Set(['openInEditor', 'refresh', 'preferences'])
+    const END_HINTS = new Set([
+        'fileDiffIncreaseContext',
+        'fileDiffDecreaseContext',
+        'fileDiffToggleWrap',
+    ])
+    const relevantShortcuts = (keymap ?? []).filter(
+        (s) =>
+            (s.mode === 'universal' || s.mode === 'fileDiff')
+            && s.keyLabel !== ''
+            && !EXCLUDED_HINTS.has(s.id),
+    )
+    const hintItems = [
+        ...relevantShortcuts.filter(
+            (s) => !NEAR_END_HINTS.has(s.id) && !END_HINTS.has(s.id),
+        ),
+        ...relevantShortcuts.filter((s) => NEAR_END_HINTS.has(s.id)),
+        ...relevantShortcuts.filter((s) => END_HINTS.has(s.id)),
+    ].map((s) => ({ key: s.keyLabel, label: s.description }))
+
+    const keyFor = (id: string) =>
+        (keymap ?? []).find((s) => s.id === id)?.helpKey ?? ''
+    const wrapKey = keyFor('fileDiffToggleWrap')
+    const increaseContextKey = keyFor('fileDiffIncreaseContext')
+    const decreaseContextKey = keyFor('fileDiffDecreaseContext')
+    const contextKeyHint = [increaseContextKey, decreaseContextKey]
+        .filter((k) => k !== '')
+        .join('/')
 
     const gutterWidth = computeGutterWidth(diffRows)
     // Per panel inner width = panelWidth - 2 bold borders.
@@ -571,9 +593,15 @@ export function FileDiff({
                         ` hunk ${focusedHunk + 1} of ${hunkRanges.length}`
                     :   ''}
                 </Text>
-                <Text
-                    dimColor
-                >{`${wrapMode ? 'wrap ' : ''}context ${contextSize} `}</Text>
+                <Box>
+                    <Text
+                        color={wrapMode ? theme.statusBarMode : undefined}
+                        dimColor={!wrapMode}
+                    >{`wrap${wrapKey ? ` (${wrapKey})` : ''} `}</Text>
+                    <Text
+                        dimColor
+                    >{`context ${contextSize}${contextKeyHint ? ` (${contextKeyHint})` : ''} `}</Text>
+                </Box>
             </Box>
 
             {/* Keyboard hints */}
