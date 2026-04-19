@@ -385,6 +385,13 @@ export function StatusBar({
     const sortArrow = sortDirection === 'asc' ? '↑' : '↓'
     const sortLabel = `[${sortMode} ${sortArrow} (${sortKey}/${reverseSortKey})]`
     const ignoreLabel = `[ignore (${toggleIgnoreKey}/${ignorePatternsKey})]`
+    const totalDiffs =
+        leftScan && rightScan ?
+            countDescendantDiffs(leftScan, rightScan, '', '', {
+                compareDates,
+                compareContents,
+            })
+        :   null
 
     const helpItems = keymap
         .filter((s) => s.keyLabel !== '' && s.mode !== 'fileDiff')
@@ -410,6 +417,12 @@ export function StatusBar({
                         >
                             {ignoreLabel}{' '}
                         </Text>
+                        {totalDiffs != null && (
+                            <Text color={theme.statusBarMode}>
+                                [{totalDiffs} diff
+                                {totalDiffs !== 1 ? 's' : ''}]{' '}
+                            </Text>
+                        )}
                         {pendingPairMark && (
                             <Text color={theme.entryPairMark}>
                                 [pair:{' '}
