@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.1]
+
+### Added
+
+- `zO` in the directory view to recursively expand the focused directory
+- `zd` in the directory view to toggle date comparison
+- `e` in the file diff view to open the focused side in `$EDITOR`
+- Total diff count badge in the status bar
+- Shortcut hints next to the filter, sort, and ignore badges in the status bar
+- Shortcut keys in the file diff footer hint row
+
+### Changed
+
+- Renamed the `All changes` filter mode to `Different` and `Only modified` back to `Modified`
+
 ## [1.5.0]
 
 ### Added

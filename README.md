@@ -200,6 +200,7 @@ Works everywhere.
 | `h` / `←` | Collapse directory or go to parent |
 | `Enter`   | Open unified diff view             |
 | `zR`      | Expand all directories             |
+| `zO`      | Recursively expand focused dir     |
 | `zM`      | Collapse all directories           |
 | `]c`      | Jump to next difference            |
 | `[c`      | Jump to previous difference        |
@@ -230,6 +231,7 @@ Works everywhere.
 | `i`  | Quick-add entry to ignore |
 | `I`  | Manage ignore patterns    |
 | `zi` | Toggle ignore filtering   |
+| `zd` | Toggle date comparison    |
 | `.`  | Open actions menu         |
 | `q`  | Quit                      |
 
@@ -249,6 +251,7 @@ Works everywhere.
 | `}` / `{`      | Increase / decrease context lines   |
 | `a`            | Toggle line-by-line selection mode  |
 | `w`            | Toggle soft-wrap for long lines     |
+| `e`            | Open focused side in `$EDITOR`      |
 | `q` / `Esc`    | Close file diff view                |
 
 ## Configuration
