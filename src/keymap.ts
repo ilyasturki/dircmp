@@ -1,5 +1,6 @@
 import type { Key } from 'ink'
 
+import type { KeyboardHint } from '~/components/keyboard-hints'
 import type { Action } from '~/utils/types'
 
 type KeyMatcher = (input: string, key: Key) => boolean
@@ -487,6 +488,17 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'OPEN_SEARCH' } },
     },
     {
+        id: 'filterMenu',
+        mode: 'directoryDiff',
+        keyLabel: 'f',
+        description: 'filter',
+        helpDescription: 'Open filter options',
+        keyDef: 'f',
+        helpKey: 'f',
+        match: (input) => input === 'f',
+        effect: { type: 'dispatch', action: { type: 'SHOW_FILTER_MENU' } },
+    },
+    {
         id: 'openInEditor',
         mode: 'universal',
         keyLabel: 'e',
@@ -658,6 +670,20 @@ export const defaultKeymap: Shortcut[] = [
         },
     },
     {
+        id: 'fileDiffIncreaseContext',
+        mode: 'fileDiff',
+        keyLabel: '{/}',
+        description: 'context size',
+        helpDescription: 'Increase diff context lines',
+        keyDef: '}',
+        helpKey: '}',
+        match: (input) => input === '}',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'INCREASE_DIFF_CONTEXT' },
+        },
+    },
+    {
         id: 'fileDiffDecreaseContext',
         mode: 'fileDiff',
         keyLabel: '',
@@ -683,6 +709,17 @@ export const defaultKeymap: Shortcut[] = [
         effect: { type: 'dispatch', action: { type: 'TOGGLE_LINE_MODE' } },
     },
     {
+        id: 'fileDiffToggleWrap',
+        mode: 'fileDiff',
+        keyLabel: 'w',
+        description: 'wrap lines',
+        helpDescription: 'Toggle soft-wrap for long lines',
+        keyDef: 'w',
+        helpKey: 'w',
+        match: (input) => input === 'w',
+        effect: { type: 'dispatch', action: { type: 'TOGGLE_DIFF_WRAP' } },
+    },
+    {
         id: 'showHelp',
         mode: 'universal',
         keyLabel: '?',
@@ -692,6 +729,17 @@ export const defaultKeymap: Shortcut[] = [
         helpKey: '?',
         match: (input) => input === '?',
         effect: { type: 'dispatch', action: { type: 'SHOW_HELP' } },
+    },
+    {
+        id: 'ignorePatterns',
+        mode: 'directoryDiff',
+        keyLabel: 'I',
+        description: 'ignore patterns',
+        helpDescription: 'Manage ignore patterns',
+        keyDef: 'I',
+        helpKey: 'I',
+        match: (input) => input === 'I',
+        effect: { type: 'dispatch', action: { type: 'SHOW_IGNORE_DIALOG' } },
     },
     {
         id: 'toggleIgnore',
@@ -716,6 +764,31 @@ export const defaultKeymap: Shortcut[] = [
         sequence: 'zd',
         match: () => false,
         effect: { type: 'dispatch', action: { type: 'TOGGLE_COMPARE_DATES' } },
+    },
+    {
+        id: 'sortMenu',
+        mode: 'directoryDiff',
+        keyLabel: 's',
+        description: 'sort',
+        helpDescription: 'Open sort options',
+        keyDef: 's',
+        helpKey: 's',
+        match: (input, key) => input === 's' && !key.shift,
+        effect: { type: 'dispatch', action: { type: 'SHOW_SORT_MENU' } },
+    },
+    {
+        id: 'reverseSortDirection',
+        mode: 'directoryDiff',
+        keyLabel: 'S',
+        description: 'reverse sort',
+        helpDescription: 'Reverse sort direction',
+        keyDef: 'S',
+        helpKey: 'S',
+        match: (input) => input === 'S',
+        effect: {
+            type: 'dispatch',
+            action: { type: 'TOGGLE_SORT_DIRECTION' },
+        },
     },
     {
         id: 'swapPanels',
@@ -757,76 +830,47 @@ export const defaultKeymap: Shortcut[] = [
             action: { type: 'SHOW_RELEASE_NOTES' },
         },
     },
-    {
-        id: 'filterMenu',
-        mode: 'directoryDiff',
-        keyLabel: 'f',
-        description: 'filter',
-        helpDescription: 'Open filter options',
-        keyDef: 'f',
-        helpKey: 'f',
-        match: (input) => input === 'f',
-        effect: { type: 'dispatch', action: { type: 'SHOW_FILTER_MENU' } },
-    },
-    {
-        id: 'sortMenu',
-        mode: 'directoryDiff',
-        keyLabel: 's',
-        description: 'sort',
-        helpDescription: 'Open sort options',
-        keyDef: 's',
-        helpKey: 's',
-        match: (input, key) => input === 's' && !key.shift,
-        effect: { type: 'dispatch', action: { type: 'SHOW_SORT_MENU' } },
-    },
-    {
-        id: 'reverseSortDirection',
-        mode: 'directoryDiff',
-        keyLabel: 'S',
-        description: 'reverse sort',
-        helpDescription: 'Reverse sort direction',
-        keyDef: 'S',
-        helpKey: 'S',
-        match: (input) => input === 'S',
-        effect: {
-            type: 'dispatch',
-            action: { type: 'TOGGLE_SORT_DIRECTION' },
-        },
-    },
-    {
-        id: 'ignorePatterns',
-        mode: 'directoryDiff',
-        keyLabel: 'I',
-        description: 'ignore patterns',
-        helpDescription: 'Manage ignore patterns',
-        keyDef: 'I',
-        helpKey: 'I',
-        match: (input) => input === 'I',
-        effect: { type: 'dispatch', action: { type: 'SHOW_IGNORE_DIALOG' } },
-    },
-    {
-        id: 'fileDiffIncreaseContext',
-        mode: 'fileDiff',
-        keyLabel: '{/}',
-        description: 'context size',
-        helpDescription: 'Increase diff context lines',
-        keyDef: '}',
-        helpKey: '}',
-        match: (input) => input === '}',
-        effect: {
-            type: 'dispatch',
-            action: { type: 'INCREASE_DIFF_CONTEXT' },
-        },
-    },
-    {
-        id: 'fileDiffToggleWrap',
-        mode: 'fileDiff',
-        keyLabel: 'w',
-        description: 'wrap lines',
-        helpDescription: 'Toggle soft-wrap for long lines',
-        keyDef: 'w',
-        helpKey: 'w',
-        match: (input) => input === 'w',
-        effect: { type: 'dispatch', action: { type: 'TOGGLE_DIFF_WRAP' } },
-    },
 ]
+
+export const directoryDiffHintIds: readonly string[] = [
+    'copyToRight',
+    'copyFromFocused',
+    'search',
+    'delete',
+    'markPair',
+    'refresh',
+    'quickIgnore',
+    'openInEditor',
+    'preferences',
+    'showHelp',
+    'editKeybindings',
+    'releaseNotes',
+]
+
+export const fileDiffHintIds: readonly string[] = [
+    'fileDiffCopyHunkToRight',
+    'fileDiffCopyHunkFromFocused',
+    'fileDiffToggleLineMode',
+    'fileDiffIncreaseContext',
+    'fileDiffToggleWrap',
+    'openInEditor',
+    'refresh',
+    'preferences',
+    'showHelp',
+    'editKeybindings',
+    'releaseNotes',
+]
+
+export function buildHintItems(
+    keymap: Shortcut[],
+    orderedIds: readonly string[],
+): KeyboardHint[] {
+    const byId = new Map(keymap.map((s) => [s.id, s]))
+    const items: KeyboardHint[] = []
+    for (const id of orderedIds) {
+        const s = byId.get(id)
+        if (!s || s.keyLabel === '') continue
+        items.push({ key: s.keyLabel, label: s.description })
+    }
+    return items
+}

@@ -16,6 +16,7 @@ import type {
     SortDirection,
     SortMode,
 } from '~/utils/types'
+import { buildHintItems, directoryDiffHintIds } from '~/keymap'
 import { isBinary } from '~/utils/binary'
 import { countDescendantDiffs } from '~/utils/compare'
 import { formatSize } from '~/utils/format-size'
@@ -402,9 +403,7 @@ export function StatusBar({
             })
         :   null
 
-    const helpItems = keymap
-        .filter((s) => s.keyLabel !== '' && s.mode !== 'fileDiff')
-        .map((s) => ({ key: s.keyLabel, label: s.description }))
+    const helpItems = buildHintItems(keymap, directoryDiffHintIds)
 
     return (
         <Box flexDirection='column'>

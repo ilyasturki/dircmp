@@ -1,6 +1,6 @@
 import { Text } from 'ink'
 
-interface KeyboardHint {
+export interface KeyboardHint {
     key: string
     label: string
 }

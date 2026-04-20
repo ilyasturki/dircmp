@@ -15,6 +15,7 @@ import type { VisualRow, VisualRowsResult } from './file-diff/diff-compute'
 import { KeyboardHints } from '~/components/keyboard-hints'
 import { PanelBox } from '~/components/panels/panel-box'
 import { useUniversalShortcuts } from '~/hooks'
+import { buildHintItems, fileDiffHintIds } from '~/keymap'
 import { statFileEntrySync } from '~/utils/scanner'
 import { borderFor, theme } from '~/utils/theme'
 import { moveToTrash, restoreFromTrash } from '~/utils/trash'
@@ -366,26 +367,7 @@ export function FileDiff({
     // panel top title (1) + panel bottom border (1) + footer (1) + optional hints (1)
     const contentHeight = Math.max(1, rows - 3 - (showHints ? 1 : 0))
 
-    const EXCLUDED_HINTS = new Set(['closeFileDiff', 'releaseNotes'])
-    const NEAR_END_HINTS = new Set(['openInEditor', 'refresh', 'preferences'])
-    const END_HINTS = new Set([
-        'fileDiffIncreaseContext',
-        'fileDiffDecreaseContext',
-        'fileDiffToggleWrap',
-    ])
-    const relevantShortcuts = (keymap ?? []).filter(
-        (s) =>
-            (s.mode === 'universal' || s.mode === 'fileDiff')
-            && s.keyLabel !== ''
-            && !EXCLUDED_HINTS.has(s.id),
-    )
-    const hintItems = [
-        ...relevantShortcuts.filter(
-            (s) => !NEAR_END_HINTS.has(s.id) && !END_HINTS.has(s.id),
-        ),
-        ...relevantShortcuts.filter((s) => NEAR_END_HINTS.has(s.id)),
-        ...relevantShortcuts.filter((s) => END_HINTS.has(s.id)),
-    ].map((s) => ({ key: s.keyLabel, label: s.description }))
+    const hintItems = buildHintItems(keymap ?? [], fileDiffHintIds)
 
     const keyFor = (id: string) =>
         (keymap ?? []).find((s) => s.id === id)?.helpKey ?? ''
