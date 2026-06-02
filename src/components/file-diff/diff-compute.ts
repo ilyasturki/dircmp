@@ -62,50 +62,57 @@ function buildPairedSegments(
     return { leftSegs, rightSegs, similarity }
 }
 
+// Renders a block of removed/added lines as split rows: paired positionally as
+// `changed`/`changed`, the leftover removed/added as left-only / right-only. With
+// `highlight` (the default) similar pairs get intra-line word segments; the coarse
+// fallback passes `false` to skip that per-word diff entirely.
 function flushChangeBlock(
     removed: { lineNum: number; content: string }[],
     added: { lineNum: number; content: string }[],
     rows: DiffRow[],
+    highlight = true,
 ): void {
     const paired = Math.min(removed.length, added.length)
     for (let i = 0; i < paired; i++) {
         const r = removed[i]
         const a = added[i]
-        const { leftSegs, rightSegs, similarity } = buildPairedSegments(
-            r.content,
-            a.content,
-        )
-        if (similarity >= PAIR_SIMILARITY_THRESHOLD) {
-            rows.push({
-                kind: 'split',
-                left: {
-                    type: 'changed',
-                    lineNum: r.lineNum,
-                    content: r.content,
-                    segments: leftSegs,
-                },
-                right: {
-                    type: 'changed',
-                    lineNum: a.lineNum,
-                    content: a.content,
-                    segments: rightSegs,
-                },
-            })
-        } else {
-            rows.push({
-                kind: 'split',
-                left: {
-                    type: 'changed',
-                    lineNum: r.lineNum,
-                    content: r.content,
-                },
-                right: {
-                    type: 'changed',
-                    lineNum: a.lineNum,
-                    content: a.content,
-                },
-            })
+        if (highlight) {
+            const { leftSegs, rightSegs, similarity } = buildPairedSegments(
+                r.content,
+                a.content,
+            )
+            if (similarity >= PAIR_SIMILARITY_THRESHOLD) {
+                rows.push({
+                    kind: 'split',
+                    left: {
+                        type: 'changed',
+                        lineNum: r.lineNum,
+                        content: r.content,
+                        segments: leftSegs,
+                    },
+                    right: {
+                        type: 'changed',
+                        lineNum: a.lineNum,
+                        content: a.content,
+                        segments: rightSegs,
+                    },
+                })
+                continue
+            }
         }
+        rows.push({
+            kind: 'split',
+            left: {
+                type: 'changed',
+                lineNum: r.lineNum,
+                content: r.content,
+            },
+            right: {
+                type: 'changed',
+                lineNum: a.lineNum,
+                content: a.content,
+            },
+        })
     }
     for (let i = paired; i < removed.length; i++) {
         rows.push({
@@ -133,6 +140,16 @@ function flushChangeBlock(
 
 export const DEFAULT_DIFF_CONTEXT = 3
 
+// Wall-clock ceiling on the synchronous line-diff. structuredPatch runs a
+// Myers diff (O(N·D)): fast when files are similar, but seconds-long when they
+// differ heavily (e.g. a regenerated lockfile, where most lines move). `timeout`
+// aborts and returns undefined once exceeded, so we bail ONLY diffs that are
+// actually slow — regardless of file size or edit distance — and fall back to a
+// coarse, O(N) line-for-line view. (A wall-clock bound is used rather than
+// `maxEditLength`, whose lineCount×editDistance proxy badly over-estimates real
+// Myers cost and so false-bails large-but-lightly-edited files.)
+const MAX_DIFF_TIME_MS = 250
+
 export function computeDiffRows(
     leftContent: string,
     rightContent: string,
@@ -147,8 +164,12 @@ export function computeDiffRows(
         rightContent,
         undefined,
         undefined,
-        { context: Math.max(0, context) },
+        { context: Math.max(0, context), timeout: MAX_DIFF_TIME_MS },
     )
+
+    // undefined => the diff was aborted for taking too long: the files are too
+    // different to align affordably. Show a coarse diff rather than freeze.
+    if (!patch) return buildCoarseDiffRows(leftContent, rightContent)
 
     const rows: DiffRow[] = []
     let prevHunkEndOld = 0
@@ -186,6 +207,53 @@ export function computeDiffRows(
         }
         flush()
     }
+    return rows
+}
+
+// Coarse fallback for files too different to align affordably. Trims the common
+// leading/trailing lines, then renders the differing middle line-for-line
+// (left vs right) without intra-line word highlighting. O(N), so it never
+// stalls the UI regardless of how different the files are.
+export function buildCoarseDiffRows(
+    leftContent: string,
+    rightContent: string,
+): DiffRow[] {
+    // An absent/empty side is zero lines, not one empty line: ''.split('\n') is
+    // [''], which would otherwise pair a phantom empty line against the present
+    // side's first line for an only-left/only-right file.
+    const leftLines = leftContent === '' ? [] : leftContent.split('\n')
+    const rightLines = rightContent === '' ? [] : rightContent.split('\n')
+
+    let lo = 0
+    while (
+        lo < leftLines.length
+        && lo < rightLines.length
+        && leftLines[lo] === rightLines[lo]
+    ) {
+        lo++
+    }
+    let leftHi = leftLines.length
+    let rightHi = rightLines.length
+    while (
+        leftHi > lo
+        && rightHi > lo
+        && leftLines[leftHi - 1] === rightLines[rightHi - 1]
+    ) {
+        leftHi--
+        rightHi--
+    }
+
+    // Render the differing middle through the same row builder as the real diff
+    // (minus word highlighting): paired lines become `changed`/`changed`, and any
+    // overflow on either side becomes removed-only / added-only rows.
+    const rows: DiffRow[] = [{ kind: 'hunk-header', skipped: lo }]
+    const removed = leftLines
+        .slice(lo, leftHi)
+        .map((content, i) => ({ lineNum: lo + i + 1, content }))
+    const added = rightLines
+        .slice(lo, rightHi)
+        .map((content, i) => ({ lineNum: lo + i + 1, content }))
+    flushChangeBlock(removed, added, rows, false)
     return rows
 }
 

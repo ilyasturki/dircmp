@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import { useInput } from 'ink'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { CompareEntry } from '~/utils/types'
 import type { DiffRow, HunkRange } from './diff-compute'
-import { computeDiffRows } from './diff-compute'
+import { computeDiffRowsAsync } from './diff-client'
 import { readFileForDiff } from './read-file'
 
 type LoadState =
@@ -86,15 +86,29 @@ export function useDiffRows(
         // the previous diff stays visible during reloads (no "Loading" flash).
     }, [entry, leftPath, rightPath, reloadKey])
 
-    const computed = useMemo(() => {
-        if (loadState.status !== 'loaded') return null
-        return computeDiffRows(
+    // The Myers diff runs off the render thread via a worker (see diff-client),
+    // so it never stalls input. Clear rows when the underlying content changes so
+    // copy-hunk can't mix stale rows with fresh content; a context-only change
+    // keeps the previous rows visible while the new diff computes (no flash).
+    const [computed, setComputed] = useState<DiffRow[] | null>(null)
+    useEffect(() => {
+        setComputed(null)
+    }, [loadState])
+    useEffect(() => {
+        if (loadState.status !== 'loaded') return
+        let cancelled = false
+        computeDiffRowsAsync(
             loadState.leftContent,
             loadState.rightContent,
             entry.relativePath,
             entry.relativePath,
             context,
-        )
+        ).then((rows) => {
+            if (!cancelled) setComputed(rows)
+        })
+        return () => {
+            cancelled = true
+        }
     }, [loadState, entry.relativePath, context])
 
     const diffRows = computed !== null && computed.length > 0 ? computed : null
