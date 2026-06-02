@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.2]
+
+### Performance
+
+- Offload file diff computation to a worker thread to keep the UI responsive on large files
+
 ## [1.5.1]
 
 ### Added
