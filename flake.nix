@@ -32,7 +32,21 @@
             outputHash = "sha256-HifjjJeX4AMU6zB55D1j4yVrlk/76j9XTiEPX2TWB/c=";
             buildPhase = ''
               export HOME=$TMPDIR
-              bun install --frozen-lockfile --no-progress
+
+              # Nix never retries a failed fixed-output derivation, so one flaky
+              # registry fetch would sink every build depending on this package.
+              for attempt in 1 2 3; do
+                if bun install --frozen-lockfile --no-progress; then
+                  break
+                fi
+                if [ "$attempt" = 3 ]; then
+                  echo "bun install failed after $attempt attempts" >&2
+                  exit 1
+                fi
+                # A truncated tarball survives in the cache and fails identically on retry.
+                rm -rf "$HOME/.bun/install/cache" node_modules
+                sleep $((attempt * 5))
+              done
             '';
             installPhase = ''
               cp -r node_modules $out
