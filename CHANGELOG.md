@@ -1,12 +1,12 @@
 # Changelog
 
-## [1.5.2]
+## [1.5.2] - 2026-06-02
 
 ### Performance
 
 - Offload file diff computation to a worker thread to keep the UI responsive on large files
 
-## [1.5.1]
+## [1.5.1] - 2026-04-20
 
 ### Added
 
@@ -21,7 +21,7 @@
 
 - Renamed the `All changes` filter mode to `Different` and `Only modified` back to `Modified`
 
-## [1.5.0]
+## [1.5.0] - 2026-04-17
 
 ### Added
 
@@ -49,7 +49,7 @@
 
 - Memoize panels and precompute the visual row mapping for smoother scrolling
 
-## [1.4.0]
+## [1.4.0] - 2026-04-15
 
 ### Added
 
@@ -77,7 +77,7 @@
 - Keep collapsed directories visible under an active filter when they contain matches
 - Exclude file-diff-only shortcuts from the directory view's status-bar hints
 
-## [1.3.0]
+## [1.3.0] - 2026-04-14
 
 ### Added
 
@@ -115,7 +115,7 @@
 
 - Defer directory diff count and cache descendants for faster status bar
 
-## [1.2.0]
+## [1.2.0] - 2026-04-12
 
 ### Added
 
@@ -128,7 +128,7 @@
 
 - Delete confirmation dialog now uses selectable confirm/cancel options instead of inline key hints
 
-## [1.1.0]
+## [1.1.0] - 2026-04-10
 
 ### Added
 
@@ -156,9 +156,9 @@
 
 - Memoize entry row components and lift panel width to reduce re-renders
 
-## [1.0.3]
+## [1.0.3] - 2026-04-07
 
-## [1.0.2]
+## [1.0.2] - 2026-04-07
 
 ### Added
 
@@ -166,13 +166,13 @@
 - AUR packages (`dircmp` and `dircmp-bin`)
 - Cross-compiled release binaries for linux-arm64, darwin, and windows
 
-## [1.0.1]
+## [1.0.1] - 2026-04-07
 
 ### Added
 
 - In-app release notes dialog with scrollable changelog viewer
 
-## [1.0.0]
+## [1.0.0] - 2026-04-07
 
 ### Added
 
@@ -190,13 +190,13 @@
 
 - Pre-scan remote directories via rclone lsjson concurrently with FUSE mount
 
-## [0.4.1]
+## [0.4.1] - 2026-04-06
 
 ### Changed
 
 - Nix package now builds a standalone binary instead of using a bun wrapper
 
-## [0.4.0]
+## [0.4.0] - 2026-04-06
 
 ### Added
 
@@ -208,7 +208,7 @@
 
 - Truncate keyboard hint line to fit terminal width
 
-## [0.3.0]
+## [0.3.0] - 2026-04-03
 
 ### Added
 
@@ -221,7 +221,7 @@
 
 - Adapt unfocused selection background to terminal color scheme
 
-## [0.2.0]
+## [0.2.0] - 2026-04-03
 
 ### Added
 
@@ -236,14 +236,14 @@
 
 - Consistent editable format and input validation in keybindings
 
-## [0.1.1]
+## [0.1.1] - 2026-04-03
 
 ### Changed
 
 - Inverse highlight for focused entries in ignore dialog
 - Interactive empty state in ignore dialog
 
-## [0.1.0]
+## [0.1.0] - 2026-04-03
 
 ### Added
 
@@ -255,7 +255,7 @@
 
 - Clear timers on unmount to prevent exit hang
 
-## [0.0.4]
+## [0.0.4] - 2026-04-03
 
 ### Added
 
@@ -277,13 +277,13 @@
 
 - Replace file hashing with size+mtime comparison and parallelize stat calls
 
-## [0.0.3]
+## [0.0.3] - 2026-04-02
 
 ### Fixed
 
 - Stage flake.nix in version hook instead of postversion
 
-## [0.0.2]
+## [0.0.2] - 2026-03-29
 
 ### Added
 
@@ -292,7 +292,7 @@
 - `--help` and `--version` CLI flags
 - Show relative path in context menu title
 
-## [0.0.1]
+## [0.0.1] - 2026-03-13
 
 ### Added
 
@@ -310,3 +310,25 @@
 - Context menu with quick actions
 - Preferences dialog with date locale setting
 - NixOS packaging via flake.nix
+
+[1.5.2]: https://github.com/ilyasturki/dircmp/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/ilyasturki/dircmp/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/ilyasturki/dircmp/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/ilyasturki/dircmp/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/ilyasturki/dircmp/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/ilyasturki/dircmp/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/ilyasturki/dircmp/compare/v1.0.3...v1.1.0
+[1.0.3]: https://github.com/ilyasturki/dircmp/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/ilyasturki/dircmp/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/ilyasturki/dircmp/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/ilyasturki/dircmp/compare/v0.4.1...v1.0.0
+[0.4.1]: https://github.com/ilyasturki/dircmp/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/ilyasturki/dircmp/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/ilyasturki/dircmp/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/ilyasturki/dircmp/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/ilyasturki/dircmp/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/ilyasturki/dircmp/compare/v0.0.4...v0.1.0
+[0.0.4]: https://github.com/ilyasturki/dircmp/compare/v0.0.3...v0.0.4
+[0.0.3]: https://github.com/ilyasturki/dircmp/compare/v0.0.2...v0.0.3
+[0.0.2]: https://github.com/ilyasturki/dircmp/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/ilyasturki/dircmp/releases/tag/v0.0.1
