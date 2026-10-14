@@ -36,6 +36,9 @@ jobs:
                   bun scripts/build-binary.ts --target=bun-darwin-arm64 --outfile dircmp-darwin-arm64
                   bun scripts/build-binary.ts --target=bun-windows-x64 --outfile dircmp-windows-x64.exe
 
+            - name: Smoke test (linux-x64)
+              run: scripts/smoke.sh ./dircmp-linux-x64 "${GITHUB_REF_NAME#v}"
+
             - name: Upload binaries
               uses: actions/upload-artifact@v7
               with:
@@ -67,6 +70,13 @@ jobs:
 
             - name: Install dependencies
               run: bun install --frozen-lockfile
+
+            - name: Smoke test the package
+              run: |
+                  bun run build:npm
+                  npm pack --pack-destination "$RUNNER_TEMP"
+                  npm install --global --prefix "$RUNNER_TEMP/npm" "$RUNNER_TEMP"/*.tgz
+                  scripts/smoke.sh "$RUNNER_TEMP/npm/bin/dircmp" "${GITHUB_REF_NAME#v}"
 
             - name: Publish to npm
               run: npx npm@latest publish --provenance --access public
