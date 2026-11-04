@@ -5,7 +5,7 @@ on:
     pull_request:
 jobs:
     check:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26.04
         steps:
             - uses: actions/checkout@v6
             # For prettier.config.ts
@@ -50,7 +50,7 @@ jobs:
                   node dist/index.js diff --format json /tmp/dircmp-a /tmp/dircmp-b
                   node dist/index.js diff --stat /tmp/dircmp-a /tmp/dircmp-b
     nix-build:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26.04
         steps:
             - uses: actions/checkout@v6
             - uses: DeterminateSystems/nix-installer-action@main
