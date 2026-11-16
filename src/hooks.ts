@@ -1,5 +1,4 @@
 import type { Dispatch } from 'react'
-import type { WriteStream } from 'tty'
 import { useApp, useInput } from 'ink'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -13,26 +12,6 @@ import { scanDirectory } from '~/utils/scanner'
 export { useListNavigation } from '~/hooks/use-list-navigation'
 export { useScrollNavigation } from '~/hooks/use-scroll-navigation'
 export { useUniversalShortcuts } from '~/hooks/use-universal-shortcuts'
-
-export function useTerminalDimensions(stdout: WriteStream | undefined) {
-    const [dimensions, setDimensions] = useState({
-        columns: stdout?.columns ?? 80,
-        rows: stdout?.rows ?? 24,
-    })
-
-    useEffect(() => {
-        if (!stdout) return
-        const onResize = () => {
-            setDimensions({ columns: stdout.columns, rows: stdout.rows })
-        }
-        stdout.on('resize', onResize)
-        return () => {
-            stdout.off('resize', onResize)
-        }
-    }, [stdout])
-
-    return dimensions
-}
 
 export function useToast() {
     const [toastMessage, setToastMessage] = useState<string | null>(null)

@@ -1,6 +1,6 @@
 import type { TextProps } from 'ink'
 import type { ReactNode } from 'react'
-import { Box, Text, useStdout } from 'ink'
+import { Box, Text, useWindowSize } from 'ink'
 
 import type { PanelSide } from '~/utils/types'
 
@@ -17,8 +17,7 @@ export function PanelBox({
     side,
     children,
 }: PanelBoxProps) {
-    const { stdout } = useStdout()
-    const columns = stdout?.columns ?? 80
+    const { columns } = useWindowSize()
     // Yoga gives the first (left) child Math.ceil and the second (right) Math.floor
     const panelWidth =
         side === 'left' ? Math.ceil(columns / 2) : Math.floor(columns / 2)

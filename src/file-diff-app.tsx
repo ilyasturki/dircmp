@@ -1,13 +1,13 @@
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
-import { useApp, useStdout } from 'ink'
+import { useApp, useWindowSize } from 'ink'
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
 
 import type { AppConfig } from '~/utils/config'
 import type { Action, CompareEntry } from '~/utils/types'
 import { AppShell } from '~/app-shell'
 import { FileDiff } from '~/components/file-diff'
-import { useTerminalDimensions, useToast } from '~/hooks'
+import { useToast } from '~/hooks'
 import { defaultKeymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
 import { loadKeybindings, resolveKeymap } from '~/utils/keybindings'
@@ -27,8 +27,7 @@ export function FileDiffApp({
     changelog,
 }: FileDiffAppProps) {
     const { exit } = useApp()
-    const { stdout } = useStdout()
-    const { columns, rows } = useTerminalDimensions(stdout)
+    const { columns, rows } = useWindowSize()
     const { showToast } = useToast()
 
     useEffect(() => {

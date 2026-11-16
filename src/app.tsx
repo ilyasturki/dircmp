@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
-import { Box, Text, useApp, useStdout } from 'ink'
+import { Box, Text, useApp, useWindowSize } from 'ink'
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
 
 import type { CliIgnoreOptions } from '~/cli/types'
@@ -17,12 +17,7 @@ import { FileDiff } from '~/components/file-diff'
 import { DirectoryDiff } from '~/components/panels/directory-diff'
 import { StatusBar } from '~/components/status-bar'
 import { executeAction } from '~/execute-action'
-import {
-    useDirectoryScan,
-    useKeymap,
-    useTerminalDimensions,
-    useToast,
-} from '~/hooks'
+import { useDirectoryScan, useKeymap, useToast } from '~/hooks'
 import { defaultKeymap } from '~/keymap'
 import { createInitialState, reducer } from '~/reducer'
 import { loadKeybindings, resolveKeymap } from '~/utils/keybindings'
@@ -66,9 +61,7 @@ export function App({
     useEffect(() => {
         initTrashSession()
     }, [])
-    const { stdout } = useStdout()
-
-    const { columns, rows } = useTerminalDimensions(stdout)
+    const { columns, rows } = useWindowSize()
     const { toastMessage, showToast } = useToast()
     const { refresh } = useDirectoryScan(
         leftDir,
