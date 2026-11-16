@@ -29,7 +29,7 @@
             dontFixup = true;
             impureEnvVars = pkgs.lib.fetchers.proxyImpureEnvVars;
             outputHashMode = "recursive";
-            outputHash = "sha256-HifjjJeX4AMU6zB55D1j4yVrlk/76j9XTiEPX2TWB/c=";
+            outputHash = "sha256-vpYDut8sDKaMxlzoJlTGOKPY4NP1RT/ISlg2p9pBV30=";
             buildPhase = ''
               export HOME=$TMPDIR
 
