@@ -13,8 +13,7 @@ export interface DiffRequest {
 }
 
 export type DiffResponse =
-    | { id: number; rows: DiffRow[] }
-    | { id: number; error: string }
+    { id: number; rows: DiffRow[] } | { id: number; error: string }
 
 // Runs on the worker thread (index.tsx calls this when !isMainThread). The Myers
 // line-diff is the one CPU-heavy step in the diff view; doing it here keeps the

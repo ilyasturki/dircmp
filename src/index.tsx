@@ -6,7 +6,6 @@ import { runDiffWorker } from '~/components/file-diff/diff-worker'
 // re-enters this same (gated) entry — the only worker approach that survives
 // `bun build --compile`, tsx/dev, and the node bundle alike. Stamped before the
 // gate so both threads see it.
-
 ;(globalThis as { __DIRCMP_ENTRY_URL__?: string }).__DIRCMP_ENTRY_URL__ =
     import.meta.url
 

@@ -56,12 +56,7 @@ export type DialogType =
     | 'filterMenu'
 
 export type FilterMode =
-    | 'all'
-    | 'all-changes'
-    | 'modified'
-    | 'only-left'
-    | 'only-right'
-    | 'same'
+    'all' | 'all-changes' | 'modified' | 'only-left' | 'only-right' | 'same'
 
 export type SortMode = 'name' | 'size' | 'date' | 'status'
 export type SortDirection = 'asc' | 'desc'
